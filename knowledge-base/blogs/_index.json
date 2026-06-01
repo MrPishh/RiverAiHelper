@@ -1,0 +1,304 @@
+{
+  "sitemapUrl": "https://blog.river.inc/sitemap-posts.xml",
+  "lastChecked": "2026-05-08T08:27:55.136Z",
+  "pages": [
+    {
+      "url": "https://blog.river.inc/dynamic-airdrop-conversion-3-0/",
+      "slug": "dynamic-airdrop-conversion-3-0",
+      "file": "dynamic-airdrop-conversion-3-0.md",
+      "lastmod": "2026-05-08T07:47:35.532Z",
+      "lastScraped": "2026-05-08T07:53:37.725Z"
+    },
+    {
+      "url": "https://blog.river.inc/s4-airdrop-is-live/",
+      "slug": "s4-airdrop-is-live",
+      "file": "s4-airdrop-is-live.md",
+      "lastmod": "2026-05-01T14:09:46.000Z",
+      "lastScraped": "2026-05-08T07:53:38.715Z"
+    },
+    {
+      "url": "https://blog.river.inc/s4-best-creators/",
+      "slug": "s4-best-creators",
+      "file": "s4-best-creators.md",
+      "lastmod": "2026-04-24T15:36:48.000Z",
+      "lastScraped": "2026-05-08T07:53:39.750Z"
+    },
+    {
+      "url": "https://blog.river.inc/s5-live/",
+      "slug": "s5-live",
+      "file": "s5-live.md",
+      "lastmod": "2026-04-23T14:47:27.000Z",
+      "lastScraped": "2026-05-08T07:53:40.527Z"
+    },
+    {
+      "url": "https://blog.river.inc/s4-airdrop-conclusion/",
+      "slug": "s4-airdrop-conclusion",
+      "file": "s4-airdrop-conclusion.md",
+      "lastmod": "2026-04-22T03:55:04.000Z",
+      "lastScraped": "2026-05-08T07:53:41.328Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-live-on-hyperliquid/",
+      "slug": "river-live-on-hyperliquid",
+      "file": "river-live-on-hyperliquid.md",
+      "lastmod": "2026-04-03T16:40:24.000Z",
+      "lastScraped": "2026-05-08T07:53:42.104Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-pts-secondary-market-compensation-plan/",
+      "slug": "river-pts-secondary-market-compensation-plan",
+      "file": "river-pts-secondary-market-compensation-plan.md",
+      "lastmod": "2026-03-03T09:43:08.000Z",
+      "lastScraped": "2026-05-08T07:53:42.570Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-sui/",
+      "slug": "river-sui",
+      "file": "river-sui.md",
+      "lastmod": "2026-01-20T12:51:01.000Z",
+      "lastScraped": "2026-05-08T07:53:42.982Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-x-layer/",
+      "slug": "river-x-layer",
+      "file": "river-x-layer.md",
+      "lastmod": "2026-01-12T08:31:24.000Z",
+      "lastScraped": "2026-05-08T07:53:43.726Z"
+    },
+    {
+      "url": "https://blog.river.inc/2026-new-year-challenge/",
+      "slug": "2026-new-year-challenge",
+      "file": "2026-new-year-challenge.md",
+      "lastmod": "2026-01-09T17:33:45.000Z",
+      "lastScraped": "2026-05-08T07:53:44.031Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-season-3-airdrop-recap/",
+      "slug": "river-season-3-airdrop-recap",
+      "file": "river-season-3-airdrop-recap.md",
+      "lastmod": "2025-12-25T05:38:50.000Z",
+      "lastScraped": "2026-05-08T07:53:44.339Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-s3-final-snapshot-s4-activation/",
+      "slug": "river-s3-final-snapshot-s4-activation",
+      "file": "river-s3-final-snapshot-s4-activation.md",
+      "lastmod": "2025-12-17T15:47:07.000Z",
+      "lastScraped": "2026-05-08T07:53:45.073Z"
+    },
+    {
+      "url": "https://blog.river.inc/conversion-2-0/",
+      "slug": "conversion-2-0",
+      "file": "conversion-2-0.md",
+      "lastmod": "2025-12-11T13:00:02.000Z",
+      "lastScraped": "2026-05-08T07:53:45.800Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-staking-activation/",
+      "slug": "river-staking-activation",
+      "file": "river-staking-activation.md",
+      "lastmod": "2025-12-08T13:06:09.000Z",
+      "lastScraped": "2026-05-08T07:53:46.541Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-follow-up-2/",
+      "slug": "river-follow-up-2",
+      "file": "river-follow-up-2.md",
+      "lastmod": "2025-11-10T07:31:16.000Z",
+      "lastScraped": "2026-05-08T07:53:47.272Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-action-follow-up-ch/",
+      "slug": "river-action-follow-up-ch",
+      "file": "river-action-follow-up-ch.md",
+      "lastmod": "2025-11-10T06:13:42.000Z",
+      "lastScraped": "2026-05-08T07:53:47.699Z"
+    },
+    {
+      "url": "https://blog.river.inc/rivers-actions-and-follow-up/",
+      "slug": "rivers-actions-and-follow-up",
+      "file": "rivers-actions-and-follow-up.md",
+      "lastmod": "2025-11-10T05:40:09.000Z",
+      "lastScraped": "2026-05-08T07:53:48.133Z"
+    },
+    {
+      "url": "https://blog.river.inc/smart-vault-2/",
+      "slug": "smart-vault-2",
+      "file": "smart-vault-2.md",
+      "lastmod": "2025-11-01T11:40:58.000Z",
+      "lastScraped": "2026-05-08T07:53:48.572Z"
+    },
+    {
+      "url": "https://blog.river.inc/riverpts-public-sale-50m/",
+      "slug": "riverpts-public-sale-50m",
+      "file": "riverpts-public-sale-50m.md",
+      "lastmod": "2025-10-30T15:39:00.000Z",
+      "lastScraped": "2026-05-08T07:53:49.362Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-pts-public-sale/",
+      "slug": "river-pts-public-sale",
+      "file": "river-pts-public-sale.md",
+      "lastmod": "2025-10-27T07:01:27.000Z",
+      "lastScraped": "2026-05-08T07:53:49.800Z"
+    },
+    {
+      "url": "https://blog.river.inc/dynamic-airdrop-conversion-3/",
+      "slug": "dynamic-airdrop-conversion-3",
+      "file": "dynamic-airdrop-conversion-3.md",
+      "lastmod": "2025-10-24T16:52:38.000Z",
+      "lastScraped": "2026-05-08T07:53:50.251Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-together-4m-river-pts/",
+      "slug": "river-together-4m-river-pts",
+      "file": "river-together-4m-river-pts.md",
+      "lastmod": "2025-10-23T10:31:41.000Z",
+      "lastScraped": "2026-05-08T07:53:50.744Z"
+    },
+    {
+      "url": "https://blog.river.inc/dynamic-airdrop-conversion-2/",
+      "slug": "dynamic-airdrop-conversion-2",
+      "file": "dynamic-airdrop-conversion-2.md",
+      "lastmod": "2025-10-19T05:06:43.000Z",
+      "lastScraped": "2026-05-08T07:53:51.233Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-dynamic-airdrop-conversion/",
+      "slug": "river-dynamic-airdrop-conversion",
+      "file": "river-dynamic-airdrop-conversion.md",
+      "lastmod": "2025-10-05T05:10:24.000Z",
+      "lastScraped": "2026-05-08T07:53:51.704Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-s3-airdrop/",
+      "slug": "river-s3-airdrop",
+      "file": "river-s3-airdrop.md",
+      "lastmod": "2025-09-29T09:58:22.000Z",
+      "lastScraped": "2026-05-08T07:53:52.143Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-base/",
+      "slug": "river-base",
+      "file": "river-base.md",
+      "lastmod": "2025-09-25T11:29:13.000Z",
+      "lastScraped": "2026-05-08T07:53:52.856Z"
+    },
+    {
+      "url": "https://blog.river.inc/prime-vault/",
+      "slug": "prime-vault",
+      "file": "prime-vault.md",
+      "lastmod": "2025-09-24T09:21:51.000Z",
+      "lastScraped": "2026-05-08T07:53:53.670Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-statement-bevm-investment-refund/",
+      "slug": "river-statement-bevm-investment-refund",
+      "file": "river-statement-bevm-investment-refund.md",
+      "lastmod": "2025-09-15T02:58:24.000Z",
+      "lastScraped": "2026-05-08T07:53:54.327Z"
+    },
+    {
+      "url": "https://blog.river.inc/introducing-river-smart-vault/",
+      "slug": "introducing-river-smart-vault",
+      "file": "introducing-river-smart-vault.md",
+      "lastmod": "2025-09-08T09:39:48.000Z",
+      "lastScraped": "2026-05-08T07:53:55.042Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-is-now-live-on-ethereum/",
+      "slug": "river-is-now-live-on-ethereum",
+      "file": "river-is-now-live-on-ethereum.md",
+      "lastmod": "2025-09-05T11:51:28.000Z",
+      "lastScraped": "2026-05-08T07:53:55.756Z"
+    },
+    {
+      "url": "https://blog.river.inc/chainlink-integraions/",
+      "slug": "chainlink-integraions",
+      "file": "chainlink-integraions.md",
+      "lastmod": "2025-09-03T00:01:08.000Z",
+      "lastScraped": "2026-05-08T07:53:56.136Z"
+    },
+    {
+      "url": "https://blog.river.inc/satoshi-protocol-raises-2m-in-seed-round-funding/",
+      "slug": "satoshi-protocol-raises-2m-in-seed-round-funding",
+      "file": "satoshi-protocol-raises-2m-in-seed-round-funding.md",
+      "lastmod": "2025-08-30T03:11:44.000Z",
+      "lastScraped": "2026-05-08T07:53:56.554Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-the-first-chain-abstraction-stablecoin-system/",
+      "slug": "river-the-first-chain-abstraction-stablecoin-system",
+      "file": "river-the-first-chain-abstraction-stablecoin-system.md",
+      "lastmod": "2025-08-30T03:11:26.000Z",
+      "lastScraped": "2026-05-08T07:53:57.261Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-layerzero/",
+      "slug": "river-layerzero",
+      "file": "river-layerzero.md",
+      "lastmod": "2025-08-21T13:43:38.000Z",
+      "lastScraped": "2026-05-08T07:53:57.708Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-mart-one-stablecoin-seven-chains-the-final-quest/",
+      "slug": "river-mart-one-stablecoin-seven-chains-the-final-quest",
+      "file": "river-mart-one-stablecoin-seven-chains-the-final-quest.md",
+      "lastmod": "2025-08-13T11:50:35.000Z",
+      "lastScraped": "2026-05-08T07:53:58.443Z"
+    },
+    {
+      "url": "https://blog.river.inc/pt-satusd-is-now-collateral-on-listadao/",
+      "slug": "pt-satusd-is-now-collateral-on-listadao",
+      "file": "pt-satusd-is-now-collateral-on-listadao.md",
+      "lastmod": "2025-07-28T10:28:20.000Z",
+      "lastScraped": "2026-05-08T07:53:58.879Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-launch-on-sonic/",
+      "slug": "river-launch-on-sonic",
+      "file": "river-launch-on-sonic.md",
+      "lastmod": "2025-06-25T10:17:43.000Z",
+      "lastScraped": "2026-05-08T07:53:59.592Z"
+    },
+    {
+      "url": "https://blog.river.inc/season2-airdrop-is-live/",
+      "slug": "season2-airdrop-is-live",
+      "file": "season2-airdrop-is-live.md",
+      "lastmod": "2025-06-22T03:16:39.000Z",
+      "lastScraped": "2026-05-08T07:54:00.035Z"
+    },
+    {
+      "url": "https://blog.river.inc/satusd-is-live-on-pendle/",
+      "slug": "satusd-is-live-on-pendle",
+      "file": "satusd-is-live-on-pendle.md",
+      "lastmod": "2025-06-18T16:27:41.000Z",
+      "lastScraped": "2026-05-08T07:54:00.480Z"
+    },
+    {
+      "url": "https://blog.river.inc/river4fun-earn-by-staking-and-sharing/",
+      "slug": "river4fun-earn-by-staking-and-sharing",
+      "file": "river4fun-earn-by-staking-and-sharing.md",
+      "lastmod": "2025-05-30T14:51:30.000Z",
+      "lastScraped": "2026-05-08T07:54:00.958Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-launches-on-base/",
+      "slug": "river-launches-on-base",
+      "file": "river-launches-on-base.md",
+      "lastmod": "2025-05-25T18:21:56.000Z",
+      "lastScraped": "2026-05-08T07:54:01.369Z"
+    },
+    {
+      "url": "https://blog.river.inc/river-now-live-on-arbitrum/",
+      "slug": "river-now-live-on-arbitrum",
+      "file": "river-now-live-on-arbitrum.md",
+      "lastmod": "2025-05-25T14:28:30.000Z",
+      "lastScraped": "2026-05-08T07:54:01.913Z"
+    }
+  ],
+  "excluded": [],
+  "configuredSinceDate": "2025-05-15",
+  "effectiveSinceDate": "2025-05-15",
+  "sinceHistory": []
+}

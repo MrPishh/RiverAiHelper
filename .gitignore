@@ -1,0 +1,24 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Secrets & environment ─────────────────────────────────────────────────────
+.env
+# Keep .env.example — it has no real values and tells new devs what to fill in
+
+# ── Generated / runtime state ─────────────────────────────────────────────────
+knowledge-base/.embeddings-cache.json
+toggles.json
+usage-stats.json
+
+# ── User data & logs ──────────────────────────────────────────────────────────
+intent/*.jsonl
+weekly-report/member-stats/**/*.jsonl
+*.log
+bot-startup.log
+
+# ── Private owner notes (not part of bot code) ────────────────────────────────
+_dev-notes/
+
+# ── Local tooling ─────────────────────────────────────────────────────────────
+.claude/
+bot.js.bak
