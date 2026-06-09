@@ -1,8 +1,9 @@
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
-const { isEnabled, toggle, getStatus } = require('./toggles');
+const fs       = require('fs');
+const path     = require('path');
+const ROOT_DIR = path.join(__dirname, '..');
+const { isEnabled } = require('./toggles');
 
 // Factory — binds discordClient, state, config, and sub-modules to the message handler.
 function registerMessageHandler(discordClient, state, config, modules) {
@@ -14,23 +15,21 @@ function registerMessageHandler(discordClient, state, config, modules) {
         STAFF_EXPLANATION_CHANNEL_ID,
         BOT_ANSWER_CHANNEL_IDS,
         STAFF_ROLE_IDS,
-        REPORTS_CHANNEL_ID,
+        SUPPORT_TICKET_CATEGORY_IDS,
+        COLLAB_CATEGORY_IDS,
+        CHINESE_DISCORD_CHANNEL_ID,
+        SCAM_LOG_CHANNEL_ID,
     } = config;
 
     const {
         claude:  { answerQuestion, identifyRelevantSources },
-        intent:  { classifyMessageIntent, logMessageIntent, logIntentClassification, RESPOND_INTENTS },
-        kbSync:  { syncBlog, syncDocs, registerBlogInIndex, registerDocInIndex, loadUsageStats, PRICE_INPUT, PRICE_OUTPUT, BLOG_SITEMAP_URL },
-        utils:   { isStaff, isBotMentioned, stripBotMention, looksResolved, trackerKey, getMonthLabel, ensureDir, appendToMonthlyWeeklyFile, saveQAPair },
-        monitor: { checkCorrectionStaleness, scanAnnouncementsForNewFacts },
+        intent:  { classifyMessageIntent, logMessageIntent, logIntentClassification, RESPOND_INTENTS, logToTicketFile, logToCollabFile },
+        kbSync:  { registerBlogInIndex, registerDocInIndex },
+        utils:   { isStaff, isBotMentioned, stripBotMention, looksResolved, trackerKey, getMonthLabel, ensureDir, appendToMonthlyWeeklyFile, saveQAPair, looksLikeSpoofedName, looksLikeHelperOffer },
         buildIndex,
         searchKB,
-        scrapeSingleArticle,
         htmlToMarkdown,
         EmbedBuilder,
-        loadCoreFacts,
-        getWeeklyStats,
-        generateCommunityReport,
     } = modules;
 
     // ─── Timed auto-answer ────────────────────────────────────────────────────
@@ -45,6 +44,10 @@ function registerMessageHandler(discordClient, state, config, modules) {
             return;
         }
 
+        // staffEngaged entry exists but window expired — use shorter wait for 20 min after staff engagement
+        const postStaff = staffTs && (Date.now() - staffTs) < state.POST_STAFF_CONTEXT_MS;
+        const waitMs = postStaff ? state.POST_STAFF_WAIT_MS : state.STAFF_WAIT_MS;
+
         const timer = setTimeout(async () => {
             if (!state.pendingQuestions.has(msgId)) return;
             state.pendingQuestions.delete(msgId);
@@ -53,10 +56,10 @@ function registerMessageHandler(discordClient, state, config, modules) {
                 return;
             }
             await answerQuestion({ question, targetMessage: message, userId, channelId });
-        }, state.STAFF_WAIT_MS);
+        }, waitMs);
 
         state.pendingQuestions.set(msgId, { question, userId, channelId, timer, storedAt: Date.now() });
-        console.log(`[AutoAnswer] Queued ${msgId} — fires in ${state.STAFF_WAIT_MS / 1000}s if no staff reply`);
+        console.log(`[AutoAnswer] Queued ${msgId} — fires in ${waitMs / 1000}s${postStaff ? ' (post-staff, shortened)' : ''} if no staff reply`);
     }
 
     // ─── Explanation embed ────────────────────────────────────────────────────
@@ -137,6 +140,62 @@ function registerMessageHandler(discordClient, state, config, modules) {
         }
     }
 
+    // ─── Scam blocker ─────────────────────────────────────────────────────────
+    // Deletes the message, issues a 1-hour timeout, and posts an alert embed.
+    // No-ops silently when the scam-blocker toggle is OFF — detection still logs.
+
+    const SCAM_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
+
+    async function takeScamAction(message, member, reason) {
+        if (!isEnabled('scam-blocker')) return;
+
+        const actions = [];
+
+        try {
+            await message.delete();
+            actions.push('msg deleted');
+        } catch (err) {
+            console.warn(`[ScamBlock] Delete failed (${message.id}): ${err.message}`);
+            actions.push('delete failed');
+        }
+
+        if (member) {
+            try {
+                await member.timeout(SCAM_TIMEOUT_MS, `Scam blocker: ${reason}`.slice(0, 512));
+                actions.push('1h timeout');
+            } catch (err) {
+                console.warn(`[ScamBlock] Timeout failed (${member.id}): ${err.message}`);
+                actions.push('timeout failed — check bot role hierarchy + Moderate Members perm');
+            }
+        } else {
+            actions.push('member not resolved — timeout skipped');
+        }
+
+        console.log(`[ScamBlock] ${message.author?.tag ?? message.author?.id} | ${reason} | ${actions.join(', ')}`);
+
+        if (!SCAM_LOG_CHANNEL_ID) return;
+        try {
+            const ch = discordClient.channels.cache.get(SCAM_LOG_CHANNEL_ID)
+                ?? await discordClient.channels.fetch(SCAM_LOG_CHANNEL_ID);
+            if (!ch?.isTextBased()) return;
+            await ch.send({ embeds: [
+                new EmbedBuilder()
+                    .setColor(0xFF3333)
+                    .setTitle('🚨 Scam Blocker')
+                    .addFields(
+                        { name: 'User',      value: `<@${message.author.id}> (${message.author.tag ?? message.author.username})`, inline: true },
+                        { name: 'Channel',   value: `<#${message.channelId}>`, inline: true },
+                        { name: 'Detection', value: reason, inline: false },
+                        { name: 'Message',   value: (message.content || '*(empty)*').slice(0, 1020) },
+                        { name: 'Actions',   value: actions.join(' · ') },
+                    )
+                    .setTimestamp(),
+            ]});
+        } catch (err) {
+            console.warn(`[ScamBlock] Alert send failed: ${err.message}`);
+        }
+    }
+
     // ─── Message handler ──────────────────────────────────────────────────────
 
     discordClient.on('messageCreate', async (message) => {
@@ -152,9 +211,38 @@ function registerMessageHandler(discordClient, state, config, modules) {
         const staff        = isStaff(member, STAFF_ROLE_IDS);
         const botMentioned = isBotMentioned(message, botUserId);
 
-        // Log every human message in general and support for intent analysis
-        if (channelId === GENERAL_CHANNEL_ID || channelId === SUPPORT_CHANNEL_ID) {
+        // Ticket/collab channel — log immediately, never respond.
+        // Classification happens at report time when the full thread is available.
+        const ticketCatSet = SUPPORT_TICKET_CATEGORY_IDS ?? new Set();
+        const collabCatSet = COLLAB_CATEGORY_IDS ?? new Set();
+        const parentId = message.channel?.parentId;
+        if ((ticketCatSet.size && ticketCatSet.has(parentId)) || (collabCatSet.size && collabCatSet.has(parentId))) {
+            if (!staff && content.trim()) {
+                if (collabCatSet.has(parentId)) logToCollabFile(message);
+                else logToTicketFile(message);
+            }
+            return;
+        }
+
+        // Log every human message in general, support, and Chinese channel for intent analysis
+        if (channelId === GENERAL_CHANNEL_ID || channelId === SUPPORT_CHANNEL_ID ||
+            (CHINESE_DISCORD_CHANNEL_ID && channelId === CHINESE_DISCORD_CHANNEL_ID)) {
             logMessageIntent(message, botUserId, staff);
+        }
+
+        // Chinese channel — log only, no live classification or response
+        if (CHINESE_DISCORD_CHANNEL_ID && channelId === CHINESE_DISCORD_CHANNEL_ID) return;
+
+        // Spoof detection — name impersonation + DM-offer pattern
+        if (!staff && state.staffNameCache.size > 0) {
+            const senderDisplay = member?.displayName ?? message.author.username;
+            const spoofCheck    = looksLikeSpoofedName(senderDisplay, state.staffNameCache);
+            if (spoofCheck.matched && looksLikeHelperOffer(content)) {
+                logIntentClassification(message.id, 'scam-content');
+                console.warn(`[SpoofDetect] ${userId} ("${senderDisplay}") resembles staff "${spoofCheck.staffName}"`);
+                await takeScamAction(message, member, `name-spoof: "${senderDisplay}" ≈ "${spoofCheck.staffName}"`);
+                return;
+            }
         }
 
         // Self-resolution check
@@ -184,133 +272,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
             }
         }
 
-        // ── !usage-stats ──────────────────────────────────────────────────────
-
-        if (content.trim() === '!usage-stats') {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const s    = loadUsageStats();
-            const cost = ((s.inputTokens / 1_000_000) * PRICE_INPUT) +
-                         ((s.outputTokens / 1_000_000) * PRICE_OUTPUT);
-            const avgIn  = s.calls ? Math.round(s.inputTokens  / s.calls) : 0;
-            const avgOut = s.calls ? Math.round(s.outputTokens / s.calls) : 0;
-            await message.reply(
-                `**Usage stats** (since ${s.since.slice(0, 10)})\n` +
-                `API calls: **${s.calls}**\n` +
-                `Input tokens: **${s.inputTokens.toLocaleString()}** (avg ${avgIn}/call)\n` +
-                `Output tokens: **${s.outputTokens.toLocaleString()}** (avg ${avgOut}/call)\n` +
-                `Estimated cost: **$${cost.toFixed(4)}**`
-            );
-            return;
-        }
-
-        // ── !sync-blog ────────────────────────────────────────────────────────
-
-        if (content.trim() === '!sync-blog') {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const status = await message.reply('Syncing blog posts (new + updated only)…');
-            try {
-                const result   = await syncBlog();
-                const [_, stale] = await Promise.all([
-                    buildIndex(),
-                    checkCorrectionStaleness(result.processedFiles),
-                ]);
-                const parts = [];
-                if (result.added)           parts.push(`${result.added} added`);
-                if (result.updated)         parts.push(`${result.updated} updated`);
-                if (result.removed)         parts.push(`${result.removed} removed from sitemap`);
-                if (result.deletedFromDisk) parts.push(`${result.deletedFromDisk} removed (deleted from disk)`);
-                if (result.skipped)         parts.push(`${result.skipped} skipped`);
-                if (result.failed)          parts.push(`${result.failed} failed`);
-                const dateNote = result.effectiveSince !== result.configuredSince
-                    ? `\nConfigured since: ${result.configuredSince} | Scraping from: **${result.effectiveSince}** (floor advanced by deletions)`
-                    : `\nScraping from: **${result.effectiveSince}**`;
-                const historyNote = result.sinceHistory && result.sinceHistory.length > 0
-                    ? `\nFloor history: ` + result.sinceHistory.map(h =>
-                        `${h.from} → ${h.to} (${h.changedAt.slice(0, 10)})`
-                      ).join(' | ')
-                    : '';
-                const staleNote = stale.length > 0
-                    ? `\n⚠️ Correction may need review:\n` + stale.map(w =>
-                        `  • **${w.correctionFile}** — related to newly indexed: \`${w.newFile}\``
-                      ).join('\n')
-                    : '';
-                await status.edit(
-                    `✅ Sync complete — ${parts.join(', ') || 'nothing changed'}\n` +
-                    `Total: ${result.total} posts tracked.${dateNote}${historyNote}${staleNote}`
-                );
-            } catch (err) {
-                await status.edit(`❌ Sync failed: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !sync-knowledge ───────────────────────────────────────────────────
-
-        if (content.trim() === '!sync-knowledge') {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const status = await message.reply('Scanning announcements and re-indexing…');
-            try {
-                loadCoreFacts();
-                // Scan runs before buildIndex so any appended facts are picked up in the same index build
-                const scanResult = await scanAnnouncementsForNewFacts();
-                const result     = await buildIndex();
-
-                let msg = `✅ Done — added: ${result.added}, updated: ${result.updated}, removed: ${result.removed}, total chunks: ${result.total}`;
-                if (scanResult.scanned > 0) {
-                    if (scanResult.found.length > 0) {
-                        msg += `\n📋 Announcements: ${scanResult.scanned} checked, ${scanResult.found.length} new fact(s) extracted`;
-                        msg += `\n→ Appended to: ${scanResult.appended.join(', ')}`;
-                    } else {
-                        msg += `\n📋 Announcements: ${scanResult.scanned} checked, nothing new`;
-                    }
-                }
-                await status.edit(msg);
-            } catch (err) {
-                await status.edit(`❌ Indexing failed: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !add-blog <url> ───────────────────────────────────────────────────
-
-        if (content.trim().startsWith('!add-blog ')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-
-            const url = content.trim().slice('!add-blog '.length).trim();
-            if (!url.startsWith('http')) {
-                await message.reply('Please provide a valid URL.\nUsage: `!add-blog https://yourblog.com/article`');
-                return;
-            }
-
-            const month      = getMonthLabel();
-            const folderName = `${month}_blog`;
-            const blogDir    = path.join(__dirname, 'knowledge-base', 'blogs', folderName);
-            ensureDir(blogDir);
-
-            const existing = fs.readdirSync(blogDir).filter(f => f.endsWith('.md'));
-            const nextNum  = existing.length + 1;
-            const filepath = path.join(blogDir, `article${nextNum}.md`);
-
-            const status = await message.reply(`Scraping article ${nextNum} for ${month}…`);
-            try {
-                const articleText = await scrapeSingleArticle(url);
-                fs.writeFileSync(
-                    filepath,
-                    `# Blog Article ${nextNum}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${articleText}`,
-                    'utf8'
-                );
-                registerBlogInIndex(url, `article${nextNum}`, `${folderName}/article${nextNum}.md`);
-                await buildIndex();
-                await status.edit(
-                    `✅ Article saved as \`knowledge-base/blogs/${folderName}/article${nextNum}.md\` and knowledge base updated.`
-                );
-            } catch (err) {
-                await status.edit(`❌ Failed to scrape article: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !add-blog-text <url> + attachment ─────────────────────────────────
+        // ── !add-blog-text <url> + attachment (no slash equivalent) ───────────
+        // Manual blog add for Cloudflare-protected pages that can't be scraped directly.
 
         if (content.trim().startsWith('!add-blog-text')) {
             if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
@@ -349,7 +312,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
 
                 const month      = getMonthLabel();
                 const folderName = `${month}_blog`;
-                const blogDir    = path.join(__dirname, 'knowledge-base', 'blogs', folderName);
+                const blogDir    = path.join(ROOT_DIR, 'knowledge-base', 'blogs', folderName);
                 ensureDir(blogDir);
 
                 const existing  = fs.readdirSync(blogDir).filter(f => f.endsWith('.md'));
@@ -371,153 +334,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
             return;
         }
 
-        // ── !exclude-blog <url> ───────────────────────────────────────────────
-
-        if (content.trim().startsWith('!exclude-blog ')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-
-            const url = content.trim().slice('!exclude-blog '.length).trim();
-            if (!url.startsWith('http')) {
-                await message.reply('Please provide a valid URL.\nUsage: `!exclude-blog https://blog.river.inc/your-post`');
-                return;
-            }
-
-            const indexPath = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
-            let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
-            if (fs.existsSync(indexPath)) {
-                try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {}
-            }
-            if (!index.excluded) index.excluded = [];
-
-            if (index.excluded.includes(url)) {
-                await message.reply(`That post is already excluded.`);
-                return;
-            }
-
-            const pageEntry = index.pages.find(p => p.url === url);
-            if (pageEntry) {
-                const fp = path.join(__dirname, 'knowledge-base', 'blogs', pageEntry.file);
-                if (fs.existsSync(fp)) fs.unlinkSync(fp);
-                index.pages = index.pages.filter(p => p.url !== url);
-            }
-
-            index.excluded.push(url);
-            ensureDir(path.join(__dirname, 'knowledge-base', 'blogs'));
-            fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
-            await buildIndex();
-
-            const slug = pageEntry?.slug ?? new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await message.reply(
-                `✅ Excluded: \`${slug}\`\n` +
-                (pageEntry ? 'File deleted from KB. ' : '') +
-                'This post will be skipped on future `!sync-blog` runs.'
-            );
-            return;
-        }
-
-        // ── !include-blog <url> ───────────────────────────────────────────────
-
-        if (content.trim().startsWith('!include-blog ')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-
-            const url = content.trim().slice('!include-blog '.length).trim();
-            if (!url.startsWith('http')) {
-                await message.reply('Please provide a valid URL.\nUsage: `!include-blog https://blog.river.inc/your-post`');
-                return;
-            }
-
-            const indexPath = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
-            let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
-            if (fs.existsSync(indexPath)) {
-                try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {}
-            }
-            if (!index.excluded) index.excluded = [];
-
-            if (!index.excluded.includes(url)) {
-                await message.reply(`That URL is not in the excluded list.`);
-                return;
-            }
-
-            index.excluded = index.excluded.filter(u => u !== url);
-            fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
-
-            const slug = new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await message.reply(
-                `✅ Removed from exclusion list: \`${slug}\`\nRun \`!sync-blog\` to re-scrape this post.`
-            );
-            return;
-        }
-
-        // ── !sync-docs  /  !sync-docs force ──────────────────────────────────
-
-        if (content.trim().startsWith('!sync-docs')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const force  = content.trim().includes('force');
-            const status = await message.reply(
-                force ? 'Force re-scraping all doc pages…' : 'Checking for new/removed doc pages…'
-            );
-            try {
-                const result     = await syncDocs(force);
-                const [_, stale] = await Promise.all([
-                    buildIndex(),
-                    checkCorrectionStaleness(result.processedFiles),
-                ]);
-                const parts = [];
-                if (result.added)   parts.push(`${result.added} added`);
-                if (result.updated) parts.push(`${result.updated} updated`);
-                if (result.removed) parts.push(`${result.removed} removed`);
-                if (result.failed)  parts.push(`${result.failed} failed`);
-                const staleNote = stale.length > 0
-                    ? `\n⚠️ Correction may need review:\n` + stale.map(w =>
-                        `  • **${w.correctionFile}** — related to newly indexed: \`${w.newFile}\``
-                      ).join('\n')
-                    : '';
-                await status.edit(
-                    `✅ Sync complete — ${parts.join(', ') || 'nothing changed'}\n` +
-                    `Total: ${result.total} pages tracked.${staleNote}`
-                );
-            } catch (err) {
-                await status.edit(`❌ Sync failed: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !add-doc <url> ────────────────────────────────────────────────────
-
-        if (content.trim().startsWith('!add-doc ')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-
-            const url = content.trim().slice('!add-doc '.length).trim();
-            if (!url.startsWith('http')) {
-                await message.reply('Please provide a valid URL.\nUsage: `!add-doc https://docs.river.inc/some-page`');
-                return;
-            }
-
-            const docsDir = path.join(__dirname, 'knowledge-base', 'docs');
-            ensureDir(docsDir);
-
-            const slug     = new URL(url).pathname.replace(/^\/|\/$/g, '').replace(/[^a-z0-9]+/gi, '-') || 'index';
-            const filepath = path.join(docsDir, `${slug}.md`);
-            const status   = await message.reply(`Scraping doc page \`${slug}\`…`);
-            try {
-                const pageText = await scrapeSingleArticle(url);
-                fs.writeFileSync(
-                    filepath,
-                    `# Doc: ${slug}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${pageText}`,
-                    'utf8'
-                );
-                registerDocInIndex(url, slug, `${slug}.md`);
-                await buildIndex();
-                await status.edit(`✅ Saved as \`knowledge-base/docs/${slug}.md\` and knowledge base updated.`);
-            } catch (err) {
-                await status.edit(
-                    `❌ Failed to scrape: ${err.message}\n\nTry \`!add-doc-text ${url}\` with an attached \`.md\`, \`.html\`, or \`.txt\` file instead.`
-                );
-            }
-            return;
-        }
-
-        // ── !add-doc-text <url> + attachment ──────────────────────────────────
+        // ── !add-doc-text <url> + attachment (no slash equivalent) ────────────
+        // Manual doc add for Cloudflare-protected pages that can't be scraped directly.
 
         if (content.trim().startsWith('!add-doc-text')) {
             if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
@@ -551,7 +369,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
                     ? await htmlToMarkdown(raw, url)
                     : raw.trim();
 
-                const docsDir  = path.join(__dirname, 'knowledge-base', 'docs');
+                const docsDir  = path.join(ROOT_DIR, 'knowledge-base', 'docs');
                 ensureDir(docsDir);
                 const slug     = new URL(url).pathname.replace(/^\/|\/$/g, '').replace(/[^a-z0-9]+/gi, '-') || 'index';
                 const filepath = path.join(docsDir, `${slug}.md`);
@@ -566,132 +384,6 @@ function registerMessageHandler(discordClient, state, config, modules) {
             } catch (err) {
                 await status.edit(`❌ ${err.message}`);
             }
-            return;
-        }
-
-        // ── !add-correction <slug> [text] + optional attachment ───────────────
-
-        if (content.trim().startsWith('!add-correction ')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-
-            const rest     = content.trim().slice('!add-correction '.length).trim();
-            const spaceIdx = rest.indexOf(' ');
-            const slug     = (spaceIdx !== -1 ? rest.slice(0, spaceIdx) : rest)
-                .toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-
-            if (!slug) {
-                await message.reply(
-                    '**Usage:** `!add-correction <topic-slug> <correction text>`\n' +
-                    'Or: `!add-correction <topic-slug>` + attach a `.md` or `.txt` file\n\n' +
-                    '**Example:** `!add-correction airdrop-conversion The current mechanism is…`'
-                );
-                return;
-            }
-
-            let correctionText = spaceIdx !== -1 ? rest.slice(spaceIdx + 1).trim() : '';
-
-            const attachment = message.attachments.find(a => /\.(txt|md)$/i.test(a.name ?? ''));
-            if (attachment) {
-                const status = await message.reply(`Reading \`${attachment.name}\`…`);
-                try {
-                    const fetch = (await import('node-fetch')).default;
-                    const res   = await fetch(attachment.url);
-                    if (!res.ok) throw new Error(`Could not download attachment: HTTP ${res.status}`);
-                    correctionText = (await res.text()).trim();
-                    await status.delete().catch(() => {});
-                } catch (err) {
-                    await status.edit(`❌ ${err.message}`);
-                    return;
-                }
-            }
-
-            if (!correctionText) {
-                await message.reply('No correction text provided. Include it after the slug or attach a `.md`/`.txt` file.');
-                return;
-            }
-
-            const correctionsDir = path.join(__dirname, 'knowledge-base', 'corrections');
-            ensureDir(correctionsDir);
-            const filepath = path.join(correctionsDir, `${slug}.md`);
-            const isUpdate = fs.existsSync(filepath);
-            fs.writeFileSync(
-                filepath,
-                `# Correction: ${slug}\nAdded: ${new Date().toISOString()}\n\n---\n\n${correctionText}`,
-                'utf8'
-            );
-
-            const indexStatus = await message.reply(`${isUpdate ? 'Updating' : 'Adding'} correction \`${slug}\` — rebuilding index…`);
-            try {
-                await buildIndex();
-                await indexStatus.edit(
-                    `✅ Correction ${isUpdate ? 'updated' : 'added'}: \`knowledge-base/corrections/${slug}.md\`\n` +
-                    'This will now rank above conflicting docs and blog posts on related questions.'
-                );
-            } catch (err) {
-                await indexStatus.edit(`❌ Index rebuild failed: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !toggle ───────────────────────────────────────────────────────────
-
-        if (content.trim().startsWith('!toggle')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const arg = content.trim().split(/\s+/)[1]?.toLowerCase();
-            if (!arg || arg === 'status') {
-                const { discord, telegram } = getStatus();
-                await message.reply(
-                    `**Bot Reply Toggles**\n` +
-                    `Discord: ${discord ? '🟢 ON' : '🔴 OFF'}\n` +
-                    `Telegram: ${telegram ? '🟢 ON' : '🔴 OFF'}`
-                );
-            } else if (arg === 'discord' || arg === 'telegram') {
-                const newState = toggle(arg);
-                await message.reply(`**${arg.charAt(0).toUpperCase() + arg.slice(1)} replies** turned ${newState ? '🟢 ON' : '🔴 OFF'}`);
-            } else {
-                await message.reply('Usage: `!toggle discord` | `!toggle telegram` | `!toggle status`');
-            }
-            return;
-        }
-
-        // ── !report ───────────────────────────────────────────────────────────
-
-        if (content.trim().startsWith('!report')) {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const parts      = content.trim().split(/\s+/);
-            const sub        = parts[1]?.toLowerCase();
-            const platformArg = parts[2]?.toLowerCase();
-            if (sub !== 'weekly' && sub !== 'daily') {
-                await message.reply('Usage: `!report weekly [discord|telegram]` or `!report daily [discord|telegram]`');
-                return;
-            }
-            const reportType = sub;
-            const platform   = platformArg === 'discord' ? 'discord' : platformArg === 'telegram' ? 'telegram' : 'both';
-            const typeLabel  = reportType === 'daily' ? 'Daily' : 'Weekly';
-            const platLabel  = { discord: 'Discord', telegram: 'Telegram', both: 'Discord + Telegram' }[platform];
-            const status     = await message.reply(`Generating ${typeLabel.toLowerCase()} community report (${platLabel})…`);
-            try {
-                await generateCommunityReport(discordClient, platform, reportType);
-                await status.edit('✅ Report posted.');
-            } catch (err) {
-                await status.edit(`❌ Failed to generate report: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── !member-stats ─────────────────────────────────────────────────────
-
-        if (content.trim() === '!member-stats') {
-            if (!staff) { await message.reply('This command is restricted to staff members.'); return; }
-            const { joins, leaves } = getWeeklyStats();
-            const guild = message.guild;
-            const total = guild ? guild.memberCount : '?';
-            await message.reply(
-                `**Server Member Stats**\n` +
-                `Total members: **${total}**\n` +
-                `Joined (Mon–Sun this week): **${joins}**\n` +
-                `Left (Mon–Sun this week): **${leaves}**`
-            );
             return;
         }
 
@@ -748,8 +440,9 @@ function registerMessageHandler(discordClient, state, config, modules) {
         }
 
         // ── Auto-answer channels only beyond this point ───────────────────────
+        // @mentions are allowed anywhere; channel gate only applies to unprompted auto-answers
 
-        if (!BOT_ANSWER_CHANNEL_IDS.includes(channelId)) return;
+        if (!botMentioned && !BOT_ANSWER_CHANNEL_IDS.includes(channelId)) return;
         if (!isEnabled('discord')) return;
 
         // ─────────────────────────────────────────────────────────────────────
@@ -813,6 +506,12 @@ function registerMessageHandler(discordClient, state, config, modules) {
             const intent1 = await classifyMessageIntent(question, message);
             logIntentClassification(message.id, intent1);
 
+            if (intent1 === 'scam-content') {
+                console.log(`[Trigger] Scenario 1 — scam-content from ${userId}`);
+                await takeScamAction(message, member, 'scam-content (@mention)');
+                return;
+            }
+
             if (intent1 === 'staff-ping') {
                 console.log(`[Trigger] Scenario 1 — staff-ping from ${userId}, redirecting`);
                 await message.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
@@ -838,6 +537,14 @@ function registerMessageHandler(discordClient, state, config, modules) {
 
                 const intent2 = await classifyMessageIntent(question, originalMessage);
                 logIntentClassification(originalMessage.id, intent2);
+
+                if (intent2 === 'scam-content') {
+                    console.log(`[Trigger] Scenario 2 — scam-content in original message from ${askedBy}`);
+                    const scamMember = originalMessage.member
+                        ?? await message.guild.members.fetch(askedBy).catch(() => null);
+                    await takeScamAction(originalMessage, scamMember, 'scam-content (via @mention reply)');
+                    return;
+                }
 
                 if (intent2 === 'staff-ping') {
                     console.log(`[Trigger] Scenario 2 — original is staff-ping from ${askedBy}, redirecting`);
@@ -885,14 +592,39 @@ function registerMessageHandler(discordClient, state, config, modules) {
             return;
         }
 
-        const intent3 = cachedIntent ?? await classifyMessageIntent(content, message);
+        // ── Prior community-discussion context (Option 2 follow-up detection) ──
+        const convDiscKey = trackerKey(userId, channelId);
+        let priorUserContext = null;
+        const discEntry = state.recentCommunityDiscussion.get(convDiscKey);
+        if (discEntry) {
+            if ((Date.now() - discEntry.storedAt) < state.COMMUNITY_DISC_WINDOW_MS) {
+                priorUserContext = discEntry.content;
+            } else {
+                state.recentCommunityDiscussion.delete(convDiscKey);
+            }
+        }
+
+        const intent3 = cachedIntent ?? await classifyMessageIntent(content, message, priorUserContext);
         logIntentClassification(message.id, intent3);
-        console.log(`[Intent] ${message.id} → ${intent3}`);
+        console.log(`[Intent] ${message.id} → ${intent3}${priorUserContext ? ' (with prior context)' : ''}`);
 
         if (!RESPOND_INTENTS.has(intent3)) {
+            if (intent3 === 'scam-content') {
+                console.log(`[Scenario 3] scam-content from ${userId}`);
+                await takeScamAction(message, member, 'scam-content (Scenario 3)');
+            } else if (intent3 === 'community-discussion') {
+                state.recentCommunityDiscussion.set(convDiscKey, {
+                    content:   content.slice(0, 200),
+                    messageId: message.id,
+                    storedAt:  Date.now(),
+                });
+                console.log(`[Scenario 3] Stored community-discussion for ${userId} — follow-up window open (30 min)`);
+            }
             console.log(`[Scenario 3] Skipped — intent '${intent3}' does not warrant a response`);
             return;
         }
+
+        if (priorUserContext) state.recentCommunityDiscussion.delete(convDiscKey);
 
         scheduleAutoAnswer(message);
         } catch (err) {

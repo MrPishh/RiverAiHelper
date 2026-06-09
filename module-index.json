@@ -1,0 +1,165 @@
+{
+  "_readme": "Machine-readable map of every source file. Use topics[] to find which files are relevant before reading them. Keeps Claude Code sessions focused — read only what the task touches.",
+  "files": {
+    "bot.js": {
+      "description": "Thin entry point — creates Discord/Telegram clients, wires all src/ modules, fires clientReady, starts cron jobs",
+      "key_functions": ["buildStaffNameCache"],
+      "key_exports": [],
+      "topics": ["startup", "discord", "telegram", "cron", "staff"]
+    },
+    "src/state.js": {
+      "description": "All shared Maps, timing constants, and REFERRAL_CODES. Root of dependency tree — no local requires",
+      "key_exports": [
+        "conversationState", "botMsgIndex", "pendingQuestions", "staffEngaged",
+        "ragSourcesMap", "answerCount", "recentCommunityDiscussion",
+        "staffNameCache", "staffNameCacheTs",
+        "STAFF_WAIT_MS", "STAFF_ENGAGED_WINDOW_MS", "POST_STAFF_WAIT_MS",
+        "POST_STAFF_CONTEXT_MS", "CONV_EXPIRY_MS", "REPHRASE_WINDOW_MS",
+        "COMMUNITY_DISC_WINDOW_MS", "MAX_BOT_ANSWERS_BEFORE_TICKET",
+        "REFERRAL_CODES", "referralCode"
+      ],
+      "topics": ["state", "conversation", "timers", "referral", "staff", "scam"]
+    },
+    "src/utils.js": {
+      "description": "Pure helpers: date/folder utils, Discord helpers, looksResolved, saveQAPair, spoof-detection helpers",
+      "key_exports": [
+        "getWeekRange", "getDayRange",
+        "isStaff", "isBotMentioned", "stripBotMention",
+        "looksResolved", "saveQAPair",
+        "normalizeDisplayName", "looksLikeSpoofedName", "looksLikeHelperOffer"
+      ],
+      "topics": ["utils", "discord", "staff", "scam", "conversation", "report"]
+    },
+    "src/intent.js": {
+      "description": "Intent classification factory, intent logging for Discord and Telegram, ticket/collab write-time logging, tier-1 scam regex",
+      "key_exports": [
+        "createIntentModule",
+        "RESPOND_INTENTS", "ALL_INTENT_CATEGORIES",
+        "INTENT_LOG_PATH", "TG_INTENT_LOG_PATH", "TICKET_LOG_PATH", "COLLAB_LOG_PATH",
+        "logToTicketFile", "logToCollabFile"
+      ],
+      "key_functions": [
+        "classifyMessageIntent", "logMessageIntent", "logIntentClassification",
+        "logTelegramMessage", "logTelegramIntent",
+        "logToTicketFile", "logToCollabFile",
+        "detectScamContentSync"
+      ],
+      "topics": ["intent", "discord", "telegram", "scam", "tickets", "logging"]
+    },
+    "src/kb-sync.js": {
+      "description": "Syncs docs and blog KB from sitemaps; registers files into the RAG index; tracks Claude API usage stats",
+      "key_exports": [
+        "syncDocs", "syncBlog",
+        "registerDocInIndex", "registerBlogInIndex",
+        "loadUsageStats", "trackUsage",
+        "PRICE_INPUT", "PRICE_OUTPUT", "PRICE_HAIKU_INPUT", "PRICE_HAIKU_OUTPUT",
+        "BLOG_SITEMAP_URL"
+      ],
+      "topics": ["kb", "rag", "scraping", "stats", "discord"]
+    },
+    "src/claude.js": {
+      "description": "Claude integration factory — answerQuestion, system prompt, RAG chunk re-ranking, scam concern detection, conversation pruning",
+      "key_exports": ["createClaudeModule"],
+      "key_functions": [
+        "getSystemPrompt", "askClaude", "answerQuestion",
+        "pruneStaleEntries", "loadCoreFacts",
+        "isScamConcern", "rerankChunks",
+        "buildInitialHistory"
+      ],
+      "topics": ["rag", "conversation", "scam", "referral", "state", "kb", "discord", "telegram"]
+    },
+    "src/commands.js": {
+      "description": "Full messageCreate event handler — all Scenarios 0–3, all !text staff commands, spoof detector, ticket/collab logging gate",
+      "key_exports": ["registerMessageHandler"],
+      "key_functions": ["scheduleAutoAnswer", "sendExplanationEmbed"],
+      "topics": ["discord", "commands", "intent", "conversation", "scam", "tickets", "staff", "rag"]
+    },
+    "src/slash-commands.js": {
+      "description": "Registers and handles all /slash Discord commands — sync, add-blog, add-correction, report, toggle, member-stats, etc.",
+      "key_exports": ["registerSlashCommands", "createSlashHandler"],
+      "topics": ["discord", "commands", "kb", "report", "stats", "toggles", "staff"]
+    },
+    "src/kb-monitor.js": {
+      "description": "Passive KB health checks — correction staleness check on sync, announcement auto-scan on sync-knowledge",
+      "key_exports": ["createMonitorModule"],
+      "key_functions": ["checkCorrectionStaleness", "scanAnnouncementsForNewFacts"],
+      "topics": ["kb", "rag", "announcements"]
+    },
+    "src/rag.js": {
+      "description": "RAG engine — chunks MD files, embeds via Voyage AI, cosine similarity search. TOP_K=8, CHUNK_SIZE=1500, OVERLAP=150. Excludes *_ann and *_tweet monthly subfolders.",
+      "key_exports": ["buildIndex", "searchKB"],
+      "topics": ["rag", "kb", "embeddings"]
+    },
+    "src/embedder.js": {
+      "description": "Voyage AI embedding provider (voyage-3-lite). Retry on 429. Swap provider via EMBEDDING_PROVIDER env var",
+      "key_exports": ["embed"],
+      "topics": ["rag", "embeddings"]
+    },
+    "src/knowledge-loader.js": {
+      "description": "Legacy — only getSourceFiles() remains, used by explanation embeds for source attribution",
+      "key_exports": ["getSourceFiles"],
+      "topics": ["kb", "rag", "staff"]
+    },
+    "src/blog-scraper.js": {
+      "description": "Scrapes URLs to Markdown via jsdom+Readability+Turndown. RSS fallback on 403",
+      "key_exports": ["scrapeSingleArticle", "htmlToMarkdown"],
+      "topics": ["scraping", "kb"]
+    },
+    "src/toggles.js": {
+      "description": "Platform reply toggle — isEnabled/toggle/getStatus. State persisted to toggles.json, survives restarts",
+      "key_exports": ["isEnabled", "toggle", "getStatus"],
+      "topics": ["toggles", "discord", "telegram"]
+    },
+    "telegram/telegram-adapter.js": {
+      "description": "Full Telegram bot adapter (Telegraf) — full parity with Discord scenarios, staff panel DM, intent logging, staff-wait timers",
+      "key_exports": ["createTelegramAdapter"],
+      "topics": ["telegram", "intent", "conversation", "scam", "staff", "toggles", "report", "stats"]
+    },
+    "weekly-report/community-report/community-report.js": {
+      "description": "Reads intent/ticket/collab logs for a date range, sends to Claude, posts report to REPORTS_CHANNEL_ID. Caches weekly reports 14 days",
+      "key_exports": ["generateCommunityReport", "buildCommunityReport", "MODEL_HAIKU", "MODEL_SONNET"],
+      "key_functions": [
+        "readDiscordMessages", "readTicketMessages", "readCollabMessages",
+        "readTelegramMessages", "readChineseDiscordMessages", "readChineseTelegramMessages",
+        "buildPrompt"
+      ],
+      "topics": ["report", "discord", "telegram", "tickets", "intent", "stats"]
+    },
+    "weekly-report/member-stats/discord/discord-member-stats.js": {
+      "description": "Logs Discord join/leave events to member-log.jsonl. getMemberStats(from, to) for any date range",
+      "key_exports": ["registerMemberEvents", "getMemberStats"],
+      "topics": ["stats", "discord"]
+    },
+    "weekly-report/member-stats/telegram/tg-member-stats.js": {
+      "description": "Logs Telegram join/leave events to tg-member-log.jsonl. getTgMemberStats(from, to) for any date range",
+      "key_exports": ["registerTgMemberEvents", "getTgMemberStats"],
+      "topics": ["stats", "telegram"]
+    }
+  },
+  "topics": {
+    "startup":      ["bot.js"],
+    "state":        ["src/state.js", "src/claude.js"],
+    "utils":        ["src/utils.js"],
+    "discord":      ["bot.js", "src/utils.js", "src/intent.js", "src/kb-sync.js", "src/claude.js", "src/commands.js", "src/slash-commands.js", "src/toggles.js", "weekly-report/community-report/community-report.js", "weekly-report/member-stats/discord/discord-member-stats.js"],
+    "telegram":     ["bot.js", "src/intent.js", "src/claude.js", "src/toggles.js", "telegram/telegram-adapter.js", "weekly-report/community-report/community-report.js", "weekly-report/member-stats/telegram/tg-member-stats.js"],
+    "intent":       ["src/intent.js", "src/commands.js", "telegram/telegram-adapter.js", "weekly-report/community-report/community-report.js"],
+    "rag":          ["src/kb-sync.js", "src/claude.js", "src/commands.js", "src/rag.js", "src/embedder.js", "src/knowledge-loader.js"],
+    "kb":           ["src/kb-sync.js", "src/claude.js", "src/kb-monitor.js", "src/rag.js", "src/knowledge-loader.js", "src/blog-scraper.js"],
+    "embeddings":   ["src/rag.js", "src/embedder.js"],
+    "scraping":     ["src/kb-sync.js", "src/blog-scraper.js"],
+    "commands":     ["src/commands.js", "src/slash-commands.js"],
+    "conversation": ["src/state.js", "src/utils.js", "src/claude.js", "src/commands.js", "telegram/telegram-adapter.js"],
+    "scam":         ["src/state.js", "src/utils.js", "src/intent.js", "src/claude.js", "src/commands.js", "telegram/telegram-adapter.js"],
+    "tickets":      ["src/intent.js", "src/commands.js", "telegram/telegram-adapter.js", "weekly-report/community-report/community-report.js"],
+    "staff":        ["bot.js", "src/state.js", "src/utils.js", "src/intent.js", "src/commands.js", "src/knowledge-loader.js", "telegram/telegram-adapter.js"],
+    "report":       ["src/slash-commands.js", "src/utils.js", "src/claude.js", "telegram/telegram-adapter.js", "weekly-report/community-report/community-report.js"],
+    "stats":        ["src/kb-sync.js", "src/slash-commands.js", "telegram/telegram-adapter.js", "weekly-report/community-report/community-report.js", "weekly-report/member-stats/discord/discord-member-stats.js", "weekly-report/member-stats/telegram/tg-member-stats.js"],
+    "toggles":      ["src/toggles.js", "src/slash-commands.js", "src/commands.js", "telegram/telegram-adapter.js"],
+    "cron":         ["bot.js"],
+    "logging":      ["src/intent.js"],
+    "timers":       ["src/state.js", "src/commands.js", "telegram/telegram-adapter.js"],
+    "referral":     ["src/state.js", "src/claude.js"],
+    "announcements":["src/kb-monitor.js"],
+    "startup":      ["bot.js"]
+  }
+}

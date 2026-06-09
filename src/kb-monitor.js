@@ -3,10 +3,11 @@
 const fs   = require('fs');
 const path = require('path');
 
-const CORRECTIONS_DIR   = path.join(__dirname, 'knowledge-base', 'corrections');
-const ANNOUNCEMENTS_DIR = path.join(__dirname, 'knowledge-base', 'announcements');
+const ROOT_DIR          = path.join(__dirname, '..');
+const CORRECTIONS_DIR   = path.join(ROOT_DIR, 'knowledge-base', 'corrections');
+const ANNOUNCEMENTS_DIR = path.join(ROOT_DIR, 'knowledge-base', 'announcements');
 const SCAN_STATE_PATH   = path.join(ANNOUNCEMENTS_DIR, '_scan-state.json');
-const BLOGS_INDEX_PATH  = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
+const BLOGS_INDEX_PATH  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
 
 const CURATED_MAP = {
     EXCHANGE:  'exchanges-and-token.md',
@@ -84,10 +85,10 @@ function stripIndexedBlogUrls(content, indexedUrls) {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
-function createMonitorModule(anthropic) {
+function createMonitorModule(anthropic, { trackUsage = null } = {}) {
 
     // ── Correction staleness check ─────────────────────────────────────────────
-    // Called after !sync-blog / !sync-docs with the list of newly written files.
+    // Called after /sync blog / /sync doc with the list of newly written files.
     // Returns an array of { newFile, correctionFile } pairs that need review.
 
     async function checkCorrectionStaleness(processedFiles) {
@@ -121,6 +122,7 @@ function createMonitorModule(anthropic) {
                             `If none need review, reply NONE.`,
                     }],
                 });
+                if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
                 const text   = resp.content[0].text.trim();
                 if (text === 'NONE' || !text) continue;
                 const flagged = text.split('\n').map(l => l.trim()).filter(l => l && l !== 'NONE');
@@ -136,7 +138,7 @@ function createMonitorModule(anthropic) {
     }
 
     // ── Announcement auto-scan ─────────────────────────────────────────────────
-    // Called during !sync-knowledge. Reads raw weekly announcement files,
+    // Called during /sync-knowledge. Reads raw weekly announcement files,
     // filters to entries newer than the last scan, strips already-indexed blog
     // URLs, then asks Haiku whether remaining content contains net-new facts.
     // If yes, appends a summary to the relevant curated file.
@@ -176,15 +178,21 @@ function createMonitorModule(anthropic) {
                         role: 'user',
                         content:
                             `River Protocol Discord announcement:\n\n${cleaned.slice(0, 800)}\n\n` +
-                            `Does this contain net-new operational facts NOT already covered by indexed blog posts or docs?\n` +
-                            `Net-new facts include: exchange/DEX listings, token address changes, product launches, ` +
-                            `protocol parameter changes, safety notices, integration announcements.\n\n` +
+                            `Does this contain net-new facts NOT already covered by indexed blog posts or docs?\n` +
+                            `Include ANY of the following:\n` +
+                            `- Exchange/DEX listings, token address changes, integration announcements\n` +
+                            `- Product launches, protocol parameter changes\n` +
+                            `- Safety notices or operational alerts\n` +
+                            `- Ecosystem stats and milestones: TVL figures, staking amounts, user counts, season progress\n` +
+                            `- Partnership or community milestones worth remembering\n` +
+                            `- Context that adds to or updates existing blog/docs content\n\n` +
                             `If YES: reply "YES [CATEGORY]" on line 1, then a 2-3 sentence factual summary on line 2.\n` +
-                            `Categories: EXCHANGE (listings/DEX/token), MILESTONE (audits/investments/stats/launches), NOTICE (safety/operational alerts)\n` +
-                            `If NO new facts: reply "NO"`,
+                            `Categories: EXCHANGE (listings/DEX/token), MILESTONE (audits/investments/stats/launches/partnerships/season updates), NOTICE (safety/operational alerts)\n` +
+                            `If NO new facts (e.g. pure hype, generic community message, event reminders with no new data): reply "NO"`,
                     }],
                 });
 
+                if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
                 const text  = resp.content[0].text.trim();
                 if (text.startsWith('NO')) continue;
 

@@ -1,11 +1,14 @@
+'use strict';
+
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 const { embed } = require('./embedder');
 
-const KB_DIR     = path.join(__dirname, 'knowledge-base');
-const CL_DIR     = path.join(__dirname, 'channel-learning');
-const CACHE_PATH = path.join(__dirname, 'knowledge-base', '.embeddings-cache.json');
+const ROOT_DIR   = path.join(__dirname, '..');
+const KB_DIR     = path.join(ROOT_DIR, 'knowledge-base');
+const CL_DIR     = path.join(ROOT_DIR, 'channel-learning');
+const CACHE_PATH = path.join(ROOT_DIR, 'knowledge-base', '.embeddings-cache.json');
 
 const CHUNK_SIZE    = 1500; // characters per chunk
 const CHUNK_OVERLAP = 150;  // overlap between chunks to avoid cutting context mid-sentence
@@ -19,7 +22,6 @@ const SOURCE_PRIORITY = [
     { prefix: 'knowledge-base/corrections',   boost: 1.3  },
     { prefix: 'knowledge-base/blogs',         boost: 1.1  },
     { prefix: 'knowledge-base/announcements', boost: 1.1  },
-    { prefix: 'knowledge-base/tweets',        boost: 1.05 },
 ];
 
 function sourceBoost(fileLabel) {
@@ -68,6 +70,9 @@ function collectMdFiles(dir, label) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
+            // Skip raw-capture monthly folders (announcements/*_ann, tweets/*_tweet)
+            // These contain unprocessed Discord messages — curated files in the parent handle indexing.
+            if (/_ann$/.test(entry.name) || /_tweet$/.test(entry.name)) continue;
             results.push(...collectMdFiles(fullPath, `${label}/${entry.name}`));
         } else if (entry.isFile() && entry.name.endsWith('.md') && !entry.name.startsWith('_')) {
             results.push({ path: fullPath, label: `${label}/${entry.name}` });
@@ -157,7 +162,7 @@ function cosine(a, b) {
 
 async function searchKB(query, topK = TOP_K) {
     const cache = loadCache();
-    if (cache.chunks.length === 0) return { context: '(Knowledge base is empty — run !sync-knowledge to index it.)', sources: [] };
+    if (cache.chunks.length === 0) return { context: '(Knowledge base is empty — run /sync-knowledge to index it.)', sources: [], rawChunks: [] };
 
     const [queryVec] = await embed([query]);
 

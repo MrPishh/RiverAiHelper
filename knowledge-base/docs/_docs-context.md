@@ -41,9 +41,9 @@ Docs are scraped from docs.river.inc and represent the current state of the offi
 
 | Field | Value | Meaning |
 |---|---|---|
-| `sitemapUrl` | `https://docs.river.inc/sitemap-pages.xml` | Where `!sync-docs` reads the page list from |
+| `sitemapUrl` | `https://docs.river.inc/sitemap-pages.xml` | Where `/sync doc` reads the page list from |
 | `configuredSinceDate` | — | No date floor. All pages in the sitemap are scraped regardless of publish date |
-| `excluded` | — | No URL-level exclusion list for docs. Unlike blogs, there is no `!exclude-doc` command. To skip a doc page, apply `<!-- EXCLUDE -->` markers inside the file instead |
+| `excluded` | — | No URL-level exclusion list for docs. Unlike blogs, there is no `/exclude-doc` command. To skip a doc page, apply `<!-- EXCLUDE -->` markers inside the file instead |
 
 ---
 

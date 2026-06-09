@@ -1,3 +1,5 @@
+'use strict';
+
 require('dotenv').config();
 
 const PROVIDER = (process.env.EMBEDDING_PROVIDER || 'voyage').toLowerCase();

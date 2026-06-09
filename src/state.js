@@ -2,12 +2,14 @@
 
 // ─── Timing constants ─────────────────────────────────────────────────────────
 
-const STAFF_WAIT_MS              = parseInt(process.env.STAFF_WAIT_MINUTES || '3', 10) * 60 * 1000;
+const STAFF_WAIT_MS              = parseInt(process.env.STAFF_WAIT_MINUTES || '5', 10) * 60 * 1000;
 const REPHRASE_WINDOW_MS         = 2 * 60 * 60 * 1000;
 const MAX_BOT_ANSWERS_BEFORE_TICKET = 2;
 const CONV_EXPIRY_MS             = 30 * 60 * 1000;
-const STAFF_ENGAGED_WINDOW_MS    = 4 * 60 * 60 * 1000;
-const BOT_REPLIED_WINDOW_MS      = 5 * 60 * 1000;
+const STAFF_ENGAGED_WINDOW_MS    = 3 * 60 * 1000;   // 3 min hard block after staff replies to a user
+const POST_STAFF_WAIT_MS         = 3 * 60 * 1000;   // shorter wait for same user after staffEngaged expires
+const POST_STAFF_CONTEXT_MS      = 20 * 60 * 1000;  // how long POST_STAFF_WAIT applies (20 min window)
+const COMMUNITY_DISC_WINDOW_MS   = 30 * 60 * 1000;
 
 // ─── Referral codes ───────────────────────────────────────────────────────────
 
@@ -44,8 +46,14 @@ const ragSourcesMap = new Map();
 // userId::channelId → timestamp
 const staffEngaged = new Map();
 
-// userId::channelId → timestamp
-const botReplied = new Map();
+// userId::channelId → { content, messageId, storedAt }
+// Tracks recent community-discussion messages for follow-up context (30-min window)
+const recentCommunityDiscussion = new Map();
+
+// normalizedName → original display name (for readable alert messages)
+// Built at startup and refreshed every 24 hrs by buildStaffNameCache() in bot.js
+const staffNameCache   = new Map();
+const staffNameCacheTs = { value: 0 };
 
 module.exports = {
     STAFF_WAIT_MS,
@@ -53,7 +61,9 @@ module.exports = {
     MAX_BOT_ANSWERS_BEFORE_TICKET,
     CONV_EXPIRY_MS,
     STAFF_ENGAGED_WINDOW_MS,
-    BOT_REPLIED_WINDOW_MS,
+    POST_STAFF_WAIT_MS,
+    POST_STAFF_CONTEXT_MS,
+    COMMUNITY_DISC_WINDOW_MS,
     REFERRAL_CODES,
     coreFacts,
     referralCode,
@@ -64,5 +74,7 @@ module.exports = {
     botMsgIndex,
     ragSourcesMap,
     staffEngaged,
-    botReplied,
+    recentCommunityDiscussion,
+    staffNameCache,
+    staffNameCacheTs,
 };

@@ -1,17 +1,19 @@
 'use strict';
 
 const { Telegraf }  = require('telegraf');
-const { isEnabled } = require('../toggles');
+const { isEnabled } = require('../src/toggles');
 const { logTgMemberEvent } = require('../weekly-report/member-stats/telegram/tg-member-stats');
 
 // ─── Telegram markdown sanitiser ─────────────────────────────────────────────
+
+const GUILD_ID = '1212686319596216350';
 
 function sanitizeForTelegram(text) {
     return text
         .replace(/\*\*(.*?)\*\*/gs, '$1')
         .replace(/\*(.*?)\*/gs, '$1')
         .replace(/<(https?:\/\/[^\s>]+)>/g, '$1')
-        .replace(/<#\d+>/g, 'the support channel in the River Discord server')
+        .replace(/<#(\d+)>/g, (_, channelId) => `https://discord.com/channels/${GUILD_ID}/${channelId}`)
         .replace(/\n{3,}/g, '\n\n')
         .trim();
 }
@@ -56,10 +58,31 @@ async function isAdmin(telegram, chatId, userId) {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
+// ─── Message splitter ─────────────────────────────────────────────────────────
+
+function splitMessage(text, maxLen = 4096) {
+    if (text.length <= maxLen) return [text];
+    const chunks = [];
+    let start = 0;
+    while (start < text.length) {
+        let end = start + maxLen;
+        if (end < text.length) {
+            const lastNewline = text.lastIndexOf('\n', end);
+            if (lastNewline > start) end = lastNewline;
+        }
+        chunks.push(text.slice(start, end));
+        start = end;
+    }
+    return chunks;
+}
+
+// ─── Factory ──────────────────────────────────────────────────────────────────
+
 function createTelegramAdapter({
     token,
     allowedChatId,
     allowedTopicIds,
+    logOnlyTopicIds = [],
     state,
     answerQuestion,
     searchKB,
@@ -67,10 +90,19 @@ function createTelegramAdapter({
     logTelegramMessage,
     logTelegramIntent,
     RESPOND_INTENTS,
+    looksResolved,
+    SUPPORT_CHANNEL_ID,
+    buildCommunityReport,
+    getMemberStats,
+    getTgMemberStats,
+    getWeekRange,
+    getDayRange,
+    getDiscordMemberCount,
 }) {
-    const bot       = new Telegraf(token);
-    const chatIdStr = String(allowedChatId);
-    const topicSet  = new Set(allowedTopicIds.map(String));
+    const bot            = new Telegraf(token);
+    const chatIdStr      = String(allowedChatId);
+    const topicSet       = new Set(allowedTopicIds.map(String));
+    const logOnlyTopicSet = new Set(logOnlyTopicIds.map(String));
     let botId       = null;
     let botUsername = null;
 
@@ -80,14 +112,206 @@ function createTelegramAdapter({
         console.log(`[TG] Bot identity: @${botUsername} (${botId})`);
     }).catch(err => console.error('[TG] getMe failed:', err.message));
 
+    // Persistent menu button — shows "≡ Menu" in every private DM.
+    // Tapping it opens the command list where staff can tap /start to open the panel.
+    bot.telegram.setMyCommands(
+        [{ command: 'start', description: 'Open Staff Panel' }],
+        { scope: { type: 'all_private_chats' } }
+    ).catch(err => console.error('[TG] setMyCommands failed:', err.message));
+
+    bot.telegram.setChatMenuButton({
+        menu_button: { type: 'commands' }
+    }).catch(err => console.error('[TG] setChatMenuButton failed:', err.message));
+
+    // ── Private DM handler ────────────────────────────────────────────────────
+
+    async function handlePrivateDM(ctx, msg) {
+        const fromId = msg.from.id;
+        const admin  = await isAdmin(ctx.telegram, chatIdStr, fromId);
+
+        if (!admin) {
+            await ctx.reply('This bot is for staff use only.');
+            return;
+        }
+
+        if (msg.text?.trim() === '/start') {
+            await ctx.reply('Staff Panel — what would you like to do?', {
+                reply_markup: { inline_keyboard: [[
+                    { text: '📊 Community Report', callback_data: 'report' },
+                    { text: '👥 Member Stats',     callback_data: 'stats'  },
+                ]] },
+            });
+            return;
+        }
+
+        await ctx.reply('Send /start to open the staff panel.');
+    }
+
+    // ── Inline keyboard callback handler ─────────────────────────────────────
+
+    bot.on('callback_query', async (ctx) => {
+        try {
+            const fromId = ctx.callbackQuery.from.id;
+            const admin  = await isAdmin(ctx.telegram, chatIdStr, fromId);
+            if (!admin) { await ctx.answerCbQuery('Staff only.'); return; }
+
+            const data  = ctx.callbackQuery.data ?? '';
+            const parts = data.split(':');
+            const [action, period, platform, modelKey] = parts;
+
+            const PERIOD_LABEL   = { week: 'Week (Mon–Sun)', day: 'Today' };
+            const PLATFORM_LABEL = { both: 'Both', discord: 'Discord only', telegram: 'Telegram only' };
+
+            // ── Step 1: choose period ─────────────────────────────────────────
+            if (parts.length === 1) {
+                const label = action === 'report' ? '📊 Community Report' : '👥 Member Stats';
+                await ctx.editMessageText(`${label}\n\nSelect period:`, {
+                    reply_markup: { inline_keyboard: [[
+                        { text: 'Week (Mon–Sun)', callback_data: `${action}:week` },
+                        { text: 'Today',          callback_data: `${action}:day`  },
+                    ]] },
+                });
+                await ctx.answerCbQuery();
+                return;
+            }
+
+            // ── Step 2: choose platform ───────────────────────────────────────
+            if (parts.length === 2) {
+                const label = action === 'report' ? '📊 Community Report' : '👥 Member Stats';
+                await ctx.editMessageText(`${label} · ${PERIOD_LABEL[period]}\n\nSelect platform:`, {
+                    reply_markup: { inline_keyboard: [[
+                        { text: 'Both',          callback_data: `${data}:both`     },
+                        { text: 'Discord only',  callback_data: `${data}:discord`  },
+                        { text: 'Telegram only', callback_data: `${data}:telegram` },
+                    ]] },
+                });
+                await ctx.answerCbQuery();
+                return;
+            }
+
+            // ── Step 3 (report only): choose AI model ─────────────────────────
+            if (parts.length === 3 && action === 'report') {
+                await ctx.editMessageText(
+                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]}\n\nSelect AI model:`, {
+                    reply_markup: { inline_keyboard: [[
+                        { text: '⚡ Haiku (fast)',    callback_data: `${data}:haiku`  },
+                        { text: '🧠 Sonnet (smarter)', callback_data: `${data}:sonnet` },
+                    ]] },
+                });
+                await ctx.answerCbQuery();
+                return;
+            }
+
+            // ── Generate stats (stats:period:platform) ────────────────────────
+            if (parts.length === 3 && action === 'stats') {
+                await ctx.answerCbQuery('Fetching stats…');
+                await ctx.editMessageText(`👥 Member Stats · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]}\n\n⏳ Fetching…`);
+
+                try {
+                    const { from, to } = period === 'day' ? getDayRange() : getWeekRange();
+                    const lines = [`👥 Member Stats — ${PERIOD_LABEL[period]}`];
+
+                    if (platform === 'discord' || platform === 'both') {
+                        const { joins, leaves } = getMemberStats(from, to);
+                        const total = getDiscordMemberCount();
+                        if (platform === 'both') lines.push('\nDiscord');
+                        lines.push(`Total members: ${total}`);
+                        lines.push(`Joined: ${joins}`);
+                        lines.push(`Left: ${leaves}`);
+                    }
+
+                    if (platform === 'telegram' || platform === 'both') {
+                        const { joins, leaves } = getTgMemberStats(from, to);
+                        const total = await ctx.telegram.getChatMembersCount(chatIdStr).catch(() => '?');
+                        if (platform === 'both') lines.push('\nTelegram');
+                        lines.push(`Total members: ${total}`);
+                        lines.push(`Joined: ${joins}`);
+                        lines.push(`Left: ${leaves}`);
+                    }
+
+                    await ctx.editMessageText(lines.join('\n'));
+                } catch (err) {
+                    console.error('[TG DM] Stats error:', err.message);
+                    await ctx.editMessageText('❌ Failed to fetch stats. Please try again.');
+                }
+                return;
+            }
+
+            // ── Generate report (report:period:platform:model) ────────────────
+            if (parts.length === 4 && action === 'report') {
+                await ctx.answerCbQuery('Generating report…');
+                await ctx.editMessageText(
+                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]} · ${modelKey === 'sonnet' ? 'Sonnet' : 'Haiku'}\n\n⏳ Generating…`
+                );
+
+                try {
+                    const reportType = period === 'day' ? 'daily' : 'weekly';
+                    const result = await buildCommunityReport({ platform, reportType, model: modelKey });
+
+                    if (!result.text) {
+                        await ctx.editMessageText('No user messages found for this period.');
+                        return;
+                    }
+
+                    const { text, dc, tg } = result;
+                    const countLine = [
+                        dc                        ? `${dc.general.length + dc.support.length} Discord` : null,
+                        result.tickets?.length > 0 ? `${result.tickets.length} Tickets`               : null,
+                        tg                        ? `${tg.length} Telegram`                           : null,
+                        result.dcChinese?.length > 0 ? `${result.dcChinese.length} Chinese (Discord)` : null,
+                        result.tgChinese?.length > 0 ? `${result.tgChinese.length} Chinese (Telegram)`: null,
+                    ].filter(Boolean).join(' + ');
+
+                    const typeLabel = period === 'week' ? 'Weekly' : 'Daily';
+                    const header = `📊 ${typeLabel} Community Report (${PLATFORM_LABEL[platform]})\n(${countLine} messages analysed)\n\n`;
+                    const full   = header + text;
+
+                    await ctx.editMessageText('✅ Report ready:');
+                    for (const chunk of splitMessage(full)) {
+                        await ctx.reply(chunk);
+                    }
+                } catch (err) {
+                    console.error('[TG DM] Report error:', err.message);
+                    await ctx.editMessageText('❌ Failed to generate report. Please try again.');
+                }
+                return;
+            }
+
+            await ctx.answerCbQuery();
+        } catch (err) {
+            console.error('[TG DM] Callback error:', err.message);
+            try { await ctx.answerCbQuery('Something went wrong.'); } catch {}
+        }
+    });
+
+    // ── Group message handler ─────────────────────────────────────────────────
+
     bot.on('message', async (ctx) => {
         try {
             const msg = ctx.message;
             if (!msg?.text?.trim()) return;
 
+            // Private DM — hand off to staff panel handler
+            if (msg.chat.type === 'private') {
+                await handlePrivateDM(ctx, msg);
+                return;
+            }
+
             if (String(msg.chat.id) !== chatIdStr) return;
 
             const threadId = msg.message_thread_id ?? null;
+
+            // Log-only topics (e.g. Chinese channel) — record message but never respond
+            if (logOnlyTopicSet.size > 0 && logOnlyTopicSet.has(String(threadId ?? ''))) {
+                if (!isEnabled('telegram')) return;
+                const logText = msg.text?.trim();
+                if (!logText) return;
+                const fromId = msg.from.id;
+                const staff  = await isAdmin(ctx.telegram, chatIdStr, fromId);
+                logTelegramMessage(msg, staff);
+                return;
+            }
+
             if (!topicSet.has(String(threadId ?? ''))) return;
 
             if (!isEnabled('telegram')) return;
@@ -101,6 +325,16 @@ function createTelegramAdapter({
 
             // Log every message (same as Discord intent log)
             logTelegramMessage(msg, staff);
+
+            // Self-resolution — cancel pending timer if user signals they're sorted
+            for (const [msgId, pending] of state.pendingQuestions) {
+                if (pending.userId === userId && pending.channelId === channelId && looksResolved(text)) {
+                    clearTimeout(pending.timer);
+                    state.pendingQuestions.delete(msgId);
+                    console.log(`[TG] Cancelled ${msgId} — user ${userId} signalled self-resolution`);
+                    break;
+                }
+            }
 
             // ── Scenario 0 — Reply to bot's CLARIFY question ──────────────────
 
@@ -120,7 +354,7 @@ function createTelegramAdapter({
 
             // ── Scenario 0.5 — Reply to a regular bot answer ──────────────────
 
-            if (replyToId && botId && msg.reply_to_message?.from?.id === botId && !staff) {
+            if (replyToId && botId && msg.reply_to_message?.from?.id === botId && !staff && text.trim().split(/\s+/).length > 1) {
                 const botAnswer = msg.reply_to_message.text || '';
                 const { context: newContext, sources: newSources } = await searchKB(text);
                 const history = [
@@ -145,7 +379,13 @@ function createTelegramAdapter({
                 const intent = await classifyMessageIntent(question, null);
                 logTelegramIntent(msg.message_id, intent);
                 console.log(`[TG] Scenario 1 — @mention from ${userId} (intent: ${intent}, staff: ${staff})`);
-                if (!RESPOND_INTENTS.has(intent)) return;
+                if (intent === 'staff-ping') {
+                    const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                    await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
+                    return;
+                }
+                // Direct @mention → always answer, same as Discord Scenario 1.
+                // Non-RESPOND_INTENTS still reach answerQuestion; Claude handles them gracefully.
                 const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
                 await answerQuestion({ question, targetMessage: target, userId, channelId });
                 return;
@@ -177,6 +417,24 @@ function createTelegramAdapter({
                 return; // Never auto-reply to staff messages
             }
 
+            // Community step-in — classify reply before intent gate; reuse result in Scenario 3
+            let cachedIntent = null;
+            if (replyToId) {
+                const tgRefKey = `tg_pending_${replyToId}`;
+                const pendingForRef = state.pendingQuestions.get(tgRefKey);
+                if (pendingForRef && pendingForRef.userId !== userId) {
+                    cachedIntent = await classifyMessageIntent(text, null);
+                    logTelegramIntent(msg.message_id, cachedIntent);
+                    if (cachedIntent === 'community-help') {
+                        clearTimeout(pendingForRef.timer);
+                        state.pendingQuestions.delete(tgRefKey);
+                        console.log(`[TG] Cancelled ${tgRefKey} — genuine community-help from ${userId}`);
+                    } else {
+                        console.log(`[TG] Kept timer for ${tgRefKey} — reply is '${cachedIntent}', not genuine help`);
+                    }
+                }
+            }
+
             // Staff-engaged suppression — back off if staff is handling this user
             const staffTs = state.staffEngaged.get(key);
             if (staffTs && (Date.now() - staffTs) < state.STAFF_ENGAGED_WINDOW_MS) {
@@ -184,11 +442,46 @@ function createTelegramAdapter({
                 return;
             }
 
+            // Prior community-discussion context
+            const convDiscKey = `${userId}::${channelId}`;
+            let priorUserContext = null;
+            const discEntry = state.recentCommunityDiscussion.get(convDiscKey);
+            if (discEntry) {
+                if ((Date.now() - discEntry.storedAt) < state.COMMUNITY_DISC_WINDOW_MS) {
+                    priorUserContext = discEntry.content;
+                } else {
+                    state.recentCommunityDiscussion.delete(convDiscKey);
+                }
+            }
+
             // Intent gate
-            const intent = await classifyMessageIntent(text, null);
-            logTelegramIntent(msg.message_id, intent);
-            console.log(`[TG] Intent: ${intent} | user: ${userId} | topic: ${threadId}`);
-            if (!RESPOND_INTENTS.has(intent)) return;
+            const intent = cachedIntent ?? await classifyMessageIntent(text, null, priorUserContext);
+            if (!cachedIntent) logTelegramIntent(msg.message_id, intent);
+            console.log(`[TG] Intent: ${intent} | user: ${userId} | topic: ${threadId}${priorUserContext ? ' (with prior context)' : ''}`);
+
+            if (intent === 'staff-ping') {
+                const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
+                return;
+            }
+
+            if (!RESPOND_INTENTS.has(intent)) {
+                if (intent === 'community-discussion') {
+                    state.recentCommunityDiscussion.set(convDiscKey, {
+                        content:   text.slice(0, 200),
+                        messageId: msg.message_id,
+                        storedAt:  Date.now(),
+                    });
+                }
+                console.log(`[TG] Skipped — intent '${intent}' does not warrant a response`);
+                return;
+            }
+
+            if (priorUserContext) state.recentCommunityDiscussion.delete(convDiscKey);
+
+            // staffEngaged entry exists but window expired — use shorter wait for 20 min after staff engagement
+            const postStaff = staffTs && (Date.now() - staffTs) < state.POST_STAFF_CONTEXT_MS;
+            const waitMs = postStaff ? state.POST_STAFF_WAIT_MS : state.STAFF_WAIT_MS;
 
             // Staff-wait timer — queue the reply, cancel if an admin responds first
             const tgPendingKey = `tg_pending_${msg.message_id}`;
@@ -197,10 +490,10 @@ function createTelegramAdapter({
                 state.pendingQuestions.delete(tgPendingKey);
                 const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
                 await answerQuestion({ question: text, targetMessage: target, userId, channelId });
-            }, state.STAFF_WAIT_MS);
+            }, waitMs);
 
             state.pendingQuestions.set(tgPendingKey, { question: text, userId, channelId, timer, storedAt: Date.now() });
-            console.log(`[TG] Queued ${tgPendingKey} — fires in ${state.STAFF_WAIT_MS / 1000}s if no admin reply`);
+            console.log(`[TG] Queued ${tgPendingKey} — fires in ${waitMs / 1000}s${postStaff ? ' (post-staff, shortened)' : ''} if no admin reply`);
 
         } catch (err) {
             console.error('[TG] Handler error:', err.message);
@@ -236,7 +529,7 @@ function createTelegramAdapter({
     });
 
     return {
-        launch:           ()       => bot.launch({ allowedUpdates: ['message', 'chat_member'] }),
+        launch:           ()       => bot.launch({ allowedUpdates: ['message', 'chat_member', 'callback_query'] }),
         stop:             (signal) => bot.stop(signal),
         getMemberCount:   ()       => bot.telegram.getChatMembersCount(allowedChatId),
     };

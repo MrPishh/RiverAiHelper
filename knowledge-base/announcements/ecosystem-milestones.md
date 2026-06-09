@@ -91,6 +91,7 @@ Launched November 15, 2025 at gov.river.inc — a dedicated space for proposal u
 **Season 5 (S5)**
 - Activated: April 22–23, 2026
 - Conversion 3.0 activated within S5: May 8, 2026
+- ≈$10M worth of RIVER staked (announced June 2, 2026)
 
 ---
 
@@ -135,6 +136,7 @@ Launched November 15, 2025 at gov.river.inc — a dedicated space for proposal u
 | Apr 22, 2026 | S4 concluded |
 | Apr 23, 2026 | Season 5 LIVE |
 | May 8, 2026 | Conversion 3.0 LIVE |
+| Jun 2, 2026 | ≈$10M worth of RIVER staked (S5 milestone) |
 
 ---
 

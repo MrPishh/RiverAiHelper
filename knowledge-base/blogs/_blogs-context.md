@@ -57,10 +57,10 @@ Note: `dynamic-airdrop-conversion-2.md` and `dynamic-airdrop-conversion-3.md` al
 
 | Field | Value | Meaning |
 |---|---|---|
-| `sitemapUrl` | `https://blog.river.inc/sitemap-posts.xml` | Where `!sync-blog` reads the post list from |
+| `sitemapUrl` | `https://blog.river.inc/sitemap-posts.xml` | Where `/sync blog` reads the post list from |
 | `configuredSinceDate` | `2025-05-15` | Permanent floor — never scrape posts published before this date (River blog launch date). Hard-coded in `bot.js` as `BLOG_SINCE_DATE`. |
 | `effectiveSinceDate` | auto-managed | Starts equal to `configuredSinceDate`. Advances automatically to the oldest remaining post's date whenever posts are physically deleted from disk. Prevents re-scraping of intentionally removed content. |
-| `excluded` | URL list | Managed by `!exclude-blog <url>` / `!include-blog <url>`. Posts on this list are permanently skipped on all future syncs even if they appear in the sitemap. Distinct from `<!-- EXCLUDE -->` markers — the exclusion list prevents re-scraping; markers only strip content from RAG. |
+| `excluded` | URL list | Managed by `/exclude-blog url:<url>` / `/include-blog url:<url>`. Posts on this list are permanently skipped on all future syncs even if they appear in the sitemap. Distinct from `<!-- EXCLUDE -->` markers — the exclusion list prevents re-scraping; markers only strip content from RAG. |
 
 ---
 

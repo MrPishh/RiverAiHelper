@@ -7,23 +7,50 @@ const { ensureDir } = require('./utils');
 
 // ─── Usage tracking ───────────────────────────────────────────────────────────
 
-const USAGE_PATH   = path.join(__dirname, 'usage-stats.json');
-const PRICE_INPUT  = 3.00;   // per 1M tokens, claude-sonnet-4-6
-const PRICE_OUTPUT = 15.00;
+const ROOT_DIR           = path.join(__dirname, '..');
+const USAGE_PATH         = path.join(ROOT_DIR, 'usage-stats.json');
+const PRICE_INPUT        = 3.00;   // per 1M tokens, claude-sonnet-4-6
+const PRICE_OUTPUT       = 15.00;
+const PRICE_HAIKU_INPUT  = 0.80;   // per 1M tokens, claude-haiku-4-5
+const PRICE_HAIKU_OUTPUT = 4.00;
 
-function loadUsageStats() {
-    if (!fs.existsSync(USAGE_PATH)) {
-        return { since: new Date().toISOString(), calls: 0, inputTokens: 0, outputTokens: 0 };
-    }
-    try { return JSON.parse(fs.readFileSync(USAGE_PATH, 'utf8')); }
-    catch { return { since: new Date().toISOString(), calls: 0, inputTokens: 0, outputTokens: 0 }; }
+function emptyBucket() {
+    return { calls: 0, inputTokens: 0, outputTokens: 0 };
 }
 
-function trackUsage(inputTokens, outputTokens) {
-    const stats = loadUsageStats();
-    stats.calls        += 1;
-    stats.inputTokens  += inputTokens;
-    stats.outputTokens += outputTokens;
+function loadUsageStats() {
+    const blank = { since: new Date().toISOString(), sonnet: emptyBucket(), haiku: emptyBucket(), monthly: {} };
+    if (!fs.existsSync(USAGE_PATH)) return blank;
+    try {
+        const s = JSON.parse(fs.readFileSync(USAGE_PATH, 'utf8'));
+        // Migrate old flat format (pre Haiku tracking)
+        if (s.calls !== undefined) {
+            return {
+                since:   s.since,
+                sonnet:  { calls: s.calls, inputTokens: s.inputTokens, outputTokens: s.outputTokens },
+                haiku:   emptyBucket(),
+                monthly: {},
+            };
+        }
+        s.monthly = s.monthly || {};
+        return s;
+    } catch { return blank; }
+}
+
+function trackUsage(inputTokens, outputTokens, model = 'sonnet') {
+    const stats     = loadUsageStats();
+    const monthKey  = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    const bucket    = model === 'haiku' ? 'haiku' : 'sonnet';
+
+    stats[bucket].calls        += 1;
+    stats[bucket].inputTokens  += inputTokens;
+    stats[bucket].outputTokens += outputTokens;
+
+    if (!stats.monthly[monthKey]) stats.monthly[monthKey] = { sonnet: emptyBucket(), haiku: emptyBucket() };
+    stats.monthly[monthKey][bucket].calls        += 1;
+    stats.monthly[monthKey][bucket].inputTokens  += inputTokens;
+    stats.monthly[monthKey][bucket].outputTokens += outputTokens;
+
     fs.writeFileSync(USAGE_PATH, JSON.stringify(stats, null, 2), 'utf8');
 }
 
@@ -32,7 +59,7 @@ function trackUsage(inputTokens, outputTokens) {
 const DOCS_SITEMAP_URL = 'https://docs.river.inc/sitemap-pages.xml';
 
 async function syncDocs(forceAll = false) {
-    const docsDir   = path.join(__dirname, 'knowledge-base', 'docs');
+    const docsDir   = path.join(ROOT_DIR, 'knowledge-base', 'docs');
     const indexPath = path.join(docsDir, '_index.json');
     ensureDir(docsDir);
 
@@ -108,7 +135,7 @@ async function syncDocs(forceAll = false) {
 }
 
 function registerDocInIndex(url, slug, file) {
-    const indexPath = path.join(__dirname, 'knowledge-base', 'docs', '_index.json');
+    const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'docs', '_index.json');
     let index = { sitemapUrl: DOCS_SITEMAP_URL, lastChecked: null, pages: [] };
     if (fs.existsSync(indexPath)) {
         try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {}
@@ -128,7 +155,7 @@ const BLOG_SITEMAP_URL = 'https://blog.river.inc/sitemap-posts.xml';
 const BLOG_SINCE_DATE  = new Date('2025-05-15');
 
 async function syncBlog() {
-    const blogsDir  = path.join(__dirname, 'knowledge-base', 'blogs');
+    const blogsDir  = path.join(ROOT_DIR, 'knowledge-base', 'blogs');
     const indexPath = path.join(blogsDir, '_index.json');
     ensureDir(blogsDir);
 
@@ -253,7 +280,7 @@ async function syncBlog() {
 }
 
 function registerBlogInIndex(url, slug, file) {
-    const indexPath = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
+    const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
     let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [] };
     if (fs.existsSync(indexPath)) {
         try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {}
@@ -271,6 +298,6 @@ module.exports = {
     syncDocs, registerDocInIndex,
     syncBlog, registerBlogInIndex,
     loadUsageStats, trackUsage,
-    PRICE_INPUT, PRICE_OUTPUT, USAGE_PATH,
+    PRICE_INPUT, PRICE_OUTPUT, PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT, USAGE_PATH,
     DOCS_SITEMAP_URL, BLOG_SITEMAP_URL,
 };

@@ -3,9 +3,10 @@
 const fs   = require('fs');
 const path = require('path');
 
-const TOGGLES_PATH = path.join(__dirname, 'toggles.json');
+const ROOT_DIR     = path.join(__dirname, '..');
+const TOGGLES_PATH = path.join(ROOT_DIR, 'toggles.json');
 
-const DEFAULTS = { discord: true, telegram: true };
+const DEFAULTS = { discord: true, telegram: true, 'scam-blocker': false };
 
 function load() {
     try {

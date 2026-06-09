@@ -3,13 +3,37 @@
 const fs   = require('fs');
 const path = require('path');
 
-const INTENT_LOG_PATH    = path.join(__dirname, 'intent', 'dc-intent-log.jsonl');
-const TG_INTENT_LOG_PATH = path.join(__dirname, 'intent', 'tg-intent-log.jsonl');
+const ROOT_DIR           = path.join(__dirname, '..');
+const INTENT_LOG_PATH    = path.join(ROOT_DIR, 'intent', 'dc-intent-log.jsonl');
+const TG_INTENT_LOG_PATH = path.join(ROOT_DIR, 'intent', 'tg-intent-log.jsonl');
+const TICKET_LOG_PATH    = path.join(ROOT_DIR, 'intent', 'ticket-log.jsonl');
+const COLLAB_LOG_PATH    = path.join(ROOT_DIR, 'intent', 'collab-log.jsonl');
 
 // Ensure the intent/ directory exists so log writes don't throw ENOENT
 if (!fs.existsSync(path.dirname(INTENT_LOG_PATH))) {
     fs.mkdirSync(path.dirname(INTENT_LOG_PATH), { recursive: true });
 }
+
+// Simple append — write time is dumb. No classification, no routing, no state.
+// Classification happens at report time when the full thread is available.
+function _writeToFile(filePath, message) {
+    try {
+        const record = {
+            platform:  'discord',
+            ts:        message.createdAt.toISOString(),
+            id:        message.id,
+            channelId: message.channelId,
+            channel:   message.channel?.name ?? message.channelId,
+            authorId:  message.author.id,
+            author:    message.author.username,
+            content:   (message.content || '').slice(0, 600),
+        };
+        fs.appendFileSync(filePath, JSON.stringify(record) + '\n', 'utf8');
+    } catch {}
+}
+
+function logToTicketFile(message) { _writeToFile(TICKET_LOG_PATH, message); }
+function logToCollabFile(message)  { _writeToFile(COLLAB_LOG_PATH,  message); }
 
 const RESPOND_INTENTS = new Set(['help-seeking', 'troubleshooting', 'onboarding', 'factual-question']);
 
@@ -25,7 +49,7 @@ const ALL_INTENT_CATEGORIES = [
 const INTENT_SYSTEM_PROMPT = `Classify this Discord or Telegram message into exactly one intent category. Reply with ONLY the category name — no explanation, no punctuation, nothing else.
 
 RESPOND (bot should answer):
-help-seeking — genuine question about protocol mechanics or how something works. ALSO includes frustrated complaints or venting about conversion rates, waiting periods, staking, token amounts, or how the protocol behaves — even when phrased as opinions rather than direct questions (e.g. "the conversion is so poor", "why do I get fewer tokens the longer I wait", "this system makes no sense"). If the user appears confused or disappointed about a protocol mechanic, treat it as help-seeking.
+help-seeking — genuine question about protocol mechanics or how something works. ALSO includes frustrated complaints or venting about conversion rates, waiting periods, staking, token amounts, or how the protocol behaves — even when phrased as opinions rather than direct questions (e.g. "the conversion is so poor", "why do I get fewer tokens the longer I wait", "this system makes no sense"). If the user appears confused or disappointed about a protocol mechanic, treat it as help-seeking. ALSO includes messages like "anyone received X reward?", "did anyone get X?", "has anyone got X?" about rewards, airdrops, or points — the "anyone" framing is a social softener; the asker typically did not receive theirs and is looking for confirmation or help.
 troubleshooting — user reporting a specific problem they are experiencing
 onboarding — new user asking how to get started, sign up, or register
 factual-question — specific question about token, staking, rates, epoch, contract address
@@ -36,17 +60,39 @@ safety-alert — legitimate community member posting a scam WARNING for public a
 scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message
 content-promotion — user sharing their own content (articles, threads, videos)
 referral-sharing — user sharing their own referral code for others to use
-community-discussion — opinion poll or strategy question directed at the community, not the bot. Does NOT include frustration about protocol mechanics — if the complaint is about how conversion, staking, or waiting works, use help-seeking instead.
+community-discussion — opinion poll or strategy question directed at the community, not the bot (e.g. "drop your strategy below", "what do you think", "best time to convert?"). Does NOT include "anyone received X?" style messages about personal reward or airdrop receipt — those are help-seeking. Does NOT include frustration about protocol mechanics — use help-seeking instead.
 community-announcement — user sharing information or news for the community
 staff-ping — user trying to get human admin attention (ticket check, tagging staff, not a protocol question)
 community-help — another community member giving genuine advice or explaining a protocol mechanic (references the product, asks clarifying questions — does NOT redirect to external sites or DMs)
 general-greeting — greeting, thanks, acknowledgement, or reaction with no question
 community-conduct — user being visibly abusive or disrespectful to other community members`;
 
-// Factory — call with the shared anthropic client and config to get bound functions.
-function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID }) {
+// ─── Scammer-side tier-1 sync check ──────────────────────────────────────────
+// Detects the scammer's OWN message patterns before Haiku runs.
+// Returns true = classify as scam-content immediately, skip API call.
+// Counterpart to detectScamConcernSync in claude.js (which is victim-side).
 
-    async function classifyMessageIntent(content, message = null) {
+const SCAM_CONTENT_PATTERNS = [
+    // Bio / profile redirect — no legitimate use case in a support channel
+    /\b(check|see|look\s+at|visit)\s+(my\s+)?(bio|profile|page)\b/i,
+    /\blink\s+in\s+(my\s+)?bio\b/i,
+    /\bin\s+my\s+(bio|profile)\b/i,
+
+    // Telegram / WhatsApp invite links — posting these in the channel is always suspicious
+    /\bt\.me\/[a-z0-9_+]{3,}/i,
+    /\bwa\.me\/\d{5,}/i,
+];
+
+function detectScamContentSync(content) {
+    return SCAM_CONTENT_PATTERNS.some(p => p.test(content));
+}
+
+// Factory — call with the shared anthropic client and config to get bound functions.
+function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }) {
+
+    async function classifyMessageIntent(content, message = null, priorUserContext = null) {
+        if (detectScamContentSync(content)) return 'scam-content';
+
         const channelName = message?.channelId === SUPPORT_CHANNEL_ID ? '#support' : '#general';
 
         let replyContext = 'Standalone message (not a reply to anything).';
@@ -72,13 +118,18 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID }) {
             } catch {}
         }
 
+        const priorContextLine = priorUserContext
+            ? `\nThis user's most recent prior message in this channel: "${priorUserContext}"\n`
+            : '';
+
         try {
             const resp = await anthropic.messages.create({
                 model:      'claude-haiku-4-5-20251001',
                 max_tokens: 15,
                 system: [{ type: 'text', text: INTENT_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-                messages:   [{ role: 'user', content: `Channel: ${channelName}\nReply context: ${replyContext}${threadContext}\n\nMessage:\n${content}\n\nCategory:` }],
+                messages:   [{ role: 'user', content: `Channel: ${channelName}\nReply context: ${replyContext}${threadContext}${priorContextLine}\n\nMessage:\n${content}\n\nCategory:` }],
             });
+            if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
             const raw = resp.content[0].text.trim().toLowerCase().replace(/[^a-z-]/g, '');
             return ALL_INTENT_CATEGORIES.includes(raw) ? raw : 'help-seeking';
         } catch (err) {
@@ -147,7 +198,11 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID }) {
         } catch {}
     }
 
-    return { classifyMessageIntent, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS };
+    return { classifyMessageIntent, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS, logToTicketFile, logToCollabFile };
 }
 
-module.exports = { createIntentModule, RESPOND_INTENTS, ALL_INTENT_CATEGORIES, INTENT_LOG_PATH, TG_INTENT_LOG_PATH };
+module.exports = {
+    createIntentModule, RESPOND_INTENTS, ALL_INTENT_CATEGORIES,
+    INTENT_LOG_PATH, TG_INTENT_LOG_PATH, TICKET_LOG_PATH, COLLAB_LOG_PATH,
+    logToTicketFile, logToCollabFile,
+};

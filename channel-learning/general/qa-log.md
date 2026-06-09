@@ -289,3 +289,79 @@ It felt different from the typical clickbait AI trading videos, so I gave it a t
 **Q** *(2026-06-01T07:19:57.037Z)*: How can i check?
 
 **A**: <#1213030463040655410>
+
+---
+**Q** *(2026-06-01T11:24:58.103Z)*: Where do I check this
+
+**A**: to see if you won any prize as part of the pizza event?
+
+---
+**Q** *(2026-06-01T12:56:14.367Z)*: Refer link pls
+
+**A**: use the code
+
+---
+**Q** *(2026-06-01T18:00:07.463Z)*: Any one have referral code?
+
+**A**: Mrpishh
+
+---
+**Q** *(2026-06-02T11:27:23.815Z)*: Outlook for $river sir
+
+**A**: Cannot give financial advice 😅😅
+
+---
+**Q** *(2026-06-02T11:59:12.858Z)*: i want to stake river and earn river pts how can i do it?
+
+**A**: go to the river site and click River page then stake it there
+
+---
+**Q** *(2026-06-02T12:07:34.155Z)*: I love $river this coin change my life
+
+**A**: ❤️ River flows
+
+---
+**Q** *(2026-06-04T13:18:25.915Z)*: from: AJOnchain7 @river4fun -filter:replies
+
+**A**: replied in ticket
+
+---
+**Q** *(2026-06-05T08:32:46.546Z)*: <@1339820488125583390> already read what you said but it didn’t affect me on any way so please check my ticket 4320
+
+**A**: let  me check
+
+---
+**Q** *(2026-06-06T09:28:32.617Z)*: Hello everyone how are you doing today
+
+**A**: its a slow weekend
+
+---
+**Q** *(2026-06-06T16:08:18.405Z)*: Please how long does it take for points to reflect?
+
+**A**: which one 4fun or the leaderboard points ?
+
+Please share more context, we have no idea what you are talking about
+
+---
+**Q** *(2026-06-06T18:13:58.877Z)*: There are two different ones? 
+
+I mean the one of creating contents on X
+
+**A**: yes....you can get points for creating content, staking River, or for even just holding satUSD and providing liquidity with it
+
+---
+**Q** *(2026-06-08T11:25:27.137Z)*: Hello, anyone available rn?
+
+**A**: ?
+
+---
+**Q** *(2026-06-08T17:14:58.905Z)*: Still no response yet from the ticket created 😭
+
+**A**: replied
+
+---
+**Q** *(2026-06-08T17:15:15.824Z)*: Hello admins Please I have not been earning points on my River. I don’t post often just twice in a week. 
+
+I need this to be rectified
+
+**A**: <@1502034724447719635>
