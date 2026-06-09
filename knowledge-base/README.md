@@ -20,11 +20,16 @@ Each subfolder has its own `_context.md` or `_*-context.md` file explaining cura
 
 ## Content priority in RAG
 
-```
-corrections  >  blogs / announcements  >  docs  >  governance  >  channel-learning
-```
+| Source | Boost | Notes |
+|---|---|---|
+| `corrections/` | 1.3× | Overrides conflicting docs/blogs — always use for factual corrections |
+| `blogs/` | 1.1× | Slightly preferred over raw docs |
+| `announcements/` | 1.1× | Curated files only — raw `*_ann/` subfolders excluded from indexing |
+| `docs/` | 1.0× | No boost |
+| `governance/` | 1.0× | No boost |
+| `channel-learning/` | 1.0× | No boost |
 
-Corrections rank 1.3× higher than docs. Use them to override outdated or conflicting doc content.
+Use corrections to override outdated or conflicting doc content — they will surface above docs/blogs for topically related queries.
 
 ## Key rules
 

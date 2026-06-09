@@ -39,6 +39,15 @@ Every outgoing message passes through `sanitizeForTelegram()` before being sent.
 
 **`GUILD_ID` is hardcoded** as `1212686319596216350` at the top of `telegram-adapter.js`. If the Discord server ever changes, update this constant.
 
+## Staff DM panel
+
+Staff can DM the bot directly on Telegram. Sending `/start` opens an inline keyboard with two buttons:
+
+- **Report** — generate a community report (prompts for period and platform, then posts to `REPORTS_CHANNEL_ID`)
+- **Stats** — show member join/leave stats for the current week
+
+A persistent **≡ Menu** button is set via `setChatMenuButton` + `setMyCommands` at bot startup so staff don't need to type `/start` each time — the button is always visible in DMs.
+
 ## Notes
 
 - The bot must be an **admin** in the Telegram group for join/leave tracking and admin detection to work

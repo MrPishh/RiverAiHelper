@@ -7,7 +7,7 @@ All bot logic lives here. `bot.js` in the root wires these modules together — 
 ### Message Handling & Responses
 | File | Purpose |
 |---|---|
-| `commands.js` | `messageCreate` Discord event handler + `!add-blog-text` / `!add-doc-text` (attachment-only text commands, no slash equivalent) |
+| `commands.js` | `messageCreate` Discord event handler + `!add-blog-text` / `!add-doc-text` (attachment-only text commands). Includes ticket/collab early-return gate (logs to jsonl, never responds) and `takeScamAction` (delete + 1h timeout + alert embed when scam-blocker is ON). |
 | `slash-commands.js` | All `/slash` command definitions and interaction handler |
 | `claude.js` | Claude Sonnet calls — RAG search, prompt building, conversation state, scam detection |
 | `intent.js` | Intent classification via Claude Haiku — 15 categories, logs every message to `intent/` |
@@ -27,7 +27,7 @@ All bot logic lives here. `bot.js` in the root wires these modules together — 
 |---|---|
 | `state.js` | Shared Maps and timing constants — single object shared across all modules |
 | `utils.js` | Pure helpers — date ranges, Discord helpers, Q&A learning, folder utilities |
-| `toggles.js` | Platform reply toggle (Discord/Telegram ON/OFF) — persisted to `toggles.json` |
+| `toggles.js` | Bot feature toggles — Discord replies, Telegram replies, Scam Blocker. Persisted to `toggles.json`. Controlled via `/toggle platform:<key>`. |
 
 ## Path convention
 
