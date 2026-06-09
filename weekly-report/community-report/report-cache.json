@@ -1,0 +1,13 @@
+{
+  "both::claude-haiku-4-5-20251001::2026-05-31T18:30:00.000Z::2026-06-07T18:29:59.999Z::cn": {
+    "text": "**Common Problems**\n\n- Points/rewards not reflecting or counting despite daily posting activity\n- Claim buttons appearing greyed out (resolved after refreshing or waiting until specific unlock times)\n- Transaction issues stuck in processing\n- Voting power calculation discrepancies in the World Cup prediction event (snapshot timing misalignment)\n- Delayed physical reward deliveries (cold chain logistics issues mentioned in Chinese channel)\n\n**Frequently Asked Questions**\n\n- How to obtain and use referral codes for registration\n- How long points take to reflect after posting or staking\n- How to stake RIVER tokens and earn points\n- How to access voting/governance power\n- How to claim points from staking rewards\n- Where to check reward status (Pizza Day event)\n- Wallet connection requirements for participation\n\n**Conversation Highlights**\n\n- **Coordinated scam/spam activity detected**: Multiple users (messages 2, 10, 15, 23, 27, 34, 50, 69, 86) posted near-identical impersonation messages with variations like \"kindly report to the t e a m\" / \"te_am\" / \"t.e.a.m\" followed by identical or similar X links (primarily https://x.com/i/status/2060600877358956960). This appears to be an organized scam campaign attempting to redirect users to fraudulent support channels. Additional spam patterns included repeated \"RELAY YOUR QUERY HERE\" messages (messages 33, 51, 53, 60) and \"GET HELP\" variants pointing to suspicious Twitter accounts.\n- Legitimate user engagement in World Cup prediction event with staff assistance on voting calculation clarifications (Chinese channel, messages 110-158)\n- Community appreciation and long-term confidence expressed despite market volatility and delayed physical rewards\n- Informal community conversations about market conditions and personal investment sentiment (mostly in Chinese channel)",
+    "dcGeneralCount": 118,
+    "dcSupportCount": 0,
+    "tgCount": 1,
+    "ticketCount": 0,
+    "dcChineseCount": 165,
+    "tgChineseCount": 3,
+    "totalMessages": 287,
+    "cachedAt": "2026-06-08T12:27:07.749Z"
+  }
+}

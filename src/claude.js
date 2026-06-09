@@ -18,13 +18,14 @@ const SCAM_CONCERN_BLOCK = [
     '• Anyone offering help in the general channel or community chat could be a scammer — public channels are not a safe place to receive support',
     "• Always verify who you're speaking to and only use official links",
     '',
-    'Official River support is only available through tickets in this server. If you need help, open one here: <#1212718437164388392>',
+    'Official River support is only available through the River Discord server. If you need help, open a support ticket here: <#1212718437164388392>',
     '',
     'Do not proceed with anything until a staff member has confirmed it through the official ticket system.',
     '— end of scam safety message —',
 ].join('\n');
 
-const SCAM_SOFT_SIGNALS = /\b(scam|real|legit|legitimate|official|verify|trust|safe|fake|phish|fraud|suspicious|dm|direct message|seed|private key|wallet|recover)\b/i;
+const SCAM_SOFT_SIGNALS  = /\b(scam|real|legit|legitimate|official|verify|trust|safe|fake|phish|fraud|suspicious|dm|direct message|seed|private key|wallet|recover)\b/i;
+const TICKET_CHANNEL_ID  = '1212718437164388392';
 
 function detectScamConcernSync(question) {
     const q = question.toLowerCase();
@@ -36,6 +37,8 @@ function detectScamConcernSync(question) {
         /\bsomeone (claiming|saying|told me|says|said) (they('re| are)|he'?s|she'?s) (an? )?(admin|staff|support|from river|river (team|support))\b/,
         /\b(how (do i|can i) )?(know|verify|tell|check|confirm) (if |whether )?(this|they|it|it'?s) (is |are )?(real|legit|legitimate|official|safe|from river)\b/,
         /\b(help|support) (outside|in dms?|privately|off.?server|through (dm|telegram|whatsapp))\b/,
+        /\b(told|asking|asked|telling) (me |you )?(to )?(dm|message|pm|contact) (them|him|her)\b/,
+        /\b(someone|a user|an account|a person)\b[\s\S]{0,80}\b(offering|offered|saying they can|says they can) help\b/,
         /\bseed phrase\b/,
         /\bprivate key\b/,
     ].some(p => p.test(q));
@@ -51,6 +54,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
                 max_tokens: 5,
                 messages:   [{ role: 'user', content: `Is this message asking whether a DM, external site, link, or person contacting them is a scam or legitimate? Answer only YES or NO.\n\nMessage: ${question.slice(0, 400)}` }],
             });
+            trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
             return resp.content[0].text.trim().toUpperCase().startsWith('Y');
         } catch {
             return true; // fail-safe: include scam block if uncertain
@@ -94,7 +98,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             'CLARIFY: Use only when a single question would meaningfully improve your answer.',
             '',
             'ESCALATE: One sentence on what you could not find, then direct to the ticket channel. No lengthy explanation.',
-            '<#1212718437164388392>',
+            `<#${TICKET_CHANNEL_ID}>`,
             '',
             'PARTIAL KNOWLEDGE: Answer what you can, then add one line: "For [specific thing], please ask the team: <link>". No separate section.',
             '',
@@ -198,6 +202,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
                 }],
             });
 
+            trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
             const scores = {};
             for (const m of resp.content[0].text.trim().matchAll(/(\d+):(\d)/g)) {
                 scores[parseInt(m[1]) - 1] = parseInt(m[2]);
@@ -252,7 +257,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             deleteConversation(key);
             await targetMessage.reply(
                 "I've tried my best but haven't been able to fully resolve your question. " +
-                "Please open a support ticket so a staff member can help you directly: <#1212718437164388392>"
+                "Please open a support ticket so a staff member can help you directly — <#1212718437164388392>"
             );
             return;
         }
@@ -290,9 +295,12 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             }
 
             const { type, answer } = await askClaude(history, scamFlag);
-            const botReply = await targetMessage.reply(answer);
+            const isDiscord = !channelId.startsWith('tg_');
+            const footer    = (isDiscord && (type === 'ANSWER' || type === 'CLARIFY'))
+                ? '\n-# To follow up: reply to this message or @RiverAiBot — no wait.'
+                : '';
+            const botReply = await targetMessage.reply(answer + footer);
             state.ragSourcesMap.set(botReply.id, { sources, storedAt: Date.now() });
-            state.botReplied.set(key, Date.now());
 
             if (type === 'CLARIFY') {
                 setConversation(key, {
@@ -315,7 +323,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             console.error('[Answer] Failed:', err.message);
             try {
                 await targetMessage.reply(
-                    'Sorry, I ran into an error answering your question. Please try again or open a support ticket: <#1212718437164388392>'
+                    'Sorry, I ran into an error answering your question. Please try again or open a support ticket — <#1212718437164388392>'
                 );
             } catch { /* ignore */ }
         }
@@ -344,21 +352,21 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         for (const [key, ts] of state.staffEngaged) {
             if (now - ts > state.STAFF_ENGAGED_WINDOW_MS) state.staffEngaged.delete(key);
         }
-        for (const [key, ts] of state.botReplied) {
-            if (now - ts > state.BOT_REPLIED_WINDOW_MS) state.botReplied.delete(key);
-        }
         for (const [key, val] of state.pendingQuestions) {
             if (now - val.storedAt > state.STAFF_WAIT_MS + 10 * 60 * 1000) {
                 clearTimeout(val.timer);
                 state.pendingQuestions.delete(key);
             }
         }
+        for (const [key, val] of state.recentCommunityDiscussion) {
+            if (now - val.storedAt > state.COMMUNITY_DISC_WINDOW_MS) state.recentCommunityDiscussion.delete(key);
+        }
     }
 
     // ─── Core facts loader ────────────────────────────────────────────────────
 
     function loadCoreFacts() {
-        const p = path.join(__dirname, 'knowledge-base', 'core-facts.md');
+        const p = path.join(__dirname, '..', 'knowledge-base', 'core-facts.md');
         if (fs.existsSync(p)) {
             state.coreFacts.value = fs.readFileSync(p, 'utf8').trim();
             console.log('[Bot] Core facts loaded');
@@ -379,4 +387,4 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
     };
 }
 
-module.exports = { createClaudeModule, SCAM_CONCERN_BLOCK };
+module.exports = { createClaudeModule };

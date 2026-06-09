@@ -3,6 +3,8 @@
 const fs   = require('fs');
 const path = require('path');
 
+const { getWeekRange, getDayRange } = require('../../../src/utils');
+
 const LOG_PATH = path.join(__dirname, 'member-log.jsonl');
 
 function logEvent(type, member) {
@@ -16,26 +18,6 @@ function logEvent(type, member) {
     try {
         fs.appendFileSync(LOG_PATH, JSON.stringify(record) + '\n', 'utf8');
     } catch {}
-}
-
-function getWeekRange() {
-    const now = new Date();
-    const day = now.getDay();
-    const sundayEnd = new Date(now);
-    sundayEnd.setDate(sundayEnd.getDate() - day);
-    sundayEnd.setHours(23, 59, 59, 999);
-    const mondayStart = new Date(sundayEnd);
-    mondayStart.setDate(mondayStart.getDate() - 6);
-    mondayStart.setHours(0, 0, 0, 0);
-    return { from: mondayStart, to: sundayEnd };
-}
-
-function getDayRange() {
-    const from = new Date();
-    from.setHours(0, 0, 0, 0);
-    const to = new Date();
-    to.setHours(23, 59, 59, 999);
-    return { from, to };
 }
 
 function getMemberStats(from, to) {

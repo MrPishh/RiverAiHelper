@@ -1,8 +1,11 @@
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 
-const KB_DIR = path.join(__dirname, 'knowledge-base');
-const CL_DIR = path.join(__dirname, 'channel-learning');
+const ROOT_DIR = path.join(__dirname, '..');
+const KB_DIR   = path.join(ROOT_DIR, 'knowledge-base');
+const CL_DIR   = path.join(ROOT_DIR, 'channel-learning');
 
 function readMdFiles(dir, labelPrefix) {
     const sections = [];
@@ -29,19 +32,6 @@ function readMdFiles(dir, labelPrefix) {
     return sections;
 }
 
-// Returns a combined string of all knowledge base content for use in prompts.
-function loadKnowledgeBase() {
-    const kbSections = readMdFiles(KB_DIR, 'knowledge-base');
-    const clSections = readMdFiles(CL_DIR, 'channel-learning');
-    const all = [...kbSections, ...clSections];
-
-    if (all.length === 0) return '(No knowledge base content found.)';
-
-    return all
-        .map(s => `### ${s.label}\n\n${s.content}`)
-        .join('\n\n---\n\n');
-}
-
 // Returns each source as { name, content } for relevance scoring.
 function getSourceFiles() {
     const kbSections = readMdFiles(KB_DIR, 'knowledge-base');
@@ -49,4 +39,4 @@ function getSourceFiles() {
     return [...kbSections, ...clSections].map(s => ({ name: s.label, content: s.content }));
 }
 
-module.exports = { loadKnowledgeBase, getSourceFiles };
+module.exports = { getSourceFiles };

@@ -1,6 +1,10 @@
+'use strict';
+
 const fs    = require('fs');
 const path  = require('path');
 const https = require('https');
+
+const ROOT_DIR = path.join(__dirname, '..');
 
 // Some blog hosts use self-signed or locally-issued certs that Node rejects.
 const relaxedAgent = new https.Agent({ rejectUnauthorized: false });
@@ -157,53 +161,4 @@ async function scrapeSingleArticle(url) {
     );
 }
 
-// ─── Recursively find all .md files under a directory ─────────────────────────
-
-function findMdFiles(dir) {
-    const results = [];
-    if (!fs.existsSync(dir)) return results;
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-        const fullPath = path.join(dir, entry.name);
-        if (entry.isDirectory()) results.push(...findMdFiles(fullPath));
-        else if (entry.isFile() && entry.name.endsWith('.md')) results.push(fullPath);
-    }
-    return results;
-}
-
-// ─── Re-scrape all blog articles under knowledge-base/blogs/ ─────────────────
-
-async function scrapeBlogArticles() {
-    const blogsDir = path.join(__dirname, 'knowledge-base', 'blogs');
-    const mdFiles  = findMdFiles(blogsDir);
-
-    if (mdFiles.length === 0) {
-        console.log('[BlogScraper] No .md files found under knowledge-base/blogs/');
-        return;
-    }
-
-    for (const filepath of mdFiles) {
-        const raw         = fs.readFileSync(filepath, 'utf8');
-        const sourceMatch = raw.match(/^Source:\s*(https?:\/\/\S+)/m);
-        if (!sourceMatch) {
-            console.log(`[BlogScraper] No Source URL in ${filepath} — skipping.`);
-            continue;
-        }
-
-        const url = sourceMatch[1];
-        console.log(`[BlogScraper] Scraping ${url} …`);
-
-        try {
-            const markdown       = await scrapeSingleArticle(url);
-            const separatorIdx   = raw.indexOf('\n---\n');
-            const header         = separatorIdx !== -1 ? raw.slice(0, separatorIdx) : raw.split('\n')[0];
-            fs.writeFileSync(filepath, `${header}\n\n---\n\n${markdown}`, 'utf8');
-            console.log(`[BlogScraper] ✅ Updated ${path.relative(__dirname, filepath)} (${markdown.length} chars)`);
-        } catch (err) {
-            console.error(`[BlogScraper] ❌ Failed for ${url}: ${err.message}`);
-        }
-    }
-
-    console.log('[BlogScraper] Done.');
-}
-
-module.exports = { htmlToMarkdown, scrapeSingleArticle, scrapeBlogArticles };
+module.exports = { htmlToMarkdown, scrapeSingleArticle };

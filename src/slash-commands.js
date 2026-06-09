@@ -1,9 +1,10 @@
 'use strict';
 
-const fs   = require('fs');
-const path = require('path');
+const fs       = require('fs');
+const path     = require('path');
+const ROOT_DIR = path.join(__dirname, '..');
 
-const { REST, Routes, ApplicationCommandOptionType } = require('discord.js');
+const { REST, Routes, ApplicationCommandOptionType, PermissionFlagsBits } = require('discord.js');
 const { isEnabled, toggle, getStatus } = require('./toggles');
 
 // ─── Command definitions ──────────────────────────────────────────────────────
@@ -18,9 +19,10 @@ const COMMANDS = [
             type:        ApplicationCommandOptionType.String,
             required:    true,
             choices: [
-                { name: 'Discord',             value: 'discord'  },
-                { name: 'Telegram',            value: 'telegram' },
-                { name: 'Show current status', value: 'status'   },
+                { name: 'Discord',                             value: 'discord'       },
+                { name: 'Telegram',                            value: 'telegram'      },
+                { name: 'Scam Blocker (auto-delete + timeout)', value: 'scam-blocker' },
+                { name: 'Show current status',                 value: 'status'        },
             ],
         }],
     },
@@ -39,14 +41,24 @@ const COMMANDS = [
                 ],
             },
             {
-                name:        'scope',
+                name:        'platform',
                 description: 'Which platform to include in the report',
+                type:        ApplicationCommandOptionType.String,
+                required:    true,
+                choices: [
+                    { name: 'Both',                    value: 'both'     },
+                    { name: 'Discord only',            value: 'discord'  },
+                    { name: 'Telegram only',           value: 'telegram' },
+                ],
+            },
+            {
+                name:        'aimodel',
+                description: 'AI model to use (default: Haiku — fast and cheap)',
                 type:        ApplicationCommandOptionType.String,
                 required:    false,
                 choices: [
-                    { name: 'Both Discord + Telegram', value: 'both'     },
-                    { name: 'Discord only',            value: 'discord'  },
-                    { name: 'Telegram only',           value: 'telegram' },
+                    { name: 'Haiku (default)',  value: 'haiku'  },
+                    { name: 'Sonnet (smarter)', value: 'sonnet' },
                 ],
             },
         ],
@@ -59,7 +71,7 @@ const COMMANDS = [
                 name:        'period',
                 description: 'Week (Mon–Sun) or Day (today)',
                 type:        ApplicationCommandOptionType.String,
-                required:    false,
+                required:    true,
                 choices: [
                     { name: 'Week (Mon–Sun)', value: 'week' },
                     { name: 'Day (today)',    value: 'day'  },
@@ -71,9 +83,9 @@ const COMMANDS = [
                 type:        ApplicationCommandOptionType.String,
                 required:    false,
                 choices: [
-                    { name: 'Both',     value: 'both'     },
-                    { name: 'Discord',  value: 'discord'  },
-                    { name: 'Telegram', value: 'telegram' },
+                    { name: 'Both',          value: 'both'     },
+                    { name: 'Discord only',  value: 'discord'  },
+                    { name: 'Telegram only', value: 'telegram' },
                 ],
             },
         ],
@@ -87,18 +99,26 @@ const COMMANDS = [
         description: 'Reload core facts, scan new announcements, and rebuild the full RAG index',
     },
     {
-        name:        'sync-blog',
-        description: 'Pull new and updated blog posts from the sitemap into the knowledge base',
-    },
-    {
-        name:        'sync-docs',
-        description: 'Pull new or removed doc pages from the sitemap into the knowledge base',
-        options: [{
-            name:        'force',
-            description: 'Force re-scrape all doc pages (not just new/removed)',
-            type:        ApplicationCommandOptionType.Boolean,
-            required:    false,
-        }],
+        name:        'sync',
+        description: 'Sync knowledge base content from source',
+        options: [
+            {
+                name:        'blog',
+                description: 'Pull new and updated blog posts from the sitemap',
+                type:        ApplicationCommandOptionType.Subcommand,
+            },
+            {
+                name:        'doc',
+                description: 'Pull new or removed doc pages from the sitemap',
+                type:        ApplicationCommandOptionType.Subcommand,
+                options: [{
+                    name:        'force',
+                    description: 'Force re-scrape all doc pages (not just new/removed)',
+                    type:        ApplicationCommandOptionType.Boolean,
+                    required:    false,
+                }],
+            },
+        ],
     },
     {
         name:        'add-blog',
@@ -186,9 +206,13 @@ async function registerSlashCommands(clientUser, guildId, token) {
 function createSlashHandler(discordClient, config, modules) {
     const {
         STAFF_ROLE_IDS,
+        ANNOUNCEMENTS_CHANNEL_ID,
+        TWEETS_CHANNEL_ID,
         GENERAL_CHANNEL_ID,
         SUPPORT_CHANNEL_ID,
         REPORTS_CHANNEL_ID,
+        SUPPORT_TICKET_CATEGORY_IDS,
+        SCAM_LOG_CHANNEL_ID,
     } = config;
 
     const staffIds = Array.isArray(STAFF_ROLE_IDS)
@@ -196,7 +220,7 @@ function createSlashHandler(discordClient, config, modules) {
         : (STAFF_ROLE_IDS || '').split(',').map(s => s.trim()).filter(Boolean);
 
     const {
-        kbSync:  { syncBlog, syncDocs, registerBlogInIndex, registerDocInIndex, loadUsageStats, PRICE_INPUT, PRICE_OUTPUT, BLOG_SITEMAP_URL },
+        kbSync:  { syncBlog, syncDocs, registerBlogInIndex, registerDocInIndex, loadUsageStats, PRICE_INPUT, PRICE_OUTPUT, PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT, BLOG_SITEMAP_URL },
         utils:   { getMonthLabel, ensureDir },
         monitor: { checkCorrectionStaleness, scanAnnouncementsForNewFacts },
         buildIndex,
@@ -213,6 +237,7 @@ function createSlashHandler(discordClient, config, modules) {
     } = modules;
 
     return async function handleInteraction(interaction) {
+        try {
         if (!interaction.isChatInputCommand()) return;
 
         const staff = interaction.member?.roles?.cache?.some(r => staffIds.includes(r.id)) ?? false;
@@ -227,11 +252,17 @@ function createSlashHandler(discordClient, config, modules) {
         if (cmd === 'toggle') {
             const platform = interaction.options.getString('platform');
             if (platform === 'status') {
-                const { discord, telegram } = getStatus();
+                const s = getStatus();
                 await interaction.reply(
-                    `**Bot Reply Toggles**\n` +
-                    `Discord: ${discord  ? '🟢 ON' : '🔴 OFF'}\n` +
-                    `Telegram: ${telegram ? '🟢 ON' : '🔴 OFF'}`
+                    `**Bot Toggles**\n` +
+                    `Discord replies: ${s.discord          ? '🟢 ON' : '🔴 OFF'}\n` +
+                    `Telegram replies: ${s.telegram         ? '🟢 ON' : '🔴 OFF'}\n` +
+                    `Scam Blocker: ${s['scam-blocker'] ? '🟢 ON (delete + timeout)' : '🔴 OFF (log only)'}`
+                );
+            } else if (platform === 'scam-blocker') {
+                const newState = toggle('scam-blocker');
+                await interaction.reply(
+                    `**Scam Blocker** turned ${newState ? '🟢 ON — will delete messages and issue 1h timeouts' : '🔴 OFF — detection still logs, no actions taken'}`
                 );
             } else {
                 const newState = toggle(platform);
@@ -246,13 +277,15 @@ function createSlashHandler(discordClient, config, modules) {
         if (cmd === 'report') {
             const period     = interaction.options.getString('period') ?? 'week';
             const reportType = period === 'day' ? 'daily' : 'weekly';
-            const platform   = interaction.options.getString('scope') ?? 'both';
+            const platform   = interaction.options.getString('platform') ?? 'both';
+            const aimodel    = interaction.options.getString('aimodel') ?? 'haiku';
             const typeLabel  = reportType === 'daily' ? 'Daily' : 'Weekly';
-            const platLabel  = { discord: 'Discord', telegram: 'Telegram', both: 'Discord + Telegram' }[platform];
+            const platLabel  = { discord: 'Discord', telegram: 'Telegram', both: 'Both' }[platform];
+            const modelLabel = aimodel === 'sonnet' ? ' · Sonnet' : '';
             await interaction.deferReply();
             try {
-                await generateCommunityReport(discordClient, platform, reportType);
-                await interaction.editReply(`✅ ${typeLabel} report (${platLabel}) posted to <#${REPORTS_CHANNEL_ID}>.`);
+                await generateCommunityReport(discordClient, platform, reportType, aimodel);
+                await interaction.editReply(`✅ ${typeLabel} report (${platLabel}${modelLabel}) posted to <#${REPORTS_CHANNEL_ID}>.`);
             } catch (err) {
                 await interaction.editReply(`❌ Failed to generate report: ${err.message}`);
             }
@@ -311,16 +344,39 @@ function createSlashHandler(discordClient, config, modules) {
 
         // ── /usage-stats ──────────────────────────────────────────────────────
         if (cmd === 'usage-stats') {
-            const s      = loadUsageStats();
-            const cost   = ((s.inputTokens / 1_000_000) * PRICE_INPUT) + ((s.outputTokens / 1_000_000) * PRICE_OUTPUT);
-            const avgIn  = s.calls ? Math.round(s.inputTokens  / s.calls) : 0;
-            const avgOut = s.calls ? Math.round(s.outputTokens / s.calls) : 0;
+            const s = loadUsageStats();
+
+            function bucketCost(b, priceIn, priceOut) {
+                return (b.inputTokens / 1_000_000) * priceIn + (b.outputTokens / 1_000_000) * priceOut;
+            }
+            function fmtBucket(label, b, priceIn, priceOut) {
+                if (!b.calls) return `${label}: no calls yet`;
+                const avgIn  = Math.round(b.inputTokens  / b.calls);
+                const avgOut = Math.round(b.outputTokens / b.calls);
+                const cost   = bucketCost(b, priceIn, priceOut);
+                return `${label}: **${b.calls}** calls · ${b.inputTokens.toLocaleString()} in (avg ${avgIn}) · ${b.outputTokens.toLocaleString()} out (avg ${avgOut}) · **$${cost.toFixed(4)}**`;
+            }
+
+            const totalCost = bucketCost(s.sonnet, PRICE_INPUT, PRICE_OUTPUT) +
+                              bucketCost(s.haiku, PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT);
+
+            // Monthly rows — most recent 3 months, newest first
+            const monthKeys = Object.keys(s.monthly || {}).sort().reverse().slice(0, 3);
+            const monthLines = monthKeys.map(k => {
+                const m       = s.monthly[k];
+                const mCost   = bucketCost(m.sonnet, PRICE_INPUT, PRICE_OUTPUT) +
+                                bucketCost(m.haiku, PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT);
+                const mCalls  = m.sonnet.calls + m.haiku.calls;
+                return `  ${k}: ${mCalls} calls · **$${mCost.toFixed(4)}**`;
+            });
+
             await interaction.reply(
-                `**Usage stats** (since ${s.since.slice(0, 10)})\n` +
-                `API calls: **${s.calls}**\n` +
-                `Input tokens: **${s.inputTokens.toLocaleString()}** (avg ${avgIn}/call)\n` +
-                `Output tokens: **${s.outputTokens.toLocaleString()}** (avg ${avgOut}/call)\n` +
-                `Estimated cost: **$${cost.toFixed(4)}**`
+                `**Usage Stats** (since ${s.since.slice(0, 10)})\n\n` +
+                `**All-time**\n` +
+                fmtBucket('Sonnet', s.sonnet, PRICE_INPUT, PRICE_OUTPUT) + '\n' +
+                fmtBucket('Haiku ', s.haiku,  PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT) + '\n' +
+                `Total estimated cost: **$${totalCost.toFixed(4)}**` +
+                (monthLines.length ? `\n\n**By month**\n${monthLines.join('\n')}` : '')
             );
             return;
         }
@@ -345,52 +401,46 @@ function createSlashHandler(discordClient, config, modules) {
             return;
         }
 
-        // ── /sync-blog ────────────────────────────────────────────────────────
-        if (cmd === 'sync-blog') {
+        // ── /sync ─────────────────────────────────────────────────────────────
+        if (cmd === 'sync') {
+            const sub = interaction.options.getSubcommand();
             await interaction.deferReply();
             try {
-                const result     = await syncBlog();
-                const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
-                const parts = [];
-                if (result.added)           parts.push(`${result.added} added`);
-                if (result.updated)         parts.push(`${result.updated} updated`);
-                if (result.removed)         parts.push(`${result.removed} removed from sitemap`);
-                if (result.deletedFromDisk) parts.push(`${result.deletedFromDisk} removed (deleted from disk)`);
-                if (result.skipped)         parts.push(`${result.skipped} skipped`);
-                if (result.failed)          parts.push(`${result.failed} failed`);
-                const dateNote  = result.effectiveSince !== result.configuredSince
-                    ? `\nConfigured since: ${result.configuredSince} | Scraping from: **${result.effectiveSince}**`
-                    : `\nScraping from: **${result.effectiveSince}**`;
-                const staleNote = stale.length > 0
-                    ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
-                    : '';
-                await interaction.editReply(
-                    `✅ Sync complete — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} posts tracked.${dateNote}${staleNote}`
-                );
-            } catch (err) {
-                await interaction.editReply(`❌ Sync failed: ${err.message}`);
-            }
-            return;
-        }
-
-        // ── /sync-docs ────────────────────────────────────────────────────────
-        if (cmd === 'sync-docs') {
-            const force = interaction.options.getBoolean('force') ?? false;
-            await interaction.deferReply();
-            try {
-                const result     = await syncDocs(force);
-                const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
-                const parts = [];
-                if (result.added)   parts.push(`${result.added} added`);
-                if (result.updated) parts.push(`${result.updated} updated`);
-                if (result.removed) parts.push(`${result.removed} removed`);
-                if (result.failed)  parts.push(`${result.failed} failed`);
-                const staleNote = stale.length > 0
-                    ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
-                    : '';
-                await interaction.editReply(
-                    `✅ Sync complete — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} pages tracked.${staleNote}`
-                );
+                if (sub === 'blog') {
+                    const result     = await syncBlog();
+                    const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
+                    const parts = [];
+                    if (result.added)           parts.push(`${result.added} added`);
+                    if (result.updated)         parts.push(`${result.updated} updated`);
+                    if (result.removed)         parts.push(`${result.removed} removed from sitemap`);
+                    if (result.deletedFromDisk) parts.push(`${result.deletedFromDisk} removed (deleted from disk)`);
+                    if (result.skipped)         parts.push(`${result.skipped} skipped`);
+                    if (result.failed)          parts.push(`${result.failed} failed`);
+                    const dateNote  = result.effectiveSince !== result.configuredSince
+                        ? `\nConfigured since: ${result.configuredSince} | Scraping from: **${result.effectiveSince}**`
+                        : `\nScraping from: **${result.effectiveSince}**`;
+                    const staleNote = stale.length > 0
+                        ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
+                        : '';
+                    await interaction.editReply(
+                        `✅ Blog sync complete — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} posts tracked.${dateNote}${staleNote}`
+                    );
+                } else if (sub === 'doc') {
+                    const force      = interaction.options.getBoolean('force') ?? false;
+                    const result     = await syncDocs(force);
+                    const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
+                    const parts = [];
+                    if (result.added)   parts.push(`${result.added} added`);
+                    if (result.updated) parts.push(`${result.updated} updated`);
+                    if (result.removed) parts.push(`${result.removed} removed`);
+                    if (result.failed)  parts.push(`${result.failed} failed`);
+                    const staleNote = stale.length > 0
+                        ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
+                        : '';
+                    await interaction.editReply(
+                        `✅ Docs sync complete${force ? ' (forced)' : ''} — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} pages tracked.${staleNote}`
+                    );
+                }
             } catch (err) {
                 await interaction.editReply(`❌ Sync failed: ${err.message}`);
             }
@@ -402,7 +452,7 @@ function createSlashHandler(discordClient, config, modules) {
             const url = interaction.options.getString('url');
             if (!url.startsWith('http')) { await interaction.reply('Please provide a valid URL starting with http.'); return; }
             const month    = getMonthLabel();
-            const blogDir  = path.join(__dirname, 'knowledge-base', 'blogs', `${month}_blog`);
+            const blogDir  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', `${month}_blog`);
             ensureDir(blogDir);
             const nextNum  = fs.readdirSync(blogDir).filter(f => f.endsWith('.md')).length + 1;
             const filepath = path.join(blogDir, `article${nextNum}.md`);
@@ -422,14 +472,14 @@ function createSlashHandler(discordClient, config, modules) {
         // ── /exclude-blog ─────────────────────────────────────────────────────
         if (cmd === 'exclude-blog') {
             const url       = interaction.options.getString('url');
-            const indexPath = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
+            const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
             let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
             if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
             if (!index.excluded) index.excluded = [];
             if (index.excluded.includes(url)) { await interaction.reply('That post is already excluded.'); return; }
             const pageEntry = index.pages.find(p => p.url === url);
             if (pageEntry) {
-                const fp = path.join(__dirname, 'knowledge-base', 'blogs', pageEntry.file);
+                const fp = path.join(ROOT_DIR, 'knowledge-base', 'blogs', pageEntry.file);
                 if (fs.existsSync(fp)) fs.unlinkSync(fp);
                 index.pages = index.pages.filter(p => p.url !== url);
             }
@@ -438,14 +488,14 @@ function createSlashHandler(discordClient, config, modules) {
             await interaction.deferReply();
             await buildIndex();
             const slug = pageEntry?.slug ?? new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await interaction.editReply(`✅ Excluded: \`${slug}\`\n${pageEntry ? 'File deleted from KB. ' : ''}Skipped on future \`/sync-blog\` runs.`);
+            await interaction.editReply(`✅ Excluded: \`${slug}\`\n${pageEntry ? 'File deleted from KB. ' : ''}Skipped on future \`/sync blog\` runs.`);
             return;
         }
 
         // ── /include-blog ─────────────────────────────────────────────────────
         if (cmd === 'include-blog') {
             const url       = interaction.options.getString('url');
-            const indexPath = path.join(__dirname, 'knowledge-base', 'blogs', '_index.json');
+            const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
             let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
             if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
             if (!index.excluded) index.excluded = [];
@@ -453,14 +503,14 @@ function createSlashHandler(discordClient, config, modules) {
             index.excluded = index.excluded.filter(u => u !== url);
             fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
             const slug = new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await interaction.reply(`✅ Removed from exclusion list: \`${slug}\`\nRun \`/sync-blog\` to re-scrape.`);
+            await interaction.reply(`✅ Removed from exclusion list: \`${slug}\`\nRun \`/sync blog\` to re-scrape.`);
             return;
         }
 
         // ── /add-doc ──────────────────────────────────────────────────────────
         if (cmd === 'add-doc') {
             const url     = interaction.options.getString('url');
-            const docsDir = path.join(__dirname, 'knowledge-base', 'docs');
+            const docsDir = path.join(ROOT_DIR, 'knowledge-base', 'docs');
             ensureDir(docsDir);
             const slug     = new URL(url).pathname.replace(/^\/|\/$/g, '').replace(/[^a-z0-9]+/gi, '-') || 'index';
             const filepath = path.join(docsDir, `${slug}.md`);
@@ -474,6 +524,53 @@ function createSlashHandler(discordClient, config, modules) {
             } catch (err) {
                 await interaction.editReply(`❌ Failed to scrape: ${err.message}`);
             }
+            return;
+        }
+
+        // ── /check-permissions ────────────────────────────────────────────────
+        if (cmd === 'check-permissions') {
+            await interaction.deferReply();
+            const botId    = discordClient.user.id;
+            const botMember = interaction.guild.members.me;
+
+            async function checkChannel(id, label, expectedSend) {
+                if (!id) return `⚠️ ${label} — not configured`;
+                try {
+                    const ch    = discordClient.channels.cache.get(id) ?? await discordClient.channels.fetch(id);
+                    const perms = ch.permissionsFor(botId);
+                    const view  = perms.has(PermissionFlagsBits.ViewChannel)       ? '✅' : '❌';
+                    const read  = perms.has(PermissionFlagsBits.ReadMessageHistory) ? '✅' : '❌';
+                    const send  = perms.has(PermissionFlagsBits.SendMessages)       ? '✅' : '❌';
+                    const sendFlag = expectedSend
+                        ? (perms.has(PermissionFlagsBits.SendMessages) ? '' : ' ⚠️ needs Send')
+                        : (perms.has(PermissionFlagsBits.SendMessages) ? ' ⚠️ should be read-only' : '');
+                    return `${label} — View ${view} | Read ${read} | Send ${send}${sendFlag}`;
+                } catch {
+                    return `❌ ${label} — could not fetch channel`;
+                }
+            }
+
+            // Guild-level permissions required by the scam blocker
+            const guildPerms  = botMember?.permissions;
+            const hasManageMsg   = guildPerms?.has(PermissionFlagsBits.ManageMessages)  ?? false;
+            const hasModMembers  = guildPerms?.has(PermissionFlagsBits.ModerateMembers) ?? false;
+            const scamBlockerPerms =
+                `**Scam Blocker (guild-level)**\n` +
+                `Manage Messages: ${hasManageMsg  ? '✅' : '❌ needed for message deletion'}\n` +
+                `Moderate Members: ${hasModMembers ? '✅' : '❌ needed for timeouts'}`;
+
+            const checks = await Promise.all([
+                checkChannel(ANNOUNCEMENTS_CHANNEL_ID, '📢 Announcements', false),
+                checkChannel(TWEETS_CHANNEL_ID,         '🐦 Tweets',         false),
+                checkChannel(GENERAL_CHANNEL_ID,        '💬 General',         true),
+                checkChannel(SUPPORT_CHANNEL_ID,        '🎫 Support',         true),
+                checkChannel(SCAM_LOG_CHANNEL_ID,       '🚨 Scam Log',        true),
+                ...[...(SUPPORT_TICKET_CATEGORY_IDS ?? [])].map((catId, i) =>
+                    checkChannel(catId, `🎟️ Ticket Category ${i + 1}`, false)
+                ),
+            ]);
+
+            await interaction.editReply(`**Bot Permission Check**\n${checks.join('\n')}\n\n${scamBlockerPerms}`);
             return;
         }
 
@@ -502,7 +599,7 @@ function createSlashHandler(discordClient, config, modules) {
 
             if (!attachment) await interaction.deferReply();
 
-            const correctionsDir = path.join(__dirname, 'knowledge-base', 'corrections');
+            const correctionsDir = path.join(ROOT_DIR, 'knowledge-base', 'corrections');
             ensureDir(correctionsDir);
             const filepath = path.join(correctionsDir, `${slug}.md`);
             const isUpdate = fs.existsSync(filepath);
@@ -517,6 +614,16 @@ function createSlashHandler(discordClient, config, modules) {
                 await interaction.editReply(`❌ Index rebuild failed: ${err.message}`);
             }
             return;
+        }
+        } catch (err) {
+            console.error('[Slash] Unhandled error:', err.message);
+            try {
+                if (interaction.deferred) {
+                    await interaction.editReply('❌ Something went wrong. Please try again.');
+                } else if (!interaction.replied) {
+                    await interaction.reply({ content: '❌ Something went wrong. Please try again.', ephemeral: true });
+                }
+            } catch {}
         }
     };
 }

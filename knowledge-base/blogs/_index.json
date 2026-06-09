@@ -1,13 +1,13 @@
 {
   "sitemapUrl": "https://blog.river.inc/sitemap-posts.xml",
-  "lastChecked": "2026-05-08T08:27:55.136Z",
+  "lastChecked": "2026-06-05T08:36:56.151Z",
   "pages": [
     {
       "url": "https://blog.river.inc/dynamic-airdrop-conversion-3-0/",
       "slug": "dynamic-airdrop-conversion-3-0",
       "file": "dynamic-airdrop-conversion-3-0.md",
-      "lastmod": "2026-05-08T07:47:35.532Z",
-      "lastScraped": "2026-05-08T07:53:37.725Z"
+      "lastmod": "2026-05-08T07:47:35.000Z",
+      "lastScraped": "2026-06-05T08:36:56.151Z"
     },
     {
       "url": "https://blog.river.inc/s4-airdrop-is-live/",
@@ -34,8 +34,8 @@
       "url": "https://blog.river.inc/s4-airdrop-conclusion/",
       "slug": "s4-airdrop-conclusion",
       "file": "s4-airdrop-conclusion.md",
-      "lastmod": "2026-04-22T03:55:04.000Z",
-      "lastScraped": "2026-05-08T07:53:41.328Z"
+      "lastmod": "2026-05-11T13:47:31.000Z",
+      "lastScraped": "2026-06-05T08:36:55.656Z"
     },
     {
       "url": "https://blog.river.inc/river-live-on-hyperliquid/",
@@ -295,6 +295,13 @@
       "file": "river-now-live-on-arbitrum.md",
       "lastmod": "2025-05-25T14:28:30.000Z",
       "lastScraped": "2026-05-08T07:54:01.913Z"
+    },
+    {
+      "url": "https://blog.river.inc/2026-world-cup-voting-challenge/",
+      "slug": "2026-world-cup-voting-challenge",
+      "file": "2026-world-cup-voting-challenge.md",
+      "lastmod": "2026-06-05T05:30:28.000Z",
+      "lastScraped": "2026-06-05T08:36:54.872Z"
     }
   ],
   "excluded": [],

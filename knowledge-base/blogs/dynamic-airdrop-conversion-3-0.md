@@ -1,6 +1,6 @@
 # Blog: dynamic-airdrop-conversion-3-0
 Source: https://blog.river.inc/dynamic-airdrop-conversion-3-0/
-Scraped: 2026-05-08T07:53:37.723Z
+Scraped: 2026-06-05T08:36:56.150Z
 
 ---
 

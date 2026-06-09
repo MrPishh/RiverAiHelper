@@ -1,6 +1,6 @@
 # Blog: s4-airdrop-conclusion
 Source: https://blog.river.inc/s4-airdrop-conclusion/
-Scraped: 2026-05-08T07:53:41.328Z
+Scraped: 2026-06-05T08:36:55.655Z
 
 ---
 
@@ -21,7 +21,6 @@ S4 drew the largest on-chain turnout in River's history.
 The distribution of eligible participants shifted further toward on-chain addresses compared to S3, reflecting a more active user base.
 
 -   250,000+ users participated in S4
--   200M River Pts distributed in S4
 -   600M+ River Pts Converted
 -   ~2M $RIVER staked (~$10M worth)
 
