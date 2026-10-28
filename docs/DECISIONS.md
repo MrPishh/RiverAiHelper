@@ -87,7 +87,7 @@ Decisions that look odd out of context, and things that were tried and removed â
 | The scam blocker never acts on staff | A staff member @mentioning the bot about a scam link was classified scam-content and could be deleted and timed out (fixed 2026-10-29). |
 | Q&A learning stores only staff replies to real questions | Staff replies to greetings and chat were being learned as if they were answers (changed 2026-10-29). |
 | A failed announcement check is retried on the next scan | The scan used to record its position before processing, so an API error lost that announcement for good (fixed 2026-10-29). |
-| The Anthropic SDK stays on 0.95.x for now | 1.x switches to a new API version (2026-10-21); upgrade once one real call has confirmed responses are unchanged. |
+| Anthropic SDK 1.x (API version 2026-10-21) since 2026-10-29 | Upgraded after a live call and `npm run eval` confirmed unchanged replies. Rules of that API version: never send `temperature` / `top_p` / `top_k` (they now return an error); pass only one credential (`apiKey`) to `new Anthropic()`. |
 | `/tgkick` kicks once, then drops the user to watch mode | They can rejoin; harmful messages are still deleted. |
 | Telegram has no proactive scam blocking for first-time offenders | Only watched users are moderated. A known gap (flagged 2026-08-18), not yet decided. |
 
