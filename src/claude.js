@@ -2,6 +2,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { getLivePrices, isPricingQuestion } = require('./price-fetcher');
 
 // ─── Scam concern detection ───────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ const SCAM_CONCERN_BLOCK = [
     'A few important things to keep in mind:',
     '• River admins and support staff will never DM you first or ask for your private keys, seed phrase, or login credentials',
     '• You will never be asked to enter your seed phrase on any third-party website',
-    '• You will never be asked to connect your wallet to any site other than the official website: <https://river.inc>',
+    '• You will never be asked to connect your wallet to any site other than the official website: <https://riverai.inc>',
     '• Anyone offering help in the general channel or community chat could be a scammer — public channels are not a safe place to receive support',
     "• Always verify who you're speaking to and only use official links",
     '',
@@ -37,7 +38,7 @@ function detectScamConcernSync(question) {
         /\bsomeone (claiming|saying|told me|says|said) (they('re| are)|he'?s|she'?s) (an? )?(admin|staff|support|from river|river (team|support))\b/,
         /\b(how (do i|can i) )?(know|verify|tell|check|confirm) (if |whether )?(this|they|it|it'?s) (is |are )?(real|legit|legitimate|official|safe|from river)\b/,
         /\b(help|support) (outside|in dms?|privately|off.?server|through (dm|telegram|whatsapp))\b/,
-        /\b(told|asking|asked|telling) (me |you )?(to )?(dm|message|pm|contact) (them|him|her)\b/,
+        /\b(told|asking|asked|telling) (me |you )?(to )?(dm|inbox|message|pm|contact) (them|him|her)\b/,
         /\b(someone|a user|an account|a person)\b[\s\S]{0,80}\b(offering|offered|saying they can|says they can) help\b/,
         /\bseed phrase\b/,
         /\bprivate key\b/,
@@ -69,7 +70,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── System prompt ────────────────────────────────────────────────────────
 
-    function getSystemPrompt(includeScamBlock = false) {
+    function getSystemPrompt(includeScamBlock = false, isFollowUp = false) {
         const factsBlock = state.coreFacts.value
             ? `CORE PROJECT FACTS (always true — use these to correct misconceptions):\n${state.coreFacts.value}\n`
             : '';
@@ -82,13 +83,16 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             '2. Wrap URLs in angle brackets: <https://example.com>. For Discord channel/ticket links use <#CHANNEL_ID> format (e.g. <#1212718437164388392>) — never a full URL.',
             '3. Never echo the question back.',
             '4. Concise and friendly. Discord renders markdown.',
+            '5. EXTERNAL LINKS: Never share any URL that does not appear in the context provided to you (knowledge base chunks or the LIVE PRICES block). Do not reference third-party tools, checkers, or external websites from your own training knowledge — even if they are real and relevant. If no provided-context link exists for something, omit the link entirely.',
             '',
             factsBlock,
             'SOURCE PRIORITY: corrections > blogs/announcements > docs. Docs may be outdated — defer to corrections and blog posts. If sources conflict, state which you used.',
             '',
             'CONVERSION: Only Conversion 3.0 is active. Default to 3.0 for all conversion questions. Reference 1.0/2.0 only if explicitly asked. If ambiguous, ask: "Are you asking about Conversion 3.0 or an earlier version?" Never apply old 1.0/2.0 figures to current questions.',
             '',
-            'RELEVANCE: Only include information that DIRECTLY answers the question. No announcements, events, or loosely related content.',
+            'RELEVANCE: Only include information that DIRECTLY answers the question. Do not volunteer related requirements, troubleshooting steps, or sub-topics the user did not ask about. No announcements, events, or loosely related content.',
+            '',
+            'SCOPE: Stop once you have answered the question. Do not append follow-up content after the answer is complete — no scoring explanations, troubleshooting steps, dashboard links, or "also worth knowing" additions unless the user asked for them. Only include extra information if omitting it would make the answer factually wrong or misleading.',
             '',
             'RESPONSE TYPE: Start every response with one of these tags on its own line:',
             'ANSWER:   — direct answer available',
@@ -102,9 +106,54 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             '',
             'PARTIAL KNOWLEDGE: Answer what you can, then add one line: "For [specific thing], please ask the team: <link>". No separate section.',
             '',
+            ...(isFollowUp ? [
+                'CONVERSATIONAL BREVITY: This is a follow-up turn in an ongoing exchange, not a fresh question — keep it to 2-4 sentences. ' +
+                'Do not re-explain a mechanism you already covered earlier in this conversation; refer back briefly instead ("as explained above") rather than repeating it. ' +
+                'If the user is just agreeing, venting, or making an observation rather than raising a new specific claim, a short acknowledgement is enough — do not restate the full mechanic.',
+                '',
+            ] : []),
             ...(includeScamBlock ? [SCAM_CONCERN_BLOCK, ''] : []),
-            'TONE: Acknowledge frustration briefly, then highlight genuine positives (longer staking = more tokens + voting power + River Pts). Neutral and factual — never dismissive.',
+            'End ANSWER and ESCALATE responses (not CLARIFY) with: SOURCES: <comma-separated knowledge-base sections most relevant to your answer>',
+            '',
+            'TONE: Acknowledge frustration briefly, then explain the mechanism in a way that gives a logical, non-panic answer. Genuine positives are forward-looking mechanics and incentives (e.g. longer staking = better conversion ratio, more tokens, more voting power) — never backward-looking performance stats like "it was up 50× before" or "it rose 40% at launch". Those comparisons make current dips feel worse, not better. Neutral and factual — never dismissive.',
         ].filter(Boolean).join('\n');
+    }
+
+    // ─── Reply chunking ────────────────────────────────────────────────────────
+    // Discord hard-caps a single message at 2000 chars. Detailed answers (e.g. full
+    // tokenomics/vesting breakdowns) can exceed that — split on paragraph/line
+    // boundaries rather than sending one oversized reply that Discord rejects outright.
+
+    function splitForReply(text, limit = 1900) {
+        if (text.length <= limit) return [text];
+
+        const paragraphs = text.split(/\n\n+/);
+        const chunks = [];
+        let current = '';
+
+        for (const para of paragraphs) {
+            const candidate = current ? `${current}\n\n${para}` : para;
+            if (candidate.length <= limit) {
+                current = candidate;
+                continue;
+            }
+            if (current) chunks.push(current);
+            if (para.length <= limit) {
+                current = para;
+                continue;
+            }
+            // Single paragraph itself exceeds the limit — hard-split on line breaks.
+            let remaining = para;
+            while (remaining.length > limit) {
+                let cut = remaining.lastIndexOf('\n', limit);
+                if (cut <= 0) cut = limit;
+                chunks.push(remaining.slice(0, cut));
+                remaining = remaining.slice(cut).trimStart();
+            }
+            current = remaining;
+        }
+        if (current) chunks.push(current);
+        return chunks;
     }
 
     // ─── Response sanitiser ───────────────────────────────────────────────────
@@ -136,23 +185,41 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Claude API call ──────────────────────────────────────────────────────
 
-    async function askClaude(history, includeScamBlock = false) {
-        state.referralCode.idx++;
-        const dynamicPart = `ASSIGNED REFERRAL CODE: If this conversation requires giving a user a registration referral code, use exactly: ${state.REFERRAL_CODES[state.referralCode.idx % state.REFERRAL_CODES.length]}\n\nEnd ANSWER and ESCALATE responses (not CLARIFY) with:\nSOURCES: <comma-separated knowledge-base sections most relevant to your answer>`;
+    // Mark the last message with cache_control so the next turn can reuse the
+    // entire prior conversation prefix (system + KB context + history) from cache.
+    function withCacheOnLastMessage(messages) {
+        if (!messages.length) return messages;
+        return messages.map((msg, idx) => {
+            if (idx !== messages.length - 1) return msg;
+            if (typeof msg.content === 'string') {
+                return { ...msg, content: [{ type: 'text', text: msg.content, cache_control: { type: 'ephemeral' } }] };
+            }
+            if (Array.isArray(msg.content) && msg.content.length > 0) {
+                const content = msg.content.map((block, bIdx, arr) =>
+                    bIdx === arr.length - 1 ? { ...block, cache_control: { type: 'ephemeral' } } : block
+                );
+                return { ...msg, content };
+            }
+            return msg;
+        });
+    }
 
+    async function askClaude(history, includeScamBlock = false) {
+        const isFollowUp = history.length > 1;
         const response = await anthropic.messages.create({
             model:      'claude-sonnet-4-6',
             max_tokens: 1024,
-            system: [
-                { type: 'text', text: getSystemPrompt(includeScamBlock), cache_control: { type: 'ephemeral' } },
-                { type: 'text', text: dynamicPart },
-            ],
-            messages: history,
+            // Two independent cache breakpoints: the system block is identical across every
+            // call with the same includeScamBlock/isFollowUp combination (cached across many
+            // different users' conversations), while withCacheOnLastMessage caches the growing
+            // per-conversation prefix (system + KB context + history) for same-thread follow-ups.
+            system: [{ type: 'text', text: getSystemPrompt(includeScamBlock, isFollowUp), cache_control: { type: 'ephemeral' } }],
+            messages:   withCacheOnLastMessage(history),
         });
 
-        if (response.usage.cache_read_input_tokens) {
-            console.log(`[Cache] Hit — ${response.usage.cache_read_input_tokens} tokens served from cache`);
-        }
+        const { cache_read_input_tokens: cacheRead, cache_creation_input_tokens: cacheWrite } = response.usage;
+        if (cacheRead)  console.log(`[Cache] Hit   — ${cacheRead} tokens from cache`);
+        if (cacheWrite) console.log(`[Cache] Write — ${cacheWrite} tokens written to cache`);
         trackUsage(response.usage.input_tokens, response.usage.output_tokens);
 
         const full     = response.content[0].text.trim();
@@ -222,11 +289,43 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
     }
 
     async function buildInitialHistory(question) {
-        const { sources, rawChunks } = await searchKB(question);
+        state.referralCode.idx++;
+        const referralCode = state.REFERRAL_CODES[state.referralCode.idx % state.REFERRAL_CODES.length];
+
+        const kbSearch = searchKB(question);
+        const pricePromise = isPricingQuestion(question) ? getLivePrices() : Promise.resolve(null);
+
+        const [{ rawChunks }, prices] = await Promise.all([kbSearch, pricePromise]);
         const reranked     = await rerankChunks(question, rawChunks);
         const finalContext = reranked.map(c => `### ${c.file}\n\n${c.text}`).join('\n\n---\n\n');
         const finalSources = [...new Set(reranked.map(c => c.file))];
-        const history      = [{ role: 'user', content: `Relevant context:\n${finalContext}\n\nQuestion: ${question}` }];
+
+        let priceBlock = '';
+        if (prices && (prices.riverPts !== null || prices.river !== null)) {
+            const lines = [
+                'LIVE PRICES (real-time data — use these figures to answer the question directly with the actual current value):',
+                'Do NOT deflect to links as the main answer. Give the calculated number, note it fluctuates, and only share a source link if the user specifically asks where to check.',
+            ];
+            if (prices.riverPts !== null) {
+                const per1k = (prices.riverPts * 1000).toFixed(3);
+                const per1m = Math.round(prices.riverPts * 1_000_000).toLocaleString();
+                const ptsLink = Math.random() < 0.7
+                    ? '<https://coinmarketcap.com/currencies/riverpts/>'
+                    : '<https://web3.okx.com/token/bsc/0xfc6be825925b7a83d131e33b46efef9084f0e014>';
+                lines.push(`River Pts (RIVERPTS): $${prices.riverPts.toFixed(6)} per token | 1,000 pts ≈ $${per1k} | 1M pts ≈ $${per1m}`);
+                lines.push(`Source (share only if asked): ${ptsLink}`);
+            }
+            if (prices.river !== null) {
+                const riverLink = Math.random() < 0.7
+                    ? '<https://coinmarketcap.com/currencies/river/>'
+                    : '<https://web3.okx.com/token/bsc/0xda7ad9dea9397cffddae2f8a052b82f1484252b3>';
+                lines.push(`$RIVER token: $${prices.river.toFixed(4)} per token`);
+                lines.push(`Source (share only if asked): ${riverLink}`);
+            }
+            priceBlock = lines.join('\n') + '\n\n';
+        }
+
+        const history = [{ role: 'user', content: `ASSIGNED REFERRAL CODE: If this conversation requires giving a user a registration referral code, use exactly: ${referralCode}\n\n${priceBlock}Relevant context:\n${finalContext}\n\nQuestion: ${question}` }];
         return { history, sources: finalSources };
     }
 
@@ -299,7 +398,10 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             const footer    = (isDiscord && (type === 'ANSWER' || type === 'CLARIFY'))
                 ? '\n-# To follow up: reply to this message or @RiverAiBot — no wait.'
                 : '';
-            const botReply = await targetMessage.reply(answer + footer);
+            let botReply;
+            for (const chunk of splitForReply(answer + footer)) {
+                botReply = await targetMessage.reply(chunk);
+            }
             state.ragSourcesMap.set(botReply.id, { sources, storedAt: Date.now() });
 
             if (type === 'CLARIFY') {
@@ -311,7 +413,18 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
                 });
                 console.log(`[Answer] [CLARIFY] Asked follow-up to ${userId} in #${channelId}`);
             } else {
-                deleteConversation(key);
+                if (type === 'ANSWER') {
+                    // Keep history so follow-ups without reply/tag still get context (expires via CONV_EXPIRY_MS)
+                    setConversation(key, {
+                        history:      [...history, { role: 'assistant', content: answer }],
+                        botMsgId:     botReply.id,
+                        channelId,
+                        lastActivity: Date.now(),
+                        isAnswered:   true,
+                    });
+                } else {
+                    deleteConversation(key);
+                }
                 const existing = state.rephrasingTracker.get(key);
                 state.rephrasingTracker.set(key, {
                     answerCount:    (existing ? existing.answerCount : 0) + 1,
@@ -356,6 +469,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             if (now - val.storedAt > state.STAFF_WAIT_MS + 10 * 60 * 1000) {
                 clearTimeout(val.timer);
                 state.pendingQuestions.delete(key);
+                for (const m of val.messages) state.pendingMsgIndex.delete(m.id);
             }
         }
         for (const [key, val] of state.recentCommunityDiscussion) {

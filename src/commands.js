@@ -1,5 +1,35 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Full messageCreate handler + all !text staff commands. Wires Scenarios 0–3,
+ * ticket/collab logging gate, spoof detector (Layer 3), and Q&A learning.
+ * Exports: registerMessageHandler
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * registerMessageHandler()        factory                         37
+ *   cancelPendingBatch()          cancel pending Scenario 3 batch  67
+ *   fireAutoAnswer()              answer a merged batch            79
+ *   scheduleAutoAnswer()          Scenario 3 timer / batch merge  107
+ *   sendExplanationEmbed()        @bot + msg-link embed           147
+ *   escalatedTimeoutMs()          scam timeout escalation         230
+ *   formatTimeoutLabel()          human-readable timeout          234
+ *   takeScamAction()              delete + timeout + alert        242
+ *   ── Message handler event ──                                  314
+ *   Ticket / collab gate          early-return, log only          329
+ *   Spoof detector (Layer 3)      name-impersonation check        349
+ *   !add-blog-text                staff text command + attach     388
+ *   !add-doc-text                 staff text command + attach     450
+ *   @bot explain embed            staff trigger                   505
+ *   Q&A learning                  saveQAPair on staff reply       532
+ *   Scenario 0                    CLARIFY continuation            562
+ *   Scenario 0.5                  reply to any bot answer         578
+ *   Scenario 1                    direct @mention                 628
+ *   Scenario 2                    @mention as reply, or own       656
+ *                                  question attributed to asker
+ *   Scenario 3                    unprompted auto-answer, batched 739
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs       = require('fs');
 const path     = require('path');
 const ROOT_DIR = path.join(__dirname, '..');
@@ -30,17 +60,75 @@ function registerMessageHandler(discordClient, state, config, modules) {
         searchKB,
         htmlToMarkdown,
         EmbedBuilder,
+        scamTracker,
     } = modules;
 
     // ─── Timed auto-answer ────────────────────────────────────────────────────
+
+    // Cancels a pending Scenario 3 batch (timer + both index entries) without answering it.
+    function cancelPendingBatch(key) {
+        const pending = state.pendingQuestions.get(key);
+        if (!pending) return null;
+        clearTimeout(pending.timer);
+        state.pendingQuestions.delete(key);
+        for (const m of pending.messages) state.pendingMsgIndex.delete(m.id);
+        return pending;
+    }
+
+    // Fires the batched answer for a pending Scenario 3 entry — merges all messages the
+    // user sent while the timer was pending into one combined question/answer instead of
+    // answering each separately.
+    async function fireAutoAnswer(key) {
+        const pending = state.pendingQuestions.get(key);
+        if (!pending) return;
+        state.pendingQuestions.delete(key);
+        for (const m of pending.messages) state.pendingMsgIndex.delete(m.id);
+
+        const { userId, channelId, lastMessage } = pending;
+        const combined = pending.messages.map(m => m.content).filter(c => c.trim()).join('\n');
+        if (!combined.trim()) {
+            console.log(`[AutoAnswer] Skipped batch for ${userId} — empty content`);
+            return;
+        }
+
+        const recentConv = state.conversationState.get(key);
+        if (recentConv?.isAnswered && (Date.now() - recentConv.lastActivity) < state.CONV_EXPIRY_MS) {
+            const { context: newContext, sources: newSources } = await searchKB(combined);
+            const updatedHistory = [
+                ...recentConv.history,
+                { role: 'user', content: `Relevant context:\n${newContext}\n\nFollow-up: ${combined}` },
+            ];
+            console.log(`[AutoAnswer] Resuming prior context for ${userId} (${pending.messages.length} message(s) batched)`);
+            await answerQuestion({ question: combined, targetMessage: lastMessage, userId, channelId, existingHistory: updatedHistory, ragSources: newSources });
+        } else {
+            console.log(`[AutoAnswer] Answering batch for ${userId} (${pending.messages.length} message(s))`);
+            await answerQuestion({ question: combined, targetMessage: lastMessage, userId, channelId });
+        }
+    }
 
     function scheduleAutoAnswer(message) {
         const { id: msgId, content: question, author: { id: userId }, channelId } = message;
         const key = trackerKey(userId, channelId);
 
+        // Check staffEngaged BEFORE folding into an existing batch — staff can engage a user
+        // via a path that doesn't touch that user's current pending batch (e.g. replying to an
+        // older, non-pending message), so an existing batch alone doesn't prove staff hasn't
+        // just engaged. Re-checking here every time keeps the hard-block authoritative.
         const staffTs = state.staffEngaged.get(key);
         if (staffTs && (Date.now() - staffTs) < state.STAFF_ENGAGED_WINDOW_MS) {
             console.log(`[AutoAnswer] Skipped ${msgId} — staff engaged with ${userId} recently`);
+            return;
+        }
+
+        const existing = state.pendingQuestions.get(key);
+        if (existing) {
+            // Same user posted again before their prior pending message(s) were answered —
+            // fold into the same batch. The original timer/deadline is left untouched, so a
+            // burst of messages still produces exactly one combined answer, not a longer wait.
+            existing.messages.push({ id: msgId, content: question, ts: Date.now() });
+            existing.lastMessage = message;
+            state.pendingMsgIndex.set(msgId, key);
+            console.log(`[AutoAnswer] Merged ${msgId} into pending batch for ${userId} (${existing.messages.length} message(s) now)`);
             return;
         }
 
@@ -48,17 +136,15 @@ function registerMessageHandler(discordClient, state, config, modules) {
         const postStaff = staffTs && (Date.now() - staffTs) < state.POST_STAFF_CONTEXT_MS;
         const waitMs = postStaff ? state.POST_STAFF_WAIT_MS : state.STAFF_WAIT_MS;
 
-        const timer = setTimeout(async () => {
-            if (!state.pendingQuestions.has(msgId)) return;
-            state.pendingQuestions.delete(msgId);
-            if (!question.trim()) {
-                console.log(`[AutoAnswer] Skipped ${msgId} — empty message content`);
-                return;
-            }
-            await answerQuestion({ question, targetMessage: message, userId, channelId });
-        }, waitMs);
+        const timer = setTimeout(() => fireAutoAnswer(key), waitMs);
 
-        state.pendingQuestions.set(msgId, { question, userId, channelId, timer, storedAt: Date.now() });
+        state.pendingQuestions.set(key, {
+            messages:    [{ id: msgId, content: question, ts: Date.now() }],
+            userId, channelId, timer,
+            lastMessage: message,
+            storedAt:    Date.now(),
+        });
+        state.pendingMsgIndex.set(msgId, key);
         console.log(`[AutoAnswer] Queued ${msgId} — fires in ${waitMs / 1000}s${postStaff ? ' (post-staff, shortened)' : ''} if no staff reply`);
     }
 
@@ -144,10 +230,41 @@ function registerMessageHandler(discordClient, state, config, modules) {
     // Deletes the message, issues a 1-hour timeout, and posts an alert embed.
     // No-ops silently when the scam-blocker toggle is OFF — detection still logs.
 
-    const SCAM_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
+    const SCAM_TIMEOUT_BASE_MS = 60 * 60 * 1000; // 1 hour — base unit for escalation
+    const SCAM_TIMEOUT_MAX_MS  = 28 * 24 * 60 * 60 * 1000; // 28 days — Discord hard cap
+
+    function escalatedTimeoutMs(nextCount) {
+        return Math.min(nextCount * SCAM_TIMEOUT_BASE_MS, SCAM_TIMEOUT_MAX_MS);
+    }
+
+    function formatTimeoutLabel(ms) {
+        const totalHours = Math.round(ms / SCAM_TIMEOUT_BASE_MS);
+        if (totalHours < 24) return `${totalHours}h timeout`;
+        const days  = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        return hours > 0 ? `${days}d ${hours}h timeout` : `${days}d timeout`;
+    }
 
     async function takeScamAction(message, member, reason) {
         if (!isEnabled('scam-blocker')) return;
+
+        // Record the infraction FIRST — recordInfraction() is a synchronous read-modify-write
+        // (no await in between reading the existing count and writing the new one), so calling
+        // it before any of the async work below makes the count used for escalation atomic
+        // relative to other concurrent takeScamAction calls for the same user. Previously the
+        // count came from a separate getRecord() call made before the awaits, leaving a window
+        // where two near-simultaneous scam messages from the same user could both read the same
+        // starting count and apply the same (under-escalated) timeout instead of the second one
+        // stepping up. `actions` is filled in with the real outcome afterward via
+        // updateLastInfractionActions() — that part isn't escalation-sensitive.
+        const infractionCount = scamTracker.recordInfraction(message.author.id, {
+            reason,
+            content:   message.content,
+            channelId: message.channelId,
+            actions:   '(pending)',
+            tag:       message.author.tag ?? message.author.username,
+        });
+        const timeoutMs = escalatedTimeoutMs(infractionCount);
 
         const actions = [];
 
@@ -161,8 +278,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
 
         if (member) {
             try {
-                await member.timeout(SCAM_TIMEOUT_MS, `Scam blocker: ${reason}`.slice(0, 512));
-                actions.push('1h timeout');
+                await member.timeout(timeoutMs, `Scam blocker: ${reason}`.slice(0, 512));
+                actions.push(formatTimeoutLabel(timeoutMs));
             } catch (err) {
                 console.warn(`[ScamBlock] Timeout failed (${member.id}): ${err.message}`);
                 actions.push('timeout failed — check bot role hierarchy + Moderate Members perm');
@@ -171,23 +288,30 @@ function registerMessageHandler(discordClient, state, config, modules) {
             actions.push('member not resolved — timeout skipped');
         }
 
-        console.log(`[ScamBlock] ${message.author?.tag ?? message.author?.id} | ${reason} | ${actions.join(', ')}`);
+        const actionsStr = actions.join(' · ');
+        scamTracker.updateInfractionActions(message.author.id, infractionCount, actionsStr);
+        console.log(`[ScamBlock] ${message.author?.tag ?? message.author?.id} | ${reason} | ${actionsStr}`);
 
         if (!SCAM_LOG_CHANNEL_ID) return;
         try {
             const ch = discordClient.channels.cache.get(SCAM_LOG_CHANNEL_ID)
                 ?? await discordClient.channels.fetch(SCAM_LOG_CHANNEL_ID);
             if (!ch?.isTextBased()) return;
+            const isRepeat   = infractionCount > 1;
+            const countLabel = isRepeat
+                ? `⚠️ **${infractionCount} — REPEAT OFFENDER**`
+                : `1 (first offence)`;
             await ch.send({ embeds: [
                 new EmbedBuilder()
-                    .setColor(0xFF3333)
-                    .setTitle('🚨 Scam Blocker')
+                    .setColor(isRepeat ? 0xFF0000 : 0xFF3333)
+                    .setTitle(isRepeat ? '🚨 Scam Blocker — REPEAT OFFENDER' : '🚨 Scam Blocker')
                     .addFields(
-                        { name: 'User',      value: `<@${message.author.id}> (${message.author.tag ?? message.author.username})`, inline: true },
-                        { name: 'Channel',   value: `<#${message.channelId}>`, inline: true },
-                        { name: 'Detection', value: reason, inline: false },
-                        { name: 'Message',   value: (message.content || '*(empty)*').slice(0, 1020) },
-                        { name: 'Actions',   value: actions.join(' · ') },
+                        { name: 'User',        value: `<@${message.author.id}> (${message.author.tag ?? message.author.username})`, inline: true },
+                        { name: 'Channel',     value: `<#${message.channelId}>`, inline: true },
+                        { name: 'Infractions', value: countLabel, inline: false },
+                        { name: 'Detection',   value: reason, inline: false },
+                        { name: 'Message',     value: (message.content || '*(empty)*').slice(0, 1020) },
+                        { name: 'Actions',     value: actionsStr },
                     )
                     .setTimestamp(),
             ]});
@@ -230,44 +354,57 @@ function registerMessageHandler(discordClient, state, config, modules) {
             logMessageIntent(message, botUserId, staff);
         }
 
-        // Chinese channel — log only, no live classification or response
-        if (CHINESE_DISCORD_CHANNEL_ID && channelId === CHINESE_DISCORD_CHANNEL_ID) return;
-
         // Spoof detection — name impersonation + DM-offer pattern
+        // spoofMatch is kept in scope so scenario routing can pass it to classifyMessageIntent
+        // if the helper-offer gate below doesn't fire (name matched but message wording didn't).
+        // Runs for the Chinese channel too — scam blocking must not depend on answer language.
+        let spoofMatch = null;
         if (!staff && state.staffNameCache.size > 0) {
             const senderDisplay = member?.displayName ?? message.author.username;
-            const spoofCheck    = looksLikeSpoofedName(senderDisplay, state.staffNameCache);
-            if (spoofCheck.matched && looksLikeHelperOffer(content)) {
+            spoofMatch = looksLikeSpoofedName(senderDisplay, state.staffNameCache);
+            if (spoofMatch.matched && looksLikeHelperOffer(content)) {
                 logIntentClassification(message.id, 'scam-content');
-                console.warn(`[SpoofDetect] ${userId} ("${senderDisplay}") resembles staff "${spoofCheck.staffName}"`);
-                await takeScamAction(message, member, `name-spoof: "${senderDisplay}" ≈ "${spoofCheck.staffName}"`);
+                console.warn(`[SpoofDetect] ${userId} ("${senderDisplay}") resembles staff "${spoofMatch.staffName}"`);
+                await takeScamAction(message, member, `name-spoof: "${senderDisplay}" ≈ "${spoofMatch.staffName}"`);
                 return;
             }
         }
 
-        // Self-resolution check
-        for (const [msgId, pending] of state.pendingQuestions) {
-            if (pending.userId === userId && pending.channelId === channelId && looksResolved(content)) {
-                clearTimeout(pending.timer);
-                state.pendingQuestions.delete(msgId);
-                console.log(`[AutoAnswer] Cancelled ${msgId} — user ${userId} signalled self-resolution`);
-                break;
+        // Chinese channel — still runs scam-content classification (below), just never answers
+        // Q&A or routes into the Scenario pipeline. Previously this returned before any
+        // classification ran at all, which meant scam messages in this channel were never
+        // caught by anything — fixed 2026-09-01 after scam links went unblocked here.
+        if (CHINESE_DISCORD_CHANNEL_ID && channelId === CHINESE_DISCORD_CHANNEL_ID) {
+            if (!staff && content.trim()) {
+                const zhIntent = await classifyMessageIntent(content, message, null, spoofMatch);
+                logIntentClassification(message.id, zhIntent);
+                if (zhIntent === 'scam-content') {
+                    await takeScamAction(message, member, 'scam-content (cn channel)');
+                }
             }
+            return;
+        }
+
+        // Self-resolution check
+        const selfKey = trackerKey(userId, channelId);
+        if (looksResolved(content) && state.pendingQuestions.has(selfKey)) {
+            const cancelled = cancelPendingBatch(selfKey);
+            console.log(`[AutoAnswer] Cancelled batch (${cancelled.messages.length} msg) — user ${userId} signalled self-resolution`);
         }
 
         // Community reply — only cancel timer for genuine community-help.
         // cachedIntent stores the result so Scenario 3 reuses it instead of calling the API again.
         let cachedIntent = null;
         if (!staff && message.reference?.messageId) {
-            const pendingForRef = state.pendingQuestions.get(message.reference.messageId);
+            const refKey        = state.pendingMsgIndex.get(message.reference.messageId);
+            const pendingForRef = refKey ? state.pendingQuestions.get(refKey) : null;
             if (pendingForRef && pendingForRef.userId !== userId) {
-                cachedIntent = await classifyMessageIntent(content, message);
+                cachedIntent = await classifyMessageIntent(content, message, null, spoofMatch);
                 if (cachedIntent === 'community-help') {
-                    clearTimeout(pendingForRef.timer);
-                    state.pendingQuestions.delete(message.reference.messageId);
-                    console.log(`[AutoAnswer] Cancelled ${message.reference.messageId} — genuine community-help from ${userId}`);
+                    cancelPendingBatch(refKey);
+                    console.log(`[AutoAnswer] Cancelled batch for ${pendingForRef.userId} — genuine community-help from ${userId}`);
                 } else {
-                    console.log(`[AutoAnswer] Kept timer for ${message.reference.messageId} — reply from ${userId} is '${cachedIntent}', not genuine help`);
+                    console.log(`[AutoAnswer] Kept timer for ${pendingForRef.userId} — reply from ${userId} is '${cachedIntent}', not genuine help`);
                 }
             }
         }
@@ -469,6 +606,27 @@ function registerMessageHandler(discordClient, state, config, modules) {
             try {
                 const referencedMsg = await message.channel.messages.fetch(message.reference.messageId);
                 if (referencedMsg.author.id === discordClient.user.id) {
+                    // Being a reply to the bot's last message doesn't mean it's addressed to the bot —
+                    // in a busy channel the bot's message may just be the most recent one. Gate on intent
+                    // the same way Scenario 1/3 do, so agreement/venting/side-conversation isn't answered.
+                    const intent05 = await classifyMessageIntent(content, message, null, spoofMatch);
+                    logIntentClassification(message.id, intent05);
+
+                    if (intent05 === 'scam-content') {
+                        console.log(`[Trigger] Scenario 0.5 — scam-content from ${userId}`);
+                        await takeScamAction(message, member, 'scam-content (Scenario 0.5)');
+                        return;
+                    }
+                    if (intent05 === 'staff-ping') {
+                        console.log(`[Trigger] Scenario 0.5 — staff-ping from ${userId}, redirecting`);
+                        await message.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
+                        return;
+                    }
+                    if (!RESPOND_INTENTS.has(intent05)) {
+                        console.log(`[Trigger] Scenario 0.5 — skipped, intent '${intent05}' does not warrant a response`);
+                        return;
+                    }
+
                     const botAnswer = referencedMsg.content.replace(/\nSOURCES:.*$/s, '').trim();
 
                     let priorQuestion = '';
@@ -486,7 +644,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
                         { role: 'user', content: `Relevant context:\n${newContext}\n\nFollow-up: ${content}` },
                     ];
 
-                    console.log(`[Trigger] Scenario 0.5 — follow-up reply from ${userId}`);
+                    console.log(`[Trigger] Scenario 0.5 — follow-up reply from ${userId} (intent: ${intent05})`);
                     await answerQuestion({ question: content, targetMessage: message, userId, channelId, existingHistory: history, ragSources: newSources });
                     return;
                 }
@@ -503,7 +661,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
             const question = stripBotMention(content, botUserId);
             if (!question) return;
 
-            const intent1 = await classifyMessageIntent(question, message);
+            const intent1 = await classifyMessageIntent(question, message, null, spoofMatch);
             logIntentClassification(message.id, intent1);
 
             if (intent1 === 'scam-content') {
@@ -528,14 +686,43 @@ function registerMessageHandler(discordClient, state, config, modules) {
         // ─────────────────────────────────────────────────────────────────────
 
         if (botMentioned && message.reference?.messageId) {
+            const ownQuestion = stripBotMention(content, botUserId);
+
             try {
                 const originalMessage = await message.channel.messages.fetch(message.reference.messageId);
-                if (originalMessage.author.id === discordClient.user.id) return;
 
-                const question = originalMessage.content;
-                const askedBy  = originalMessage.author.id;
+                // Replying to the bot's own message with added text — a personal follow-up,
+                // there's no "original asker" to answer on behalf of.
+                if (originalMessage.author.id === discordClient.user.id) {
+                    if (!ownQuestion) return;
 
-                const intent2 = await classifyMessageIntent(question, originalMessage);
+                    const intentSelf = await classifyMessageIntent(ownQuestion, message, null, spoofMatch);
+                    logIntentClassification(message.id, intentSelf);
+
+                    if (intentSelf === 'scam-content') {
+                        console.log(`[Trigger] Scenario 2 — scam-content from ${userId} (mention+reply to bot)`);
+                        await takeScamAction(message, member, 'scam-content (@mention+reply to bot)');
+                        return;
+                    }
+
+                    if (intentSelf === 'staff-ping') {
+                        console.log(`[Trigger] Scenario 2 — staff-ping from ${userId} (mention+reply to bot), redirecting`);
+                        await message.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
+                        return;
+                    }
+
+                    console.log(`[Trigger] Scenario 2 — mention+reply to bot with own question by ${userId} (intent: ${intentSelf})`);
+                    await answerQuestion({ question: ownQuestion, targetMessage: message, userId, channelId });
+                    return;
+                }
+
+                const askedBy = originalMessage.author.id;
+
+                // Scam/staff-ping detection always checks the ORIGINAL message — that's the
+                // post actually being replied to/answered for. Using any clarifying text the
+                // mentioning user added instead would both miss scam content in the original
+                // post and misattribute the mentioning user's own words to the original asker.
+                const intent2 = await classifyMessageIntent(originalMessage.content, originalMessage);
                 logIntentClassification(originalMessage.id, intent2);
 
                 if (intent2 === 'scam-content') {
@@ -552,16 +739,25 @@ function registerMessageHandler(discordClient, state, config, modules) {
                     return;
                 }
 
-                console.log(`[Trigger] Scenario 2 — reply mention, answering original from ${askedBy} (intent: ${intent2})`);
+                console.log(`[Trigger] Scenario 2 — reply mention, answering original from ${askedBy}${ownQuestion ? ' (staff-clarified question)' : ''} (intent: ${intent2})`);
 
-                const pending = state.pendingQuestions.get(message.reference.messageId);
-                if (pending) {
-                    clearTimeout(pending.timer);
-                    state.pendingQuestions.delete(message.reference.messageId);
-                    console.log(`[AutoAnswer] Cancelled pending timer for ${message.reference.messageId}`);
+                // For the ANSWER itself (not the moderation check above), prefer the mentioning
+                // user's own clarifying text when present — it's usually a clearer restatement
+                // of a vague original message.
+                const question = ownQuestion || originalMessage.content;
+
+                const refKeyS2 = state.pendingMsgIndex.get(message.reference.messageId);
+                if (refKeyS2) {
+                    cancelPendingBatch(refKeyS2);
+                    console.log(`[AutoAnswer] Cancelled pending batch for ${askedBy}`);
                 }
 
-                await answerQuestion({ question, targetMessage: originalMessage, userId: askedBy, channelId });
+                // Thread the reply under whichever message makes sense to reply to: the
+                // original vague message by default, or the mentioning user's own message
+                // when they added their own clarified question (they'll often ping the
+                // original asker separately to point them at the answer).
+                const replyTarget = ownQuestion ? message : originalMessage;
+                await answerQuestion({ question, targetMessage: replyTarget, userId: askedBy, channelId });
             } catch (err) {
                 console.error('[Trigger] Could not fetch original message:', err.message);
             }
@@ -574,11 +770,11 @@ function registerMessageHandler(discordClient, state, config, modules) {
 
         if (staff) {
             if (message.reference?.messageId) {
-                const pending = state.pendingQuestions.get(message.reference.messageId);
+                const refKeyS3 = state.pendingMsgIndex.get(message.reference.messageId);
+                const pending  = refKeyS3 ? state.pendingQuestions.get(refKeyS3) : null;
                 if (pending) {
-                    clearTimeout(pending.timer);
-                    state.pendingQuestions.delete(message.reference.messageId);
-                    console.log(`[Scenario 3] Staff replied — cancelled timer for ${message.reference.messageId}`);
+                    cancelPendingBatch(refKeyS3);
+                    console.log(`[Scenario 3] Staff replied — cancelled batch for ${pending.userId}`);
                     state.staffEngaged.set(trackerKey(pending.userId, channelId), Date.now());
                 } else {
                     message.channel.messages.fetch(message.reference.messageId).then(ref => {
@@ -587,6 +783,16 @@ function registerMessageHandler(discordClient, state, config, modules) {
                             console.log(`[StaffEngaged] Recorded staff engagement with ${ref.author.id}`);
                         }
                     }).catch(() => {});
+                }
+            } else {
+                // Plain staff message (no reply) — treat as engagement with anyone
+                // currently pending an auto-answer in this channel, so the bot
+                // doesn't answer over staff who are actively handling it inline.
+                for (const [key, pending] of state.pendingQuestions) {
+                    if (pending.channelId !== channelId) continue;
+                    cancelPendingBatch(key);
+                    state.staffEngaged.set(trackerKey(pending.userId, channelId), Date.now());
+                    console.log(`[StaffEngaged] Staff active in #${channelId} — cancelled pending auto-answer for ${pending.userId}`);
                 }
             }
             return;
@@ -604,7 +810,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
             }
         }
 
-        const intent3 = cachedIntent ?? await classifyMessageIntent(content, message, priorUserContext);
+        const intent3 = cachedIntent ?? await classifyMessageIntent(content, message, priorUserContext, spoofMatch);
         logIntentClassification(message.id, intent3);
         console.log(`[Intent] ${message.id} → ${intent3}${priorUserContext ? ' (with prior context)' : ''}`);
 

@@ -1,10 +1,34 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Reads intent/ticket/collab logs, builds Claude prompt, posts report to Discord.
+ * Daily and weekly reports cached 14 days (keyed by platform::model::from::to[::cn]);
+ * pass force:true to bypass the cache and regenerate.
+ * Exports: generateCommunityReport, buildCommunityReport, MODEL_HAIKU, MODEL_SONNET
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * loadCache() / saveCache()        report-cache.json I/O           44
+ * cacheKey()                       platform::model::from::to key   57
+ * readDiscordMessages()            dc-intent-log.jsonl             64
+ * readAndGroupThreads()            group ticket/collab by thread   87
+ * formatThreads()                  threads → readable text        113
+ * readTicketMessages()             ticket-log.jsonl               121
+ * readCollabMessages()             collab-log.jsonl               133
+ * readTelegramMessages()           tg-intent-log.jsonl            138
+ * readChineseDiscordMessages()     Chinese Discord channel log    158
+ * readChineseTelegramMessages()    Chinese Telegram topic log     177
+ * redactSensitive()                strip 0x private keys          198
+ * buildPrompt()                    assemble sections for Claude   208
+ * buildCommunityReport()           call Claude, return report     240
+ * generateCommunityReport()        full pipeline + post to Discord337
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
 const { INTENT_LOG_PATH, TG_INTENT_LOG_PATH, TICKET_LOG_PATH, COLLAB_LOG_PATH } = require('../../src/intent');
-const { getWeekRange, getDayRange } = require('../../src/utils');
+const { getWeekRange, getDayRange, splitMessage } = require('../../src/utils');
 const { trackUsage } = require('../../src/kb-sync');
 
 const MAX_MSG_LENGTH = 280;
@@ -190,14 +214,16 @@ function buildPrompt(sections, reportType) {
         : '';
     return `You are analysing community messages from a crypto/DeFi project over ${periodDesc}.
 
+LENGTH GUIDANCE: Keep the report as concise as possible. Prefer 2–3 focused bullets per section; only go longer if the data genuinely warrants it. Cut low-value filler.
+
 IMPORTANT CONTEXT:
 - Every message in this dataset is from a community member. Staff and moderator messages have already been removed — do NOT attribute any message to staff, moderators, or the team.
-- In DeFi/crypto communities, scammers routinely impersonate support by posting fake help links, "DM me", or copy-pasted "report to the team" messages. If you see multiple users posting identical or near-identical support-sounding messages, treat them as scam/spam activity — NOT as staff behaviour. Flag these as scam attempts in Conversation Highlights.
-- Malicious links are automatically blocked by a regex filter. Scammers work around this by sharing Twitter/X links (which are allowed) where the tweet content redirects to a scam server. This is a known structural limitation — do NOT highlight Twitter/X link sharing as a moderation failure or suggest staff are not doing their job. A one-line mention under spam activity is sufficient; do not give it undue weight.${chineseNote}
+- In DeFi/crypto communities, scammers routinely post fake help links, "DM me", or copy-pasted "report to the team" messages. These are automatically handled by the scam-blocker — do NOT include routine scam/spam patterns in the report. Only flag a scam incident in Conversation Highlights if something unusual occurred that the bot would not have caught (e.g. a new attack vector, a victim who was actually harmed, or a coordinated campaign that overwhelmed moderation).
+- Malicious links are automatically blocked. Twitter/X links shared by scammers are a known structural limitation — do not mention this in the report at all.${chineseNote}
 
 ${body}
 
-Write a concise ${reportType === 'daily' ? 'daily' : 'weekly'} community report divided into exactly these three sections. Start immediately with the first section heading — do NOT add a title, date line, or any introductory text. Use bullet points only. Be specific — reference actual topics or issues mentioned. Do not pad or repeat. Never reproduce private keys, seed phrases, passwords, or any sensitive credentials — paraphrase or omit them.
+Write a concise ${reportType === 'daily' ? 'daily' : 'weekly'} community report divided into exactly these three sections. Start immediately with the first section heading — do NOT add a title, date line, or any introductory text. Use bullet points only. Do NOT use horizontal dividers (---) between sections. Be specific — reference actual topics or issues mentioned. Do not pad or repeat. Never reproduce private keys, seed phrases, passwords, or any sensitive credentials — paraphrase or omit them.
 
 **Common Problems**
 (issues users repeatedly ran into)
@@ -206,7 +232,7 @@ Write a concise ${reportType === 'daily' ? 'daily' : 'weekly'} community report 
 (questions that came up more than once or represent a clear theme)
 
 **Conversation Highlights**
-(notable exchanges, interesting discussions, or moments worth flagging for the team — include scam/spam activity if observed)`;
+(notable exchanges, interesting discussions, or moments worth flagging for the team — do NOT include routine scam/spam; only flag if something serious occurred that automated moderation would not have caught)`;
 }
 
 // ─── Core builder — returns report data without posting anywhere ──────────────
@@ -219,12 +245,13 @@ async function buildCommunityReport(anthropic, {
     platform   = 'both',
     reportType = 'weekly',
     model      = MODEL_HAIKU,
+    force      = false,
 }) {
     const { from, to }  = reportType === 'daily' ? getDayRange() : getWeekRange();
     const hasChinese    = !!(CHINESE_DISCORD_CHANNEL_ID || CHINESE_TELEGRAM_TOPIC_ID);
 
-    // Weekly reports cover a frozen date range — serve from cache if available
-    if (reportType === 'weekly') {
+    // Both daily and weekly reports cover a frozen date range — serve from cache unless force-regenerating
+    if (!force) {
         const cache = loadCache();
         const key   = cacheKey(platform, model, from, to, hasChinese);
         if (cache[key]) {
@@ -280,29 +307,27 @@ async function buildCommunityReport(anthropic, {
 
     const resp = await anthropic.messages.create({
         model,
-        max_tokens: 1800,
+        max_tokens: 800,
         messages:   [{ role: 'user', content: buildPrompt(sections, reportType) }],
     });
 
     const text = resp.content[0].text.trim();
     trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, model === MODEL_SONNET ? 'sonnet' : 'haiku');
 
-    // Save weekly reports to cache
-    if (reportType === 'weekly') {
-        const cache = loadCache();
-        cache[cacheKey(platform, model, from, to, hasChinese)] = {
-            text,
-            dcGeneralCount:  dc        ? dc.general.length : undefined,
-            dcSupportCount:  dc        ? dc.support.length : undefined,
-            tgCount:         tg        ? tg.length         : undefined,
-            ticketCount:     tickets.length,
-            dcChineseCount:  dcChinese ? dcChinese.length   : undefined,
-            tgChineseCount:  tgChinese ? tgChinese.length   : undefined,
-            totalMessages,
-            cachedAt:        new Date().toISOString(),
-        };
-        saveCache(cache);
-    }
+    // Cache the fresh result — next non-force call for this platform/model/period reuses it
+    const cache = loadCache();
+    cache[cacheKey(platform, model, from, to, hasChinese)] = {
+        text,
+        dcGeneralCount:  dc        ? dc.general.length : undefined,
+        dcSupportCount:  dc        ? dc.support.length : undefined,
+        tgCount:         tg        ? tg.length         : undefined,
+        ticketCount:     tickets.length,
+        dcChineseCount:  dcChinese ? dcChinese.length   : undefined,
+        tgChineseCount:  tgChinese ? tgChinese.length   : undefined,
+        totalMessages,
+        cachedAt:        new Date().toISOString(),
+    };
+    saveCache(cache);
 
     return { text, dc, tg, tickets, dcChinese, tgChinese, from, to, totalMessages };
 }
@@ -319,6 +344,7 @@ async function generateCommunityReport(discordClient, {
     platform   = 'both',
     reportType = 'weekly',
     model      = MODEL_HAIKU,
+    force      = false,
 }) {
     const reportsChannel = await discordClient.channels.fetch(REPORTS_CHANNEL_ID);
     const platformLabel  = { discord: 'Discord', telegram: 'Telegram', both: 'Both' }[platform];
@@ -327,7 +353,7 @@ async function generateCommunityReport(discordClient, {
     const result = await buildCommunityReport(anthropic, {
         GENERAL_CHANNEL_ID, SUPPORT_CHANNEL_ID,
         CHINESE_DISCORD_CHANNEL_ID, CHINESE_TELEGRAM_TOPIC_ID,
-        platform, reportType, model,
+        platform, reportType, model, force,
     });
 
     const fromLabel = result.from.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -349,11 +375,11 @@ async function generateCommunityReport(discordClient, {
     ].filter(Boolean).join(' + ');
     const cacheNote = result.fromCache ? ' — cached' : '';
 
-    await reportsChannel.send(
-        `**${typeLabel} Community Report (${platformLabel})** — ${dateRange}\n` +
-        `*(${countLine} messages analysed${cacheNote})*\n\n` +
-        text
-    );
+    const header = `**${typeLabel} Community Report (${platformLabel})** — ${dateRange}\n*(${countLine} messages analysed${cacheNote})*`;
+    const chunks = splitMessage(`${header}\n\n${text}`, 2000);
+    for (const chunk of chunks) {
+        await reportsChannel.send(chunk);
+    }
 }
 
 module.exports = { generateCommunityReport, buildCommunityReport, MODEL_HAIKU, MODEL_SONNET };

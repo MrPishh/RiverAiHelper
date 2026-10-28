@@ -1,5 +1,23 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * RAG engine — chunks MD files, embeds via Voyage AI, cosine similarity search.
+ * TOP_K=8, CHUNK_SIZE=1500, OVERLAP=150. Skips *_ann and *_tweet subfolders.
+ * Exports: buildIndex, searchKB
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * SOURCE_PRIORITY[]                 correction > blog > docs      21
+ * sourceBoost()                     priority score multiplier     27
+ * chunkText()                       split into overlapping chunks 36
+ * hashText()                        cache key per chunk           49
+ * loadCache() / saveCache()         .embeddings-cache.json I/O    55
+ * collectMdFiles()                  walk KB dirs, skip _ann etc.  67
+ * buildIndex()                      embed all chunks, fill cache  87
+ * cosine()                          vector dot-product similarity152
+ * searchKB()                        query → {context,sources,rawChunks} 163
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');

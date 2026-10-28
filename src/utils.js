@@ -1,5 +1,32 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Pure helpers — no side effects, no API calls, no shared state.
+ * Exports: getWeekRange, getDayRange, getMonthLabel, getWeekLabel,
+ *          appendToMonthlyWeeklyFile, ensureDir, isStaff, isBotMentioned,
+ *          stripBotMention, looksResolved, trackerKey, saveQAPair,
+ *          normalizeDisplayName, looksLikeSpoofedName, looksLikeHelperOffer,
+ *          splitMessage
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * getWeekRange() / getDayRange()   date range for log queries      37
+ * getMonthLabel() / getWeekLabel() folder/file name builders       57
+ * ensureDir()                      mkdir -p wrapper                69
+ * appendToMonthlyWeeklyFile()      write to ann/tweet week files   75
+ * isStaff()                        role-based staff check          92
+ * isBotMentioned()                 check if bot @mentioned         97
+ * stripBotMention()                remove <@botId> from content   101
+ * looksResolved()                  self-resolution pattern check  108
+ * trackerKey()                     userId::channelId string       112
+ * normalizeDisplayName()           leet-sub + strip for spoof     121
+ * levenshtein()                    edit distance for name match   129
+ * looksLikeSpoofedName()           Layer 3 spoof detector         148
+ * looksLikeHelperOffer()           DM / help-offer pattern        162
+ * splitMessage()                   chunk text at maxLen, newline-aware 171
+ * saveQAPair()                     write to channel-learning/     187
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
@@ -130,13 +157,32 @@ function looksLikeSpoofedName(senderDisplayName, staffNameCache) {
     return { matched: false };
 }
 
-const HELPER_OFFER_RE = /\b(dm\s*me|message\s*me|contact\s*me(\s+privately)?|reach\s*me|send\s*me\s*a\s*[dp]m|i\s+can\s+help|how\s+can\s+i\s+help|i('ll|'d|\s+will|\s+would)\s+help|i\s+can\s+assist|let\s+me\s+help|help\s+you(\s+out)?\s+privately|outside\s+(the\s+)?channel|in\s+(private|my\s+dms?|direct))\b/i;
+const HELPER_OFFER_RE = /\b(dm\s*me|message\s*me|contact\s*me(\s+privately)?|reach\s*me|send\s*me\s*a\s*[dp]m|i\s+can\s+help|how\s+can\s+i\s+help|i('ll|'d|\s+will|\s+would)\s+help|i\s+can\s+assist|let\s+me\s+help|help\s+you(\s+out)?\s+privately|outside\s+(the\s+)?channel|in\s+(private|my\s+dms?|direct)|inbox\s*(me|us)|check\s+(your\s+)?(inbox|requests?|dms?)|sent?\s+(you\s+)?(a\s+)?(?:friend\s+)?request)\b/i;
 
 function looksLikeHelperOffer(content) {
     return HELPER_OFFER_RE.test(content);
 }
 
+
 // ─── Knowledge helpers ────────────────────────────────────────────────────────
+
+// Splits text into chunks no longer than maxLen, breaking at the last newline before the
+// limit when possible (falls back to a hard cut if no newline is found).
+function splitMessage(text, maxLen = 4096) {
+    if (text.length <= maxLen) return [text];
+    const chunks = [];
+    let start = 0;
+    while (start < text.length) {
+        let end = start + maxLen;
+        if (end < text.length) {
+            const lastNewline = text.lastIndexOf('\n', end);
+            if (lastNewline > start) end = lastNewline;
+        }
+        chunks.push(text.slice(start, end));
+        start = end;
+    }
+    return chunks;
+}
 
 function saveQAPair(channelName, question, answer) {
     const filepath  = path.join(ROOT_DIR, 'channel-learning', channelName, 'qa-log.md');
@@ -163,4 +209,5 @@ module.exports = {
     normalizeDisplayName,
     looksLikeSpoofedName,
     looksLikeHelperOffer,
+    splitMessage,
 };

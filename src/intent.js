@@ -1,5 +1,30 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Intent classification factory + logging for Discord and Telegram.
+ * Two-tier scammer-side detection: hard sync (Layer 1) + soft+Haiku (Layer 2).
+ * Exports: createIntentModule, RESPOND_INTENTS, ALL_INTENT_CATEGORIES,
+ *          INTENT_LOG_PATH, TG_INTENT_LOG_PATH, TICKET_LOG_PATH, COLLAB_LOG_PATH,
+ *          logToTicketFile, logToCollabFile
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * RESPOND_INTENTS, ALL_INTENT_CATEGORIES                          38
+ * SCAM_CONTENT_PATTERNS           Layer 1 hard-sync patterns      75
+ * SCAM_SOFT_PATTERNS              Layer 2 regex pre-filter        98
+ * normalizeScamContent()          leet + space obfuscation fix   110
+ * detectScamContentSync()         Layer 1 — no API cost          118
+ * hasSoftScamSignal()             Layer 2 pre-filter             123
+ * logToTicketFile/logToCollabFile write-time logging (module-lvl) 35
+ * createIntentModule()            factory                        139
+ *   detectScamContentLLM()        Layer 2 Haiku YES/NO           143
+ *   classifyMessageIntent()       main Haiku classifier          158
+ *   logMessageIntent()            Discord raw message log        213
+ *   logIntentClassification()     classified intent record       238
+ *   logTelegramMessage()          Telegram raw log               245
+ *   logTelegramIntent()           Telegram classified record     266
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
@@ -49,21 +74,21 @@ const ALL_INTENT_CATEGORIES = [
 const INTENT_SYSTEM_PROMPT = `Classify this Discord or Telegram message into exactly one intent category. Reply with ONLY the category name — no explanation, no punctuation, nothing else.
 
 RESPOND (bot should answer):
-help-seeking — genuine question about protocol mechanics or how something works. ALSO includes frustrated complaints or venting about conversion rates, waiting periods, staking, token amounts, or how the protocol behaves — even when phrased as opinions rather than direct questions (e.g. "the conversion is so poor", "why do I get fewer tokens the longer I wait", "this system makes no sense"). If the user appears confused or disappointed about a protocol mechanic, treat it as help-seeking. ALSO includes messages like "anyone received X reward?", "did anyone get X?", "has anyone got X?" about rewards, airdrops, or points — the "anyone" framing is a social softener; the asker typically did not receive theirs and is looking for confirmation or help.
+help-seeking — genuine question about protocol mechanics or how something works. ALSO includes frustrated complaints or venting about conversion rates, waiting periods, staking, token amounts, or how the protocol behaves — even when phrased as opinions rather than direct questions (e.g. "the conversion is so poor", "why do I get fewer tokens the longer I wait", "this system makes no sense"). If the user appears confused or disappointed about a protocol mechanic, treat it as help-seeking. ALSO includes messages like "anyone received X reward?", "did anyone get X?", "has anyone got X?" about rewards, airdrops, or points — the "anyone" framing is a social softener; the asker typically did not receive theirs and is looking for confirmation or help. Does NOT include a matter-of-fact statement explaining why something is happening, with no confusion, complaint, or question of their own (e.g. "that's due to S1 staking", "once staking ends the price will recover") — the speaker is informing, not asking. That is community-help (if answering/aimed at another user) or community-discussion (if a general take) even though it uses the same staking/price/rate vocabulary — use the presence of the SPEAKER'S OWN confusion, frustration, or question as the deciding signal, not the topic. Does NOT include a stated hope, wish, or prediction about a future price or token amount with no confusion, complaint, or question attached (e.g. "hoping for 4 dollars only", "I think it'll hit $10 by S6") — that is community-hype, even though it uses the same price vocabulary as genuine venting.
 troubleshooting — user reporting a specific problem they are experiencing
 onboarding — new user asking how to get started, sign up, or register
 factual-question — specific question about token, staking, rates, epoch, contract address
 
 DO NOT RESPOND (bot should stay silent):
-community-hype — celebration, milestone reaction, price hype, general project positivity
+community-hype — celebration, milestone reaction, price hype, general project positivity. Includes stated hopes, wishes, or predictions about future price/token amounts with no confusion or complaint (e.g. "hoping for 4 dollars only", "$10 by S6 easy")
 safety-alert — legitimate community member posting a scam WARNING for public awareness (e.g. "⚠️ Fake accounts spotted — block and report", "Scammer" calling out a bad actor)
-scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message
+scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. ALSO includes a non-staff sender directing a help-seeker to an external resource the sender owns — e.g. "check my dashboard and relay this", "check my page", "go to my link" — even when phrased in broken or informal English. The sender owning the resource ("my dashboard", "my page", "my link") combined with a help-seeker context is a strong scam signal regardless of which noun is used. ALSO includes an unprompted, standalone broadcast (not a reply to any specific victim, no help-seeker needed in the thread) that invites the whole channel to send questions/issues/concerns to "the team" or "support" via an external link — e.g. "Share Your Questions/Issues to the team: [link]", "Report your issue here: [link]", "Contact support: [link]" — River's official support is Discord tickets only, so any external link framed as official contact/support channels is scam-content regardless of who it's addressed to. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message — except for the broadcast form above, which needs no victim message at all. EXCEPTION: "go here" / "go to X" / "open a ticket" phrasing is NOT scam-content when the destination is a Discord channel mention (renders as <#123456789>) — either in this message or shared by the same sender in the immediately preceding thread context. A channel mention points inside this same server (e.g. the official ticket channel) and is never an external redirect, regardless of how the surrounding wording resembles a scam exemplar — classify as community-help instead
 content-promotion — user sharing their own content (articles, threads, videos)
 referral-sharing — user sharing their own referral code for others to use
 community-discussion — opinion poll or strategy question directed at the community, not the bot (e.g. "drop your strategy below", "what do you think", "best time to convert?"). Does NOT include "anyone received X?" style messages about personal reward or airdrop receipt — those are help-seeking. Does NOT include frustration about protocol mechanics — use help-seeking instead.
 community-announcement — user sharing information or news for the community
 staff-ping — user trying to get human admin attention (ticket check, tagging staff, not a protocol question)
-community-help — another community member giving genuine advice or explaining a protocol mechanic (references the product, asks clarifying questions — does NOT redirect to external sites or DMs)
+community-help — another community member giving genuine advice or explaining a protocol mechanic (references the product, asks clarifying questions — does NOT redirect to external sites or DMs). Includes matter-of-fact explanations of why something is happening (e.g. "that's due to S1 staking") even with no addressee named — the speaker is informing, not confused or asking. Includes directing someone to an in-server channel via a Discord channel mention (<#channelId>), e.g. pointing a user to the official ticket channel — that is genuine help, not a scam redirect
 general-greeting — greeting, thanks, acknowledgement, or reaction with no question
 community-conduct — user being visibly abusive or disrespectful to other community members`;
 
@@ -73,28 +98,129 @@ community-conduct — user being visibly abusive or disrespectful to other commu
 // Counterpart to detectScamConcernSync in claude.js (which is victim-side).
 
 const SCAM_CONTENT_PATTERNS = [
-    // Bio / profile redirect — no legitimate use case in a support channel
-    /\b(check|see|look\s+at|visit)\s+(my\s+)?(bio|profile|page)\b/i,
+    // Bio / profile redirect — only unambiguous redirect verbs (visit/go to/open/click)
+    // "check/see/look at my profile/dashboard" is excluded — a user asking "can you check my profile?"
+    // is a legitimate help-seeking message. Reasoning (Haiku) handles that distinction, not regex.
+    /\b(visit|click|open|go\s+to)\s+(my\s+)?(bio|profile|page|dashboard)\b/i,
     /\blink\s+in\s+(my\s+)?bio\b/i,
     /\bin\s+my\s+(bio|profile)\b/i,
 
     // Telegram / WhatsApp invite links — posting these in the channel is always suspicious
     /\bt\.me\/[a-z0-9_+]{3,}/i,
     /\bwa\.me\/\d{5,}/i,
+
+    // "report/contact/reach/share ... the team" + external URL — scam redirect disguised as
+    // official support. Missed real case 2026-09-01: "Share Your Questions/Issues to the team:
+    // <link>" — verb wasn't in the old list and wording sits between verb and "team", so the old
+    // \s+-only gap never matched. .{0,40} tolerates the words in between; verb list widened.
+    // Pure tweet sharing without these phrases is allowed.
+    /\b(report|contact|reach|share|send)\b.{0,40}\b(the\s+)?(team|support|us)\b.*https?:\/\//i,
 ];
 
-function detectScamContentSync(content) {
-    return SCAM_CONTENT_PATTERNS.some(p => p.test(content));
+// Soft scam signals — suspicious but context-dependent.
+// These do NOT classify immediately. Instead they trigger detectScamContentLLM (Haiku YES/NO)
+// which uses the full conversation context to decide.
+// Examples of why context matters:
+//   "dm me" — scam offer to a help-seeker vs two friends naturally moving to private
+//   "check my dashboard" — scammer redirecting victim vs user asking for help with their own account
+//   "accept my request" — friend-request scam (gain DM access) vs two people already in conversation
+const SCAM_SOFT_PATTERNS = [
+    // DM / PM / inbox redirect — innocent between friends already in conversation,
+    // scam when a stranger offers it as "help" to someone who just posted a problem
+    /\b(dm|pm)\s+(me|you|us)\b/i,
+    /\binbox\s*(me|you|us)\b/i,
+    // "check/see/look at my X" — ambiguous verb: could be help-seeker describing own account
+    // or scammer directing victim to an external resource they own
+    /\b(check|see|look\s+at)\s+(my\s+)?(bio|profile|page|dashboard|link|feed|channel|group|site)\b/i,
+    // Friend-request redirect — scammer sends a friend request so they can DM the victim privately.
+    // "accept my request" alone doesn't confirm scam; Haiku checks whether a help-seeker was in the thread.
+    /\baccept\s+(my|the)\s+(friend\s+)?request\b/i,
+    /\bsent\s+(you\s+)?a\s+friend\s+request\b/i,
+    // Unsolicited "how can I help" opener — ambiguous on its own (~80% scam opening line
+    // posing as staff, ~20% genuine community member phrasing it oddly per real samples).
+    // Haiku reasons over reply/thread context to tell the two apart.
+    /\bhow\s+(can|may)\s+(i|we)\s+help\s+(you|u)\b/i,
+];
+
+// Bare mention of a bot account with no other message content — Telegram requires every
+// bot username to end in "bot", so this pattern is structurally Telegram-only: Discord
+// mentions serialize as <@id>, never as "@NameBot" text, so it can't false-positive there.
+// Checked against RAW content (not normalizeScamContent's output) because that function's
+// leet-speak pass rewrites '@' -> 'a', which would silently swallow the literal '@' this needs.
+const BARE_BOT_MENTION_PATTERN = /^@[a-z0-9_]{2,}bot$/i;
+
+const LEET_MAP_CONTENT = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '6': 'g', '7': 't', '@': 'a' };
+
+function normalizeScamContent(content) {
+    return content
+        // collapse spaced-out letters: "t e a m" → "team", "d m" → "dm"
+        .replace(/\b([a-z])((?:\s+[a-z])+)\b/gi, (_, first, rest) => first + rest.replace(/\s+/g, ''))
+        // leet substitution
+        .replace(/[0134567@]/g, c => LEET_MAP_CONTENT[c] ?? c);
 }
+
+function detectScamContentSync(content) {
+    const normalized = normalizeScamContent(content);
+    return SCAM_CONTENT_PATTERNS.some(p => p.test(normalized));
+}
+
+function hasSoftScamSignal(content) {
+    if (BARE_BOT_MENTION_PATTERN.test(content.trim())) return true;
+    const normalized = normalizeScamContent(content);
+    return SCAM_SOFT_PATTERNS.some(p => p.test(normalized));
+}
+
+// Focused scam detection prompt — used by detectScamContentLLM for soft-signal messages.
+// Separate from INTENT_SYSTEM_PROMPT: asks only YES/NO, not a category label.
+const SCAM_DETECT_PROMPT = `You are a scam detection assistant for a Discord crypto support server.
+
+Answer YES if the sender appears to be doing any of the following to someone who just posted a support question or complaint:
+- Redirecting them toward an external resource the sender owns (bio, link, dashboard, page)
+- Inviting them into a private conversation via DM, PM, or inbox as unsolicited "help"
+- Asking them to accept a friend request in order to receive private "support" — a common attack where the scammer gains DM access by posing as staff or a helper
+- Opening with an unsolicited offer to help ("How can I help you?", "How can we assist?") — a common scammer opening line when posing as staff or support
+
+Also answer YES if the message is nothing but a bare mention of an external bot account (e.g. just "@SomeExchangeBot") with no other content — a known Telegram spam/redirect pattern, regardless of reply context.
+
+Also answer YES if a name-spoof warning is included in the sender info — this means the sender's display name was already determined by a deterministic check to closely resemble a known staff member's name (via leet substitution and edit-distance matching). Combined with any redirect or contact offer, treat this as a strong scam signal regardless of how innocent the message wording seems.
+
+Answer NO if:
+- The sender is asking for help with their own account (they are the help-seeker, not the helper)
+- Two people already in an established back-and-forth conversation are naturally moving to private contact
+- A friend request or private message is clearly expected and consensual given what was already said
+- The message is about something unrelated to crypto support (e.g. a game invite, a feature request, a social event) and there is no help-seeker context in the thread
+
+Use the sender identity, reply context, and recent channel messages provided to make your decision.
+
+Reply with ONLY: YES or NO`;
 
 // Factory — call with the shared anthropic client and config to get bound functions.
 function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }) {
 
-    async function classifyMessageIntent(content, message = null, priorUserContext = null) {
+    // Focused Haiku YES/NO scam check for soft-signal messages.
+    // Fails safe: returns false on API error (avoid false positives).
+    async function detectScamContentLLM(content, replyCtx, threadCtx, senderInfo = '') {
+        try {
+            const senderLine = senderInfo ? `Sender: ${senderInfo}\n` : '';
+            const resp = await anthropic.messages.create({
+                model:    'claude-haiku-4-5-20251001',
+                max_tokens: 5,
+                system:   SCAM_DETECT_PROMPT,
+                messages: [{ role: 'user', content: `${senderLine}Reply context: ${replyCtx}${threadCtx}\n\nMessage:\n${content}` }],
+            });
+            if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
+            return resp.content[0].text.trim().toUpperCase().startsWith('YES');
+        } catch {
+            return false;
+        }
+    }
+
+    async function classifyMessageIntent(content, message = null, priorUserContext = null, spoofMatch = null) {
         if (detectScamContentSync(content)) return 'scam-content';
 
         const channelName = message?.channelId === SUPPORT_CHANNEL_ID ? '#support' : '#general';
 
+        // Build context once — reused by both the soft scam check and normal classification.
         let replyContext = 'Standalone message (not a reply to anything).';
         if (message?.reference?.messageId) {
             try {
@@ -116,6 +242,24 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
                     .join('\n');
                 if (lines) threadContext = `\nRecent messages in channel:\n${lines}`;
             } catch {}
+        }
+
+        // Build sender identity string for Haiku.
+        // spoofMatch is pre-computed by Layer 3 in commands.js (leet-normalization + Levenshtein)
+        // and passed in — no need to re-run the check here.
+        const senderDisplay  = message?.member?.displayName ?? message?.author?.username ?? '';
+        const senderUsername = message?.author?.username ?? '';
+        let senderInfo = (senderDisplay && senderDisplay !== senderUsername)
+            ? `display name "${senderDisplay}", username "${senderUsername}"`
+            : senderUsername ? `username "${senderUsername}"` : '';
+        if (spoofMatch?.matched) {
+            senderInfo += ` — NAME-SPOOF WARNING: display name closely resembles staff member "${spoofMatch.staffName}"`;
+        }
+
+        // Soft signal check — regex narrows the field, Haiku reasons over context.
+        if (hasSoftScamSignal(content)) {
+            const isScam = await detectScamContentLLM(content, replyContext, threadContext, senderInfo);
+            if (isScam) return 'scam-content';
         }
 
         const priorContextLine = priorUserContext
@@ -198,7 +342,42 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         } catch {}
     }
 
-    return { classifyMessageIntent, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS, logToTicketFile, logToCollabFile };
+    // FUD check for watched users — runs as a secondary pass when the message
+    // didn't already trigger scam/conduct detection. Lenient: only catches clear,
+    // unambiguous harmful content. When in doubt the model returns NO (fail-safe).
+    async function checkWatchedFUD(content) {
+        try {
+            const resp = await anthropic.messages.create({
+                model:      'claude-haiku-4-5-20251001',
+                max_tokens: 5,
+                system: `You are a moderator for a crypto project's official Telegram community.
+A user who has been flagged for past rule violations is sending a message. Decide if this message is clear, unambiguous FUD or deliberate harmful content.
+
+Answer YES ONLY if the message clearly and explicitly:
+- Calls the project a rug pull, scam, or deliberate fraud
+- Urges other members to sell, exit, or abandon the project
+- States the project is definitively dying/dead or going to zero in a declarative way meant to harm
+
+Answer NO if the message:
+- Expresses frustration or disappointment, even if strongly worded
+- Asks skeptical questions about the project
+- Makes a price comment without explicitly urging others to act on it
+- Shares a negative opinion or criticism without a clear harmful agenda
+- Is ambiguous or could reasonably be a genuine concern
+
+When in doubt, answer NO.
+
+Reply with ONLY: YES or NO`,
+                messages: [{ role: 'user', content: `Message: ${content}` }],
+            });
+            if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens, 'haiku');
+            return resp.content[0].text.trim().toUpperCase().startsWith('YES');
+        } catch {
+            return false;
+        }
+    }
+
+    return { classifyMessageIntent, checkWatchedFUD, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS, logToTicketFile, logToCollabFile };
 }
 
 module.exports = {

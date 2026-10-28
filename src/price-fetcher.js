@@ -1,0 +1,63 @@
+'use strict';
+
+// Contract addresses on BNB Chain (BSC)
+const RIVERPTS_ADDRESS = '0xfc6be825925b7a83d131e33b46efef9084f0e014';
+const RIVER_ADDRESS    = '0xda7ad9dea9397cffddae2f8a052b82f1484252b3';
+const CACHE_TTL_MS     = 5 * 60 * 1000; // 5 minutes
+
+let cache = { riverPts: null, river: null, fetchedAt: 0 };
+
+async function fetchDexPrice(address) {
+    const fetch = (await import('node-fetch')).default;
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 6000);
+    try {
+        const res = await fetch(
+            `https://api.dexscreener.com/latest/dex/tokens/${address}`,
+            { signal: controller.signal }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const pairs = data.pairs || [];
+        if (!pairs.length) return null;
+        // Pick the BSC pair with the highest USD liquidity
+        const bscPairs = pairs.filter(p => p.chainId === 'bsc');
+        const pool     = (bscPairs.length ? bscPairs : pairs)
+            .sort((a, b) => (b.liquidity?.usd || 0) - (a.liquidity?.usd || 0))[0];
+        return parseFloat(pool.priceUsd) || null;
+    } finally {
+        clearTimeout(t);
+    }
+}
+
+async function getLivePrices() {
+    if (Date.now() - cache.fetchedAt < CACHE_TTL_MS && cache.riverPts !== null) {
+        return cache;
+    }
+    const [riverPtsResult, riverResult] = await Promise.allSettled([
+        fetchDexPrice(RIVERPTS_ADDRESS),
+        fetchDexPrice(RIVER_ADDRESS),
+    ]);
+
+    // A failure on one token shouldn't discard the other token's successful fetch —
+    // fall back to the previous cached value for whichever side failed.
+    const riverPts = riverPtsResult.status === 'fulfilled' ? riverPtsResult.value : cache.riverPts;
+    const river    = riverResult.status    === 'fulfilled' ? riverResult.value    : cache.river;
+    if (riverPtsResult.status === 'rejected') console.error('[Price] RIVERPTS fetch failed:', riverPtsResult.reason?.message);
+    if (riverResult.status    === 'rejected') console.error('[Price] RIVER fetch failed:', riverResult.reason?.message);
+
+    cache = { riverPts, river, fetchedAt: Date.now() };
+    console.log(`[Price] Refreshed — RIVERPTS $${riverPts?.toFixed(6)} | RIVER $${river?.toFixed(4)}`);
+    return cache;
+}
+
+// Returns true when the question is about River Pts or $RIVER market price/value.
+function isPricingQuestion(text) {
+    const t        = text.toLowerCase();
+    const hasPts   = /\b(river\s*pt[s]?|river\s+point[s]?|riverpts?)\b/i.test(t);
+    const hasRiver = /\b(\$river|river\s+token|river\s+coin)\b/i.test(t);
+    const hasPrice = /\b(price|worth|value|how much|cost|market|buy|sell|dex|trading|listed)\b/i.test(t);
+    return (hasPts || hasRiver) && hasPrice;
+}
+
+module.exports = { getLivePrices, isPricingQuestion };

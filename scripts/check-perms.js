@@ -1,0 +1,73 @@
+'use strict';
+/**
+ * One-shot diagnostic: checks the bot's Discord permissions across every
+ * configured channel. Run with: node scripts/check-perms.js
+ */
+const { Client, GatewayIntentBits, PermissionFlagsBits } = require('discord.js');
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
+const TOKEN = process.env.DISCORD_TOKEN;
+
+const CHANNELS = [
+    { id: process.env.ANNOUNCEMENTS_CHANNEL_ID,    label: '📢 Announcements',       needsSend: false, needsEmbed: false },
+    { id: process.env.TWEETS_CHANNEL_ID,            label: '🐦 Tweets',              needsSend: false, needsEmbed: false },
+    { id: process.env.GENERAL_CHANNEL_ID,           label: '💬 General',              needsSend: true,  needsEmbed: true  },
+    { id: process.env.SUPPORT_CHANNEL_ID,           label: '🎫 Support',              needsSend: true,  needsEmbed: true  },
+    { id: process.env.STAFF_EXPLANATION_CHANNEL_ID, label: '🔍 Staff Explanation',    needsSend: true,  needsEmbed: true  },
+    { id: process.env.REPORTS_CHANNEL_ID,           label: '📊 Reports',              needsSend: true,  needsEmbed: true  },
+    { id: process.env.SCAM_LOG_CHANNEL_ID,          label: '🚨 Scam Log',             needsSend: true,  needsEmbed: true  },
+    { id: process.env.CHINESE_DISCORD_CHANNEL_ID,   label: '🇨🇳 Chinese Channel',    needsSend: false, needsEmbed: false },
+    ...(process.env.SUPPORT_TICKET_CATEGORY_IDS || '').split(',').filter(Boolean).map((id, i) => ({
+        id, label: `🎟️ Ticket Category ${i + 1}`, needsSend: false, needsEmbed: false,
+    })),
+    ...(process.env.COLLAB_CATEGORY_IDS || '').split(',').filter(Boolean).map((id, i) => ({
+        id, label: `🤝 Collab Category ${i + 1}`, needsSend: false, needsEmbed: false,
+    })),
+];
+
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+client.once('clientReady', async () => {
+    const botId     = client.user.id;
+    const guild     = client.guilds.cache.first();
+    const botMember = guild?.members.me;
+    const gPerms    = botMember?.permissions;
+
+    console.log('\n=== Bot Permission Report ===\n');
+
+    for (const { id, label, needsSend, needsEmbed } of CHANNELS) {
+        if (!id) { console.log(`${label}\n  ⚠️  Not configured in .env\n`); continue; }
+        try {
+            const ch    = client.channels.cache.get(id) ?? await client.channels.fetch(id).catch(() => null);
+            if (!ch) { console.log(`${label}\n  ❌ Could not fetch channel (${id})\n`); continue; }
+
+            const perms = ch.permissionsFor(botId);
+            const view  = perms.has(PermissionFlagsBits.ViewChannel)        ? '✅' : '❌ MISSING';
+            const read  = perms.has(PermissionFlagsBits.ReadMessageHistory)  ? '✅' : '❌ MISSING';
+            const send  = perms.has(PermissionFlagsBits.SendMessages)        ? '✅' : '❌ MISSING';
+            const embed = perms.has(PermissionFlagsBits.EmbedLinks)          ? '✅' : '❌ MISSING';
+
+            const warn = [];
+            if (needsSend  && !perms.has(PermissionFlagsBits.SendMessages)) warn.push('ADD: Send Messages');
+            if (needsEmbed && !perms.has(PermissionFlagsBits.EmbedLinks))   warn.push('ADD: Embed Links');
+            if (!needsSend && perms.has(PermissionFlagsBits.SendMessages))  warn.push('(read-only — Send unnecessary but harmless)');
+
+            console.log(`${label}`);
+            console.log(`  View: ${view}  |  Read History: ${read}  |  Send: ${send}  |  Embed Links: ${embed}`);
+            if (warn.length) console.log(`  ⚠️  ${warn.join(' | ')}`);
+            console.log('');
+        } catch (err) {
+            console.log(`${label}\n  ❌ Error: ${err.message}\n`);
+        }
+    }
+
+    console.log('=== Guild-level (Scam Blocker) ===\n');
+    const manageMsg  = gPerms?.has(PermissionFlagsBits.ManageMessages)  ? '✅' : '❌ MISSING — needed for message deletion';
+    const modMembers = gPerms?.has(PermissionFlagsBits.ModerateMembers) ? '✅' : '❌ MISSING — needed for timeouts';
+    console.log(`Manage Messages:  ${manageMsg}`);
+    console.log(`Moderate Members: ${modMembers}\n`);
+
+    await client.destroy();
+});
+
+client.login(TOKEN);

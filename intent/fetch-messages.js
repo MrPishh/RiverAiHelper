@@ -1,5 +1,5 @@
 // Temporary script to fetch messages from a channel since a given date
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const CHANNEL_ID = process.argv[2] || '1212717429319540790';
 const SINCE_DATE = new Date('2026-05-09T00:00:00Z');

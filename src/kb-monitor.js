@@ -1,10 +1,34 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Passive KB health checks — triggered by sync commands, never standalone.
+ * Exports: createMonitorModule
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * CURATED_MAP                      category → curated file         36
+ * loadScanState() / saveScanState() _scan-state.json I/O           44
+ * loadCorrectionFiles()            read corrections/ for check     57
+ * loadIndexedBlogUrls()            blog URLs to strip from ann     70
+ * getRawAnnouncementFiles()        walk *_ann/weekN.md             78
+ * parseAnnouncementEntries()       split entries by --- separator  92
+ * stripIndexedBlogUrls()           remove already-indexed reposts 106
+ * createMonitorModule()            factory                        115
+ *   draftCorrectionUpdate()        drafts update to _drafts/       126
+ *                                  (or NO_CHANGE_NEEDED) for one flagged correction
+ *   checkCorrectionStaleness()     fast Haiku-only flag list on    179
+ *                                  full correction text — never blocks sync reply
+ *   draftCorrectionUpdates()       batch-drafts flagged pairs,     235
+ *                                  called separately, not awaited by sync reply
+ *   scanAnnouncementsForNewFacts() auto-extract → curated file    253
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
 const ROOT_DIR          = path.join(__dirname, '..');
 const CORRECTIONS_DIR   = path.join(ROOT_DIR, 'knowledge-base', 'corrections');
+const CORRECTION_DRAFTS_DIR = path.join(CORRECTIONS_DIR, '_drafts');
 const ANNOUNCEMENTS_DIR = path.join(ROOT_DIR, 'knowledge-base', 'announcements');
 const SCAN_STATE_PATH   = path.join(ANNOUNCEMENTS_DIR, '_scan-state.json');
 const BLOGS_INDEX_PATH  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
@@ -36,7 +60,10 @@ function loadCorrectionFiles() {
         .filter(f => f.endsWith('.md') && !f.startsWith('_'))
         .map(f => ({
             name:    f,
-            content: fs.readFileSync(path.join(CORRECTIONS_DIR, f), 'utf8').slice(0, 600),
+            // Full content, not a truncated snippet — the staleness check needs to see
+            // each correction's stated scope/purpose to avoid flagging on topical overlap
+            // alone (e.g. two docs both mentioning "River Pts" without either being wrong).
+            content: fs.readFileSync(path.join(CORRECTIONS_DIR, f), 'utf8'),
         }));
 }
 
@@ -87,9 +114,67 @@ function stripIndexedBlogUrls(content, indexedUrls) {
 
 function createMonitorModule(anthropic, { trackUsage = null } = {}) {
 
+    // ── Correction draft generation ────────────────────────────────────────────
+    // Given a correction file flagged as possibly stale, drafts a proposed
+    // updated version and writes it alongside the live file for human review —
+    // never overwrites the live correction directly.
+
+    // Returns { draftPath, noChangeNeeded }. draftPath is null when either the
+    // model found no genuine change (noChangeNeeded: true) or generation failed
+    // (noChangeNeeded: false) — callers should distinguish the two.
+
+    async function draftCorrectionUpdate(correctionFileName, newSlug, newContent) {
+        const correctionPath = path.join(CORRECTIONS_DIR, correctionFileName);
+        if (!fs.existsSync(correctionPath)) return { draftPath: null, noChangeNeeded: false };
+        const currentContent = fs.readFileSync(correctionPath, 'utf8');
+
+        try {
+            const resp = await anthropic.messages.create({
+                model:      'claude-sonnet-4-6',
+                max_tokens: 4000,
+                system:
+                    'You update River Protocol correction files — hand-curated reference documents the ' +
+                    'support bot quotes directly to users. First decide whether the new article actually makes ' +
+                    'any EXISTING claim in the correction file (a figure, date, or fact) outdated or wrong. ' +
+                    'Being on a related or overlapping topic is not enough — if the correction\'s own claims are ' +
+                    'still accurate, or the new article is out of that correction\'s stated scope, or it just repeats ' +
+                    'what the correction already says, reply with exactly `NO_CHANGE_NEEDED` and nothing else. ' +
+                    'Only if there is a genuine change: preserve the existing structure, section order, and tone ' +
+                    'exactly, change only what the new article explicitly states is updated or superseded, leave ' +
+                    'anything not stated unchanged rather than guessing, and output the complete updated file ' +
+                    'content — no commentary, no markdown code fences.',
+                messages: [{
+                    role: 'user',
+                    content:
+                        `Current correction file (${correctionFileName}):\n\n${currentContent}\n\n---\n\n` +
+                        `New article that may update it (${newSlug}):\n\n${newContent.slice(0, 6000)}\n\n---\n\n` +
+                        `Does this correction file need to change? If not, reply NO_CHANGE_NEEDED. Otherwise produce the full updated correction file content.`,
+                }],
+            });
+            if (trackUsage) trackUsage(resp.usage.input_tokens, resp.usage.output_tokens);
+            const draft = resp.content[0].text.trim();
+
+            if (draft === 'NO_CHANGE_NEEDED' || draft.startsWith('NO_CHANGE_NEEDED')) {
+                return { draftPath: null, noChangeNeeded: true };
+            }
+
+            if (!fs.existsSync(CORRECTION_DRAFTS_DIR)) fs.mkdirSync(CORRECTION_DRAFTS_DIR, { recursive: true });
+            const draftPath = path.join(CORRECTION_DRAFTS_DIR, correctionFileName);
+            const header =
+                `<!-- DRAFT — proposed update from "${newSlug}" (${new Date().toISOString()}). ` +
+                `Review against knowledge-base/corrections/${correctionFileName} before applying; ` +
+                `delete this file once reviewed either way. -->\n\n`;
+            fs.writeFileSync(draftPath, header + draft, 'utf8');
+            return { draftPath: path.relative(ROOT_DIR, draftPath).replace(/\\/g, '/'), noChangeNeeded: false };
+        } catch (err) {
+            console.error(`[Monitor] Draft generation failed for ${correctionFileName}:`, err.message);
+            return { draftPath: null, noChangeNeeded: false };
+        }
+    }
+
     // ── Correction staleness check ─────────────────────────────────────────────
     // Called after /sync blog / /sync doc with the list of newly written files.
-    // Returns an array of { newFile, correctionFile } pairs that need review.
+    // Returns an array of { newFile, correctionFile, draftPath } pairs that need review.
 
     async function checkCorrectionStaleness(processedFiles) {
         if (!processedFiles || processedFiles.length === 0) return [];
@@ -102,14 +187,14 @@ function createMonitorModule(anthropic, { trackUsage = null } = {}) {
             .join('\n\n---\n\n');
 
         // Corrections block is identical for every file in this sync run — cache it.
-        const correctionSystem = [{ type: 'text', text: `These are the active correction files for River Protocol (manual overrides for known-wrong content):\n\n${correctionSummary}`, cache_control: { type: 'ephemeral' } }];
+        const correctionSystem = [{ type: 'text', text: `These are the full active correction files for River Protocol (manual overrides for known-wrong content). Each has a stated scope/purpose — a correction is only relevant if the new article falls within that stated scope, not merely because it shares a topic like "River Pts" or "airdrop":\n\n${correctionSummary}`, cache_control: { type: 'ephemeral' } }];
 
         for (const { filePath, content: newContent } of processedFiles) {
             const slug = path.basename(filePath, '.md');
             try {
                 const resp = await anthropic.messages.create({
                     model:      'claude-haiku-4-5-20251001',
-                    max_tokens: 80,
+                    max_tokens: 150,
                     system:     correctionSystem,
                     messages: [{
                         role: 'user',
@@ -117,7 +202,10 @@ function createMonitorModule(anthropic, { trackUsage = null } = {}) {
                             `A new article was added to the River Protocol knowledge base:\n` +
                             `File: ${slug}\n` +
                             `Content (first 1500 chars):\n${newContent.slice(0, 1500)}\n\n` +
-                            `Does this article contradict, update, or potentially supersede any correction? ` +
+                            `Does this article state a specific fact, figure, or date that makes any EXISTING claim in a ` +
+                            `correction file factually outdated or wrong? Being about a related or overlapping topic is ` +
+                            `NOT sufficient — only flag a correction if you can point to a claim in it that the new article ` +
+                            `actually contradicts or supersedes, and that claim falls within that correction's own stated scope. ` +
                             `Reply with the correction file names that need review, one per line. ` +
                             `If none need review, reply NONE.`,
                     }],
@@ -135,6 +223,25 @@ function createMonitorModule(anthropic, { trackUsage = null } = {}) {
         }
 
         return warnings;
+    }
+
+    // ── Correction draft batch ─────────────────────────────────────────────────
+    // Called separately from (and not awaited by) the sync reply, since drafting
+    // runs one Sonnet call per flagged pair and can take well over a minute —
+    // it must never block the fast Haiku-only flag list shown to the user.
+    // Takes the warnings from checkCorrectionStaleness plus the same
+    // processedFiles list, returns the same warnings with draftPath/noChangeNeeded filled in.
+
+    async function draftCorrectionUpdates(warnings, processedFiles) {
+        const contentBySlug = new Map(
+            (processedFiles || []).map(({ filePath, content }) => [path.basename(filePath, '.md'), content])
+        );
+        const results = [];
+        for (const w of warnings) {
+            const { draftPath, noChangeNeeded } = await draftCorrectionUpdate(w.correctionFile, w.newFile, contentBySlug.get(w.newFile) || '');
+            results.push({ ...w, draftPath, noChangeNeeded });
+        }
+        return results;
     }
 
     // ── Announcement auto-scan ─────────────────────────────────────────────────
@@ -224,7 +331,7 @@ function createMonitorModule(anthropic, { trackUsage = null } = {}) {
         return { scanned: newEntries.length, found, appended: [...new Set(appended)] };
     }
 
-    return { checkCorrectionStaleness, scanAnnouncementsForNewFacts };
+    return { checkCorrectionStaleness, draftCorrectionUpdates, scanAnnouncementsForNewFacts };
 }
 
 module.exports = { createMonitorModule };

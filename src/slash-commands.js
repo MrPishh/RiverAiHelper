@@ -1,10 +1,34 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Registers all /slash commands with Discord and handles interactions.
+ * Exports: registerSlashCommands, createSlashHandler, COMMANDS
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * COMMANDS[]                      command definitions              35
+ * postDraftResults()               shared /sync draft-followup helper 286
+ * registerSlashCommands()         POST definitions to Discord     231
+ *   ── Interaction handler ──                                    244
+ * createSlashHandler()            factory                         246
+ *   /toggle                       Discord/Telegram/ScamBlocker    309
+ *   /report                       weekly/daily, model, force      334
+ *   /member-stats                 join/leave counts               355
+ *   /usage-stats                  Claude API token counts         405
+ *   /sync                         KB sync (Knowledge/Blog/Doc)    444
+ *                                 — correction drafts fire-and-forget
+ *                                 via postDraftResults(), never awaited
+ *   /blog                         Add / Exclude / Include post    505
+ *   /scam-record                  View / List / Clear infractions 564
+ *   /check-permissions            disabled — not registered       658
+ *   /add-correction               add/update corrections/ file    718
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 const fs       = require('fs');
 const path     = require('path');
 const ROOT_DIR = path.join(__dirname, '..');
 
-const { REST, Routes, ApplicationCommandOptionType, PermissionFlagsBits } = require('discord.js');
+const { REST, Routes, ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 const { isEnabled, toggle, getStatus } = require('./toggles');
 
 // ─── Command definitions ──────────────────────────────────────────────────────
@@ -12,7 +36,7 @@ const { isEnabled, toggle, getStatus } = require('./toggles');
 const COMMANDS = [
     {
         name:        'toggle',
-        description: 'Turn bot auto-replies on or off for a platform',
+        description: 'Toggle bot features: auto-replies (Discord/Telegram) or scam blocker',
         options: [{
             name:        'platform',
             description: 'Which platform to toggle',
@@ -61,6 +85,12 @@ const COMMANDS = [
                     { name: 'Sonnet (smarter)', value: 'sonnet' },
                 ],
             },
+            {
+                name:        'force',
+                description: 'Bypass the cache and regenerate even if this period was already reported',
+                type:        ApplicationCommandOptionType.Boolean,
+                required:    false,
+            },
         ],
     },
     {
@@ -95,71 +125,82 @@ const COMMANDS = [
         description: 'Show Claude API call count, token usage, and estimated cost',
     },
     {
-        name:        'sync-knowledge',
-        description: 'Reload core facts, scan new announcements, and rebuild the full RAG index',
-    },
-    {
         name:        'sync',
-        description: 'Sync knowledge base content from source',
+        description: 'Sync knowledge base content',
         options: [
             {
-                name:        'blog',
-                description: 'Pull new and updated blog posts from the sitemap',
-                type:        ApplicationCommandOptionType.Subcommand,
+                name:        'type',
+                description: 'What to sync',
+                type:        ApplicationCommandOptionType.String,
+                required:    true,
+                choices: [
+                    { name: 'Knowledge — reload core facts, scan announcements, rebuild RAG index', value: 'knowledge' },
+                    { name: 'Blog — pull new and updated posts from the sitemap',                   value: 'blog'      },
+                    { name: 'Doc — pull new or removed pages from the docs sitemap',               value: 'doc'       },
+                ],
             },
             {
-                name:        'doc',
-                description: 'Pull new or removed doc pages from the sitemap',
-                type:        ApplicationCommandOptionType.Subcommand,
-                options: [{
-                    name:        'force',
-                    description: 'Force re-scrape all doc pages (not just new/removed)',
-                    type:        ApplicationCommandOptionType.Boolean,
-                    required:    false,
-                }],
+                name:        'force',
+                description: 'Doc only: re-scrape all pages regardless of changes',
+                type:        ApplicationCommandOptionType.Boolean,
+                required:    false,
             },
         ],
     },
     {
-        name:        'add-blog',
-        description: 'Scrape a single blog post URL and add it to the knowledge base',
-        options: [{
-            name:        'url',
-            description: 'Full URL of the blog post',
-            type:        ApplicationCommandOptionType.String,
-            required:    true,
-        }],
+        name:        'blog',
+        description: 'Manage blog posts in the knowledge base',
+        options: [
+            {
+                name:        'action',
+                description: 'What to do',
+                type:        ApplicationCommandOptionType.String,
+                required:    true,
+                choices: [
+                    { name: 'Add — scrape a post URL and add it to the KB',       value: 'add'     },
+                    { name: 'Exclude — remove a post from KB, skip future syncs', value: 'exclude' },
+                    { name: 'Include — re-add an excluded post to the sync list', value: 'include' },
+                ],
+            },
+            {
+                name:        'url',
+                description: 'Full URL of the blog post',
+                type:        ApplicationCommandOptionType.String,
+                required:    true,
+            },
+        ],
     },
     {
-        name:        'exclude-blog',
-        description: 'Remove a blog post from the knowledge base and skip it on future syncs',
-        options: [{
-            name:        'url',
-            description: 'Full URL of the blog post to exclude',
-            type:        ApplicationCommandOptionType.String,
-            required:    true,
-        }],
+        name:        'scam-record',
+        description: 'View or manage the scammer infraction list',
+        options: [
+            {
+                name:        'action',
+                description: 'What to do',
+                type:        ApplicationCommandOptionType.String,
+                required:    true,
+                choices: [
+                    { name: 'View — show all infractions for a user',        value: 'view'  },
+                    { name: 'List — show all users in the scammer record',   value: 'list'  },
+                    { name: 'Clear — remove a user from the list entirely',  value: 'clear' },
+                ],
+            },
+            {
+                name:        'user',
+                description: 'Discord user (required for View and Clear)',
+                type:        ApplicationCommandOptionType.User,
+                required:    false,
+            },
+            {
+                name:        'count',
+                description: 'Clear only: how many recent infractions to remove, e.g. -5. Omit to clear all.',
+                type:        ApplicationCommandOptionType.Integer,
+                required:    false,
+            },
+        ],
     },
-    {
-        name:        'include-blog',
-        description: 'Remove a blog post from the exclusion list so it gets re-scraped on next sync',
-        options: [{
-            name:        'url',
-            description: 'Full URL of the blog post to re-include',
-            type:        ApplicationCommandOptionType.String,
-            required:    true,
-        }],
-    },
-    {
-        name:        'add-doc',
-        description: 'Scrape a single doc page URL and add it to the knowledge base',
-        options: [{
-            name:        'url',
-            description: 'Full URL of the doc page',
-            type:        ApplicationCommandOptionType.String,
-            required:    true,
-        }],
-    },
+    // 'check-permissions' intentionally omitted from COMMANDS — not registered with Discord.
+    // Handler still exists below (~line 655) for when it's re-enabled; add it back here to register it.
     {
         name:        'add-correction',
         description: 'Add or update a correction in the knowledge base (outranks docs and blogs in RAG)',
@@ -210,8 +251,11 @@ function createSlashHandler(discordClient, config, modules) {
         TWEETS_CHANNEL_ID,
         GENERAL_CHANNEL_ID,
         SUPPORT_CHANNEL_ID,
+        STAFF_EXPLANATION_CHANNEL_ID,
         REPORTS_CHANNEL_ID,
         SUPPORT_TICKET_CATEGORY_IDS,
+        COLLAB_CATEGORY_IDS,
+        CHINESE_DISCORD_CHANNEL_ID,
         SCAM_LOG_CHANNEL_ID,
     } = config;
 
@@ -222,7 +266,7 @@ function createSlashHandler(discordClient, config, modules) {
     const {
         kbSync:  { syncBlog, syncDocs, registerBlogInIndex, registerDocInIndex, loadUsageStats, PRICE_INPUT, PRICE_OUTPUT, PRICE_HAIKU_INPUT, PRICE_HAIKU_OUTPUT, BLOG_SITEMAP_URL },
         utils:   { getMonthLabel, ensureDir },
-        monitor: { checkCorrectionStaleness, scanAnnouncementsForNewFacts },
+        monitor: { checkCorrectionStaleness, draftCorrectionUpdates, scanAnnouncementsForNewFacts },
         buildIndex,
         scrapeSingleArticle,
         htmlToMarkdown,
@@ -234,7 +278,21 @@ function createSlashHandler(discordClient, config, modules) {
         getTgMemberStats,
         getTelegramMemberCount,
         generateCommunityReport,
+        scamTracker,
     } = modules;
+
+    // Drafts correction updates for stale files in the background and posts the results as a
+    // followUp once done — fire-and-forget, never awaited, shared by the /sync blog and doc branches.
+    function postDraftResults(interaction, stale, processedFiles) {
+        draftCorrectionUpdates(stale, processedFiles).then(drafted => {
+            const lines = drafted.map(w => {
+                if (w.noChangeNeeded) return `  • **${w.correctionFile}** — reviewed, no change needed`;
+                if (w.draftPath)      return `  • **${w.correctionFile}** — draft: \`${w.draftPath}\``;
+                return `  • **${w.correctionFile}** — draft generation failed`;
+            }).join('\n');
+            return interaction.followUp(`📝 Correction review results:\n${lines}`);
+        }).catch(err => console.error('[Monitor] Draft batch failed:', err.message));
+    }
 
     return async function handleInteraction(interaction) {
         try {
@@ -278,13 +336,15 @@ function createSlashHandler(discordClient, config, modules) {
             const period     = interaction.options.getString('period') ?? 'week';
             const reportType = period === 'day' ? 'daily' : 'weekly';
             const platform   = interaction.options.getString('platform') ?? 'both';
-            const aimodel    = interaction.options.getString('aimodel') ?? 'haiku';
+            const aimodelKey = interaction.options.getString('aimodel') ?? 'haiku';
+            const aimodel    = aimodelKey === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+            const force      = interaction.options.getBoolean('force') ?? false;
             const typeLabel  = reportType === 'daily' ? 'Daily' : 'Weekly';
             const platLabel  = { discord: 'Discord', telegram: 'Telegram', both: 'Both' }[platform];
-            const modelLabel = aimodel === 'sonnet' ? ' · Sonnet' : '';
+            const modelLabel = aimodelKey === 'sonnet' ? ' · Sonnet' : '';
             await interaction.deferReply();
             try {
-                await generateCommunityReport(discordClient, platform, reportType, aimodel);
+                await generateCommunityReport(discordClient, platform, reportType, aimodel, force);
                 await interaction.editReply(`✅ ${typeLabel} report (${platLabel}${modelLabel}) posted to <#${REPORTS_CHANNEL_ID}>.`);
             } catch (err) {
                 await interaction.editReply(`❌ Failed to generate report: ${err.message}`);
@@ -381,32 +441,24 @@ function createSlashHandler(discordClient, config, modules) {
             return;
         }
 
-        // ── /sync-knowledge ───────────────────────────────────────────────────
-        if (cmd === 'sync-knowledge') {
-            await interaction.deferReply();
-            try {
-                loadCoreFacts();
-                const scanResult = await scanAnnouncementsForNewFacts();
-                const result     = await buildIndex();
-                let msg = `✅ Done — added: ${result.added}, updated: ${result.updated}, removed: ${result.removed}, total chunks: ${result.total}`;
-                if (scanResult.scanned > 0) {
-                    msg += scanResult.found.length > 0
-                        ? `\n📋 Announcements: ${scanResult.scanned} checked, ${scanResult.found.length} new fact(s) extracted\n→ Appended to: ${scanResult.appended.join(', ')}`
-                        : `\n📋 Announcements: ${scanResult.scanned} checked, nothing new`;
-                }
-                await interaction.editReply(msg);
-            } catch (err) {
-                await interaction.editReply(`❌ Indexing failed: ${err.message}`);
-            }
-            return;
-        }
-
         // ── /sync ─────────────────────────────────────────────────────────────
         if (cmd === 'sync') {
-            const sub = interaction.options.getSubcommand();
+            const type = interaction.options.getString('type');
             await interaction.deferReply();
             try {
-                if (sub === 'blog') {
+                if (type === 'knowledge') {
+                    loadCoreFacts();
+                    const scanResult = await scanAnnouncementsForNewFacts();
+                    const result     = await buildIndex();
+                    let msg = `✅ Done — added: ${result.added}, updated: ${result.updated}, removed: ${result.removed}, total chunks: ${result.total}`;
+                    if (scanResult.scanned > 0) {
+                        msg += scanResult.found.length > 0
+                            ? `\n📋 Announcements: ${scanResult.scanned} checked, ${scanResult.found.length} new fact(s) extracted\n→ Appended to: ${scanResult.appended.join(', ')}`
+                            : `\n📋 Announcements: ${scanResult.scanned} checked, nothing new`;
+                    }
+                    await interaction.editReply(msg);
+
+                } else if (type === 'blog') {
                     const result     = await syncBlog();
                     const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
                     const parts = [];
@@ -415,17 +467,29 @@ function createSlashHandler(discordClient, config, modules) {
                     if (result.removed)         parts.push(`${result.removed} removed from sitemap`);
                     if (result.deletedFromDisk) parts.push(`${result.deletedFromDisk} removed (deleted from disk)`);
                     if (result.skipped)         parts.push(`${result.skipped} skipped`);
+                    if (result.filtered)        parts.push(`⚠️ ${result.filtered} filtered (lastmod moved but true publish/modified date didn't — redeploy artifact, not real content)`);
                     if (result.failed)          parts.push(`${result.failed} failed`);
+                    const reviewNote = result.flaggedForReview?.length > 0
+                        ? `\n🔎 Held back for review (true publish date is before BLOG_SINCE_DATE, but flagged instead of auto-decided):\n` +
+                          result.flaggedForReview.slice(0, 8).map(f =>
+                              `  • **${f.title || '(untitled)'}** <${f.url}> — published ${f.publishedTime?.slice(0, 10)}` +
+                              (f.previouslyKnownAs ? ` (seen before as "${f.previouslyKnownAs}")` : ' (never seen before this sync)')
+                          ).join('\n') +
+                          (result.flaggedForReview.length > 8 ? `\n  …and ${result.flaggedForReview.length - 8} more (see logs)` : '') +
+                          `\nUse \`/include-blog\` on any of these if they should be in the KB despite the date floor.`
+                        : '';
                     const dateNote  = result.effectiveSince !== result.configuredSince
                         ? `\nConfigured since: ${result.configuredSince} | Scraping from: **${result.effectiveSince}**`
                         : `\nScraping from: **${result.effectiveSince}**`;
                     const staleNote = stale.length > 0
-                        ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
+                        ? `\n⚠️ Correction may need review (drafting proposed updates in the background):\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
                         : '';
                     await interaction.editReply(
-                        `✅ Blog sync complete — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} posts tracked.${dateNote}${staleNote}`
+                        `✅ Blog sync complete — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} posts tracked.${dateNote}${staleNote}${reviewNote}`
                     );
-                } else if (sub === 'doc') {
+                    if (stale.length > 0) postDraftResults(interaction, stale, result.processedFiles);
+
+                } else if (type === 'doc') {
                     const force      = interaction.options.getBoolean('force') ?? false;
                     const result     = await syncDocs(force);
                     const [_, stale] = await Promise.all([buildIndex(), checkCorrectionStaleness(result.processedFiles)]);
@@ -435,11 +499,12 @@ function createSlashHandler(discordClient, config, modules) {
                     if (result.removed) parts.push(`${result.removed} removed`);
                     if (result.failed)  parts.push(`${result.failed} failed`);
                     const staleNote = stale.length > 0
-                        ? `\n⚠️ Correction may need review:\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
+                        ? `\n⚠️ Correction may need review (drafting proposed updates in the background):\n` + stale.map(w => `  • **${w.correctionFile}** — related to: \`${w.newFile}\``).join('\n')
                         : '';
                     await interaction.editReply(
                         `✅ Docs sync complete${force ? ' (forced)' : ''} — ${parts.join(', ') || 'nothing changed'}\nTotal: ${result.total} pages tracked.${staleNote}`
                     );
+                    if (stale.length > 0) postDraftResults(interaction, stale, result.processedFiles);
                 }
             } catch (err) {
                 await interaction.editReply(`❌ Sync failed: ${err.message}`);
@@ -447,111 +512,191 @@ function createSlashHandler(discordClient, config, modules) {
             return;
         }
 
-        // ── /add-blog ─────────────────────────────────────────────────────────
-        if (cmd === 'add-blog') {
-            const url = interaction.options.getString('url');
-            if (!url.startsWith('http')) { await interaction.reply('Please provide a valid URL starting with http.'); return; }
-            const month    = getMonthLabel();
-            const blogDir  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', `${month}_blog`);
-            ensureDir(blogDir);
-            const nextNum  = fs.readdirSync(blogDir).filter(f => f.endsWith('.md')).length + 1;
-            const filepath = path.join(blogDir, `article${nextNum}.md`);
-            await interaction.deferReply();
-            try {
-                const articleText = await scrapeSingleArticle(url);
-                fs.writeFileSync(filepath, `# Blog Article ${nextNum}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${articleText}`, 'utf8');
-                registerBlogInIndex(url, `article${nextNum}`, `${month}_blog/article${nextNum}.md`);
+        // ── /blog ─────────────────────────────────────────────────────────────
+        if (cmd === 'blog') {
+            const action = interaction.options.getString('action');
+            const url    = interaction.options.getString('url');
+
+            if (action === 'add') {
+                const month    = getMonthLabel();
+                const blogDir  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', `${month}_blog`);
+                ensureDir(blogDir);
+                const nextNum  = fs.readdirSync(blogDir).filter(f => f.endsWith('.md')).length + 1;
+                const filepath = path.join(blogDir, `article${nextNum}.md`);
+                await interaction.deferReply();
+                try {
+                    const articleText = await scrapeSingleArticle(url);
+                    fs.writeFileSync(filepath, `# Blog Article ${nextNum}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${articleText}`, 'utf8');
+                    registerBlogInIndex(url, `article${nextNum}`, `${month}_blog/article${nextNum}.md`);
+                    await buildIndex();
+                    await interaction.editReply(`✅ Saved as \`knowledge-base/blogs/${month}_blog/article${nextNum}.md\` and KB updated.`);
+                } catch (err) {
+                    await interaction.editReply(`❌ Failed to scrape: ${err.message}`);
+                }
+                return;
+            }
+
+            if (action === 'exclude') {
+                const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
+                let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
+                if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
+                if (!index.excluded) index.excluded = [];
+                if (index.excluded.includes(url)) { await interaction.reply('That post is already excluded.'); return; }
+                const pageEntry = index.pages.find(p => p.url === url);
+                if (pageEntry) {
+                    const fp = path.join(ROOT_DIR, 'knowledge-base', 'blogs', pageEntry.file);
+                    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+                    index.pages = index.pages.filter(p => p.url !== url);
+                }
+                index.excluded.push(url);
+                fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
+                await interaction.deferReply();
                 await buildIndex();
-                await interaction.editReply(`✅ Saved as \`knowledge-base/blogs/${month}_blog/article${nextNum}.md\` and KB updated.`);
-            } catch (err) {
-                await interaction.editReply(`❌ Failed to scrape: ${err.message}`);
+                const slug = pageEntry?.slug ?? new URL(url).pathname.replace(/^\/|\/$/g, '');
+                await interaction.editReply(`✅ Excluded: \`${slug}\`\n${pageEntry ? 'File deleted from KB. ' : ''}Skipped on future \`/sync type:Blog\` runs.`);
+                return;
             }
-            return;
+
+            if (action === 'include') {
+                const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
+                let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
+                if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
+                if (!index.excluded) index.excluded = [];
+                if (!index.excluded.includes(url)) { await interaction.reply('That URL is not in the excluded list.'); return; }
+                index.excluded = index.excluded.filter(u => u !== url);
+                fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
+                const slug = new URL(url).pathname.replace(/^\/|\/$/g, '');
+                await interaction.reply(`✅ Removed from exclusion list: \`${slug}\`\nRun \`/sync type:Blog\` to re-scrape.`);
+                return;
+            }
         }
 
-        // ── /exclude-blog ─────────────────────────────────────────────────────
-        if (cmd === 'exclude-blog') {
-            const url       = interaction.options.getString('url');
-            const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
-            let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
-            if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
-            if (!index.excluded) index.excluded = [];
-            if (index.excluded.includes(url)) { await interaction.reply('That post is already excluded.'); return; }
-            const pageEntry = index.pages.find(p => p.url === url);
-            if (pageEntry) {
-                const fp = path.join(ROOT_DIR, 'knowledge-base', 'blogs', pageEntry.file);
-                if (fs.existsSync(fp)) fs.unlinkSync(fp);
-                index.pages = index.pages.filter(p => p.url !== url);
-            }
-            index.excluded.push(url);
-            fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
-            await interaction.deferReply();
-            await buildIndex();
-            const slug = pageEntry?.slug ?? new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await interaction.editReply(`✅ Excluded: \`${slug}\`\n${pageEntry ? 'File deleted from KB. ' : ''}Skipped on future \`/sync blog\` runs.`);
-            return;
-        }
+        // ── /scam-record ──────────────────────────────────────────────────────
+        if (cmd === 'scam-record') {
+            await interaction.deferReply({ ephemeral: true });
+            const action = interaction.options.getString('action');
+            const target = interaction.options.getUser('user');
 
-        // ── /include-blog ─────────────────────────────────────────────────────
-        if (cmd === 'include-blog') {
-            const url       = interaction.options.getString('url');
-            const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
-            let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [], excluded: [] };
-            if (fs.existsSync(indexPath)) { try { index = JSON.parse(fs.readFileSync(indexPath, 'utf8')); } catch {} }
-            if (!index.excluded) index.excluded = [];
-            if (!index.excluded.includes(url)) { await interaction.reply('That URL is not in the excluded list.'); return; }
-            index.excluded = index.excluded.filter(u => u !== url);
-            fs.writeFileSync(indexPath, JSON.stringify(index, null, 2), 'utf8');
-            const slug = new URL(url).pathname.replace(/^\/|\/$/g, '');
-            await interaction.reply(`✅ Removed from exclusion list: \`${slug}\`\nRun \`/sync blog\` to re-scrape.`);
-            return;
-        }
-
-        // ── /add-doc ──────────────────────────────────────────────────────────
-        if (cmd === 'add-doc') {
-            const url     = interaction.options.getString('url');
-            const docsDir = path.join(ROOT_DIR, 'knowledge-base', 'docs');
-            ensureDir(docsDir);
-            const slug     = new URL(url).pathname.replace(/^\/|\/$/g, '').replace(/[^a-z0-9]+/gi, '-') || 'index';
-            const filepath = path.join(docsDir, `${slug}.md`);
-            await interaction.deferReply();
-            try {
-                const pageText = await scrapeSingleArticle(url);
-                fs.writeFileSync(filepath, `# Doc: ${slug}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${pageText}`, 'utf8');
-                registerDocInIndex(url, slug, `${slug}.md`);
-                await buildIndex();
-                await interaction.editReply(`✅ Saved as \`knowledge-base/docs/${slug}.md\` and KB updated.`);
-            } catch (err) {
-                await interaction.editReply(`❌ Failed to scrape: ${err.message}`);
+            if (action === 'view') {
+                if (!target) {
+                    await interaction.editReply('Please select a user for the View action.');
+                    return;
+                }
+                const record = scamTracker.getRecord(target.id);
+                if (!record) {
+                    await interaction.editReply(`No infractions on record for <@${target.id}>.`);
+                    return;
+                }
+                const { infractions, tag, firstSeen, lastSeen } = record;
+                const isRepeat = infractions.length > 1;
+                const embed = new EmbedBuilder()
+                    .setColor(isRepeat ? 0xFF0000 : 0xFF8800)
+                    .setTitle(`🚨 Scammer Record — ${tag}`)
+                    .setDescription(
+                        `<@${target.id}>\n` +
+                        `**Total infractions:** ${infractions.length}${isRepeat ? '  ⚠️ Repeat offender' : ''}\n` +
+                        `First seen: <t:${Math.floor(new Date(firstSeen).getTime() / 1000)}:f> | ` +
+                        `Last seen: <t:${Math.floor(new Date(lastSeen).getTime() / 1000)}:f>`
+                    )
+                    .setTimestamp();
+                const shown  = infractions.slice(-10);
+                const offset = infractions.length - shown.length;
+                shown.forEach((inf, i) => {
+                    const num  = offset + i + 1;
+                    const ts   = Math.floor(new Date(inf.ts).getTime() / 1000);
+                    const chan = inf.channelId ? `<#${inf.channelId}>` : 'unknown';
+                    const msg  = (inf.content || '*(empty)*').slice(0, 200);
+                    embed.addFields({
+                        name:  `#${num} — <t:${ts}:f>`,
+                        value: `**Detection:** ${inf.reason}\n**Channel:** ${chan}\n**Actions:** ${inf.actions}\n**Message:** ${msg}`,
+                    });
+                });
+                if (infractions.length > 10) {
+                    embed.setFooter({ text: `Showing last 10 of ${infractions.length} infractions.` });
+                }
+                await interaction.editReply({ embeds: [embed] });
+                return;
             }
-            return;
+
+            if (action === 'list') {
+                const all     = scamTracker.getAllRecords();
+                const entries = Object.values(all);
+                if (entries.length === 0) {
+                    await interaction.editReply('No scammer records on file.');
+                    return;
+                }
+                entries.sort((a, b) => b.infractions.length - a.infractions.length);
+                const lines = entries.map(r =>
+                    `<@${r.userId}> — **${r.infractions.length}** infraction${r.infractions.length > 1 ? 's' : ''}` +
+                    `${r.infractions.length > 1 ? ' ⚠️' : ''} | last: <t:${Math.floor(new Date(r.lastSeen).getTime() / 1000)}:d>`
+                );
+                let body = lines.join('\n');
+                if (body.length > 1900) body = body.slice(0, 1900) + `\n…(${entries.length} total — truncated)`;
+                await interaction.editReply(`**Scammer List — ${entries.length} user(s)**\n${body}`);
+                return;
+            }
+
+            if (action === 'clear') {
+                if (!target) {
+                    await interaction.editReply('Please select a user for the Clear action.');
+                    return;
+                }
+                const count = interaction.options.getInteger('count');
+                // null / 0 / positive → clear all; negative → remove last |count| infractions
+                if (!count || count >= 0) {
+                    const removed = scamTracker.clearUser(target.id);
+                    await interaction.editReply(
+                        removed
+                            ? `✅ All infractions cleared for <@${target.id}>. They have been removed from the scammer list.`
+                            : `<@${target.id}> was not in the scammer list.`
+                    );
+                } else {
+                    const toRemove = Math.abs(count);
+                    const { removed, remaining } = scamTracker.trimInfractions(target.id, toRemove);
+                    if (removed === 0) {
+                        await interaction.editReply(`<@${target.id}> was not in the scammer list.`);
+                    } else if (remaining === 0) {
+                        await interaction.editReply(`✅ Removed ${removed} infraction${removed > 1 ? 's' : ''} for <@${target.id}>. Record cleared entirely.`);
+                    } else {
+                        await interaction.editReply(`✅ Removed ${removed} infraction${removed > 1 ? 's' : ''} for <@${target.id}>. **${remaining}** remain${remaining > 1 ? '' : 's'}.`);
+                    }
+                }
+                return;
+            }
         }
 
         // ── /check-permissions ────────────────────────────────────────────────
         if (cmd === 'check-permissions') {
             await interaction.deferReply();
-            const botId    = discordClient.user.id;
+            const botId     = discordClient.user.id;
             const botMember = interaction.guild.members.me;
 
-            async function checkChannel(id, label, expectedSend) {
+            // needsSend: bot must post here. needsEmbed: bot sends rich embeds here.
+            async function checkChannel(id, label, needsSend, needsEmbed = false) {
                 if (!id) return `⚠️ ${label} — not configured`;
                 try {
                     const ch    = discordClient.channels.cache.get(id) ?? await discordClient.channels.fetch(id);
                     const perms = ch.permissionsFor(botId);
-                    const view  = perms.has(PermissionFlagsBits.ViewChannel)       ? '✅' : '❌';
-                    const read  = perms.has(PermissionFlagsBits.ReadMessageHistory) ? '✅' : '❌';
-                    const send  = perms.has(PermissionFlagsBits.SendMessages)       ? '✅' : '❌';
-                    const sendFlag = expectedSend
-                        ? (perms.has(PermissionFlagsBits.SendMessages) ? '' : ' ⚠️ needs Send')
-                        : (perms.has(PermissionFlagsBits.SendMessages) ? ' ⚠️ should be read-only' : '');
-                    return `${label} — View ${view} | Read ${read} | Send ${send}${sendFlag}`;
+                    const view   = perms.has(PermissionFlagsBits.ViewChannel)        ? '✅' : '❌';
+                    const read   = perms.has(PermissionFlagsBits.ReadMessageHistory)  ? '✅' : '❌';
+                    const send   = perms.has(PermissionFlagsBits.SendMessages)        ? '✅' : '❌';
+                    const embed  = perms.has(PermissionFlagsBits.EmbedLinks)          ? '✅' : '❌';
+
+                    const warnings = [];
+                    if (needsSend  && !perms.has(PermissionFlagsBits.SendMessages))  warnings.push('needs Send');
+                    if (needsEmbed && !perms.has(PermissionFlagsBits.EmbedLinks))    warnings.push('needs Embed Links');
+                    if (!needsSend && perms.has(PermissionFlagsBits.SendMessages))   warnings.push('should be read-only');
+
+                    const warnStr = warnings.length ? ` ⚠️ ${warnings.join(', ')}` : '';
+                    const embedCol = needsEmbed ? ` | Embed ${embed}` : '';
+                    return `${label} — View ${view} | Read ${read} | Send ${send}${embedCol}${warnStr}`;
                 } catch {
                     return `❌ ${label} — could not fetch channel`;
                 }
             }
 
             // Guild-level permissions required by the scam blocker
-            const guildPerms  = botMember?.permissions;
+            const guildPerms     = botMember?.permissions;
             const hasManageMsg   = guildPerms?.has(PermissionFlagsBits.ManageMessages)  ?? false;
             const hasModMembers  = guildPerms?.has(PermissionFlagsBits.ModerateMembers) ?? false;
             const scamBlockerPerms =
@@ -560,13 +705,19 @@ function createSlashHandler(discordClient, config, modules) {
                 `Moderate Members: ${hasModMembers ? '✅' : '❌ needed for timeouts'}`;
 
             const checks = await Promise.all([
-                checkChannel(ANNOUNCEMENTS_CHANNEL_ID, '📢 Announcements', false),
-                checkChannel(TWEETS_CHANNEL_ID,         '🐦 Tweets',         false),
-                checkChannel(GENERAL_CHANNEL_ID,        '💬 General',         true),
-                checkChannel(SUPPORT_CHANNEL_ID,        '🎫 Support',         true),
-                checkChannel(SCAM_LOG_CHANNEL_ID,       '🚨 Scam Log',        true),
+                checkChannel(ANNOUNCEMENTS_CHANNEL_ID,    '📢 Announcements',      false),
+                checkChannel(TWEETS_CHANNEL_ID,           '🐦 Tweets',             false),
+                checkChannel(GENERAL_CHANNEL_ID,          '💬 General',             true,  true),
+                checkChannel(SUPPORT_CHANNEL_ID,          '🎫 Support',             true,  true),
+                checkChannel(STAFF_EXPLANATION_CHANNEL_ID,'🔍 Staff Explanation',   true,  true),
+                checkChannel(REPORTS_CHANNEL_ID,          '📊 Reports',             true,  true),
+                checkChannel(SCAM_LOG_CHANNEL_ID,         '🚨 Scam Log',            true,  true),
+                checkChannel(CHINESE_DISCORD_CHANNEL_ID,  '🇨🇳 Chinese Channel',   false),
                 ...[...(SUPPORT_TICKET_CATEGORY_IDS ?? [])].map((catId, i) =>
                     checkChannel(catId, `🎟️ Ticket Category ${i + 1}`, false)
+                ),
+                ...[...(COLLAB_CATEGORY_IDS ?? [])].map((catId, i) =>
+                    checkChannel(catId, `🤝 Collab Category ${i + 1}`, false)
                 ),
             ]);
 

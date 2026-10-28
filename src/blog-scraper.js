@@ -133,6 +133,34 @@ async function fetchFromRSS(articleUrl) {
     return null;
 }
 
+// ─── Publish/modified metadata ─────────────────────────────────────────────────
+// Ghost (and most CMSes) stamp each post page with article:published_time /
+// article:modified_time meta tags — the editorial dates, set once and only touched
+// by an actual content edit. A sitemap's <lastmod> is not the same thing: it can
+// move on a site-wide redeploy or domain migration with zero content change, so it
+// is not safe on its own to gate BLOG_SINCE_DATE or "did this post change" decisions.
+// Only available via the direct-fetch path — the RSS fallback only carries the
+// article body, not the page <head>, so both fields come back null there.
+
+function extractPublishMeta(html) {
+    const pick = (re) => (html.match(re) || [])[1] || null;
+    return {
+        publishedTime: pick(/property=["']article:published_time["']\s+content=["'](.*?)["']/),
+        modifiedTime:  pick(/property=["']article:modified_time["']\s+content=["'](.*?)["']/),
+        title:         pick(/property=["']og:title["']\s+content=["'](.*?)["']/) || pick(/<title>(.*?)<\/title>/),
+    };
+}
+
+async function fetchPublishMeta(url) {
+    try {
+        const response = await fetchUrl(url);
+        if (!response.ok) return { publishedTime: null, modifiedTime: null, title: null };
+        return extractPublishMeta(await response.text());
+    } catch {
+        return { publishedTime: null, modifiedTime: null, title: null };
+    }
+}
+
 // ─── Main scrape function ─────────────────────────────────────────────────────
 // 1. Try direct page fetch + Readability + Markdown
 // 2. On 403/block, fall back to RSS feed
@@ -161,4 +189,4 @@ async function scrapeSingleArticle(url) {
     );
 }
 
-module.exports = { htmlToMarkdown, scrapeSingleArticle };
+module.exports = { htmlToMarkdown, scrapeSingleArticle, fetchPublishMeta };

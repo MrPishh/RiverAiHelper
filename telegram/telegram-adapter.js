@@ -1,21 +1,137 @@
 'use strict';
 
+/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
+ * Full Telegram bot adapter (Telegraf). Full parity with Discord:
+ * all Scenarios 0–3, community step-in, staff-wait timers, spoof detection,
+ * staff DM panel with inline keyboard.
+ * Exports: createTelegramAdapter
+ *
+ * Function / Section                                           ~Line
+ * ─────────────────────────────────────────────────────────────────
+ * sanitizeForTelegram()            <#channelId> → Discord deep link 117
+ * makeTgTarget()                   reply-target wrapper            129
+ * isAdmin()                        cached admin check (10-min TTL) 150
+ * permaBan helpers                 load/save/check/add/remove       44
+ * createTelegramAdapter()          factory                         167
+ *   handlePrivateDM()              staff panel DM flow             314
+ *     /tgban /tgunban /tgbanlist   perma-ban staff commands        338
+ *   ── Callback query handler ──   inline keyboard steps           592
+ *     Step 1: period               week / day                      605
+ *     Step 2: platform             Discord / Telegram / Both       618
+ *     Step 3: AI model (report)    Haiku / Sonnet + force variant   632
+ *     Generate stats                                               651
+ *     Generate report               model + force → real model ID  686
+ *   cancelPendingBatch/fireAutoAnswer()  batched Scenario 3 answer  736
+ *   ── Group message handler ──    main text event                 770
+ *     Private DM gate                                              778
+ *     Scenario 0                   CLARIFY continuation            823
+ *     Scenario 0.5                 reply to any bot answer         839
+ *     Scenario 1                   @mention                        870
+ *     Scenario 3                   unprompted auto-answer, batched  894
+ *     Community step-in            classify reply, cancel batch    935
+ *     staffEngaged / POST_STAFF    timer logic                     953
+ *   Join/leave tracking + auto-re-ban on rejoin (chat_member)      1034
+ * ─────────────────────────────────────────────────────────────────────────── */
+
+const fs            = require('fs');
+const path          = require('path');
 const { Telegraf }  = require('telegraf');
 const { isEnabled } = require('../src/toggles');
+const { splitMessage } = require('../src/utils');
 const { logTgMemberEvent } = require('../weekly-report/member-stats/telegram/tg-member-stats');
+
+// ─── Perma-ban store ──────────────────────────────────────────────────────────
+// Keyed by string userId. Survives restarts. Bot auto-re-bans on rejoin.
+
+const PERMA_BAN_PATH = path.join(__dirname, '..', 'data', 'tg-perma-ban.json');
+
+function _loadBans() {
+    try { return JSON.parse(fs.readFileSync(PERMA_BAN_PATH, 'utf8')); }
+    catch { return {}; }
+}
+function _saveBans(store) {
+    fs.mkdirSync(path.dirname(PERMA_BAN_PATH), { recursive: true });
+    fs.writeFileSync(PERMA_BAN_PATH, JSON.stringify(store, null, 2), 'utf8');
+}
+function isPermaBanned(userId) {
+    return !!_loadBans()[String(userId)];
+}
+function addPermaBan(userId, { username = null, reason = null, mode = 'watch' } = {}) {
+    const store = _loadBans();
+    const key   = String(userId);
+    if (!store[key]) {
+        store[key] = { userId: Number(userId), username, reason, mode, bannedAt: new Date().toISOString(), rejoinCount: 0 };
+        _saveBans(store);
+        return 'added';
+    }
+    if (store[key].mode !== mode) {
+        store[key].mode = mode;
+        if (reason) store[key].reason = reason;
+        _saveBans(store);
+        return 'updated'; // mode changed
+    }
+    return 'exists';
+}
+function removePermaBan(userId) {
+    const store = _loadBans();
+    const key   = String(userId);
+    if (!store[key]) return false;
+    delete store[key];
+    _saveBans(store);
+    return true;
+}
+function bumpRejoin(userId) {
+    const store = _loadBans();
+    const key   = String(userId);
+    if (!store[key]) return 0;
+    store[key].rejoinCount = (store[key].rejoinCount || 0) + 1;
+    store[key].lastRejoin  = new Date().toISOString();
+    _saveBans(store);
+    return store[key].rejoinCount;
+}
+
+// ─── Alert-admin store ───────────────────────────────────────────────────────
+// Admins who opted in to receive moderation alerts via DM.
+// Any group admin can opt in/out with /tgalerts on|off.
+// Falls back to all cached admins when no one has opted in yet.
+
+const ALERT_ADMINS_PATH = path.join(__dirname, '..', 'data', 'tg-alert-admins.json');
+
+function _loadAlertAdmins() {
+    try { return new Set(JSON.parse(fs.readFileSync(ALERT_ADMINS_PATH, 'utf8'))); }
+    catch { return new Set(); }
+}
+function _saveAlertAdmins(set) {
+    fs.mkdirSync(path.dirname(ALERT_ADMINS_PATH), { recursive: true });
+    fs.writeFileSync(ALERT_ADMINS_PATH, JSON.stringify([...set], null, 2), 'utf8');
+}
+function _getNotifyAdmins() {
+    const opted = _loadAlertAdmins();
+    return opted.size > 0 ? opted : adminCache; // fall back to all admins if none opted in
+}
 
 // ─── Telegram markdown sanitiser ─────────────────────────────────────────────
 
 const GUILD_ID = '1212686319596216350';
 
+// Converts Discord-flavored text (from Claude, e.g. answers or reports) into Telegram
+// HTML-parse-mode text. Order matters: unwrap Discord's own bracket syntax first (raw,
+// unambiguous), THEN escape HTML special chars in what's left, THEN add real <b> tags for
+// **bold** — inserted after escaping so they survive as actual tags, not escaped text.
+// Callers must pass { parse_mode: 'HTML' } on the send call for this to render correctly.
 function sanitizeForTelegram(text) {
-    return text
-        .replace(/\*\*(.*?)\*\*/gs, '$1')
-        .replace(/\*(.*?)\*/gs, '$1')
+    let out = text
         .replace(/<(https?:\/\/[^\s>]+)>/g, '$1')
-        .replace(/<#(\d+)>/g, (_, channelId) => `https://discord.com/channels/${GUILD_ID}/${channelId}`)
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+        .replace(/<#(\d+)>/g, (_, channelId) => `https://discord.com/channels/${GUILD_ID}/${channelId}`);
+    out = out
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    // Discord-style **bold** -> real Telegram bold. Single-asterisk *italic* is deliberately
+    // left as plain text (not converted) — it's a much noisier pattern to match safely and
+    // wasn't the reported problem; **bold** report headers were.
+    out = out.replace(/\*\*(.*?)\*\*/gs, '<b>$1</b>');
+    return out.replace(/\n{3,}/g, '\n\n').trim();
 }
 
 // ─── Target message wrapper ───────────────────────────────────────────────────
@@ -25,6 +141,7 @@ function makeTgTarget(ctx, chatId, threadId, replyToMsgId) {
         reply: async (text) => {
             const sanitized = sanitizeForTelegram(text);
             const sent = await ctx.telegram.sendMessage(chatId, sanitized, {
+                parse_mode: 'HTML',
                 ...(threadId ? { message_thread_id: threadId } : {}),
                 reply_to_message_id: replyToMsgId,
             });
@@ -58,26 +175,6 @@ async function isAdmin(telegram, chatId, userId) {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
-// ─── Message splitter ─────────────────────────────────────────────────────────
-
-function splitMessage(text, maxLen = 4096) {
-    if (text.length <= maxLen) return [text];
-    const chunks = [];
-    let start = 0;
-    while (start < text.length) {
-        let end = start + maxLen;
-        if (end < text.length) {
-            const lastNewline = text.lastIndexOf('\n', end);
-            if (lastNewline > start) end = lastNewline;
-        }
-        chunks.push(text.slice(start, end));
-        start = end;
-    }
-    return chunks;
-}
-
-// ─── Factory ──────────────────────────────────────────────────────────────────
-
 function createTelegramAdapter({
     token,
     allowedChatId,
@@ -87,6 +184,7 @@ function createTelegramAdapter({
     answerQuestion,
     searchKB,
     classifyMessageIntent,
+    checkWatchedFUD,
     logTelegramMessage,
     logTelegramIntent,
     RESPOND_INTENTS,
@@ -106,6 +204,17 @@ function createTelegramAdapter({
     let botId       = null;
     let botUsername = null;
 
+    // In-memory watchlist — 'watch' and 'mute' mode users. Seeded from file on startup.
+    // 'ban'/'kick'-mode users are not added here; they are handled at the join event.
+    const watchedUsers = new Set(
+        Object.entries(_loadBans())
+            .filter(([, v]) => v.mode === 'watch' || v.mode === 'mute' || (v.mode ?? 'watch') === 'watch')
+            .map(([k]) => k)
+    );
+    if (watchedUsers.size > 0) console.log(`[TG] Watchlist seeded: ${watchedUsers.size} user(s)`);
+
+    const HARMFUL_INTENTS = new Set(['scam-content', 'community-conduct']);
+
     bot.telegram.getMe().then(me => {
         botId       = me.id;
         botUsername = me.username;
@@ -122,6 +231,94 @@ function createTelegramAdapter({
     bot.telegram.setChatMenuButton({
         menu_button: { type: 'commands' }
     }).catch(err => console.error('[TG] setChatMenuButton failed:', err.message));
+
+    // ── Watched-user message handler ─────────────────────────────────────────
+    // Called for every message from a user in the watchlist.
+    // Classifies the message; on harmful intent: deletes it, mutes the user,
+    // and DMs all cached admins a report.
+
+    async function handleWatchedMessage(ctx, msg, fromId, text, threadId) {
+        console.log(`[TG-WATCH] Message from watched user ${fromId}: "${text.slice(0, 120)}"`);
+
+        // Belt-and-suspenders: if join event was missed but mode is ban, ban on first message
+        const record = _loadBans()[String(fromId)];
+        if (record?.mode === 'ban') {
+            try {
+                await ctx.telegram.banChatMember(chatIdStr, fromId, { revoke_messages: true });
+                console.log(`[TG] Message-time ban fired for ${fromId} (join event was missed)`);
+            } catch (err) {
+                console.error(`[TG] Message-time ban failed for ${fromId}:`, err.message);
+            }
+            const who  = msg.from.username ? `@${msg.from.username}` : `ID ${fromId}`;
+            const note = `🚫 Banned user ${who} slipped past the join event — caught on first message and banned.`;
+            for (const adminId of _getNotifyAdmins()) {
+                try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+            }
+            return;
+        }
+
+        const intent = await classifyMessageIntent(text, null);
+        logTelegramIntent(msg.message_id, intent);
+        console.log(`[TG-WATCH] Intent: ${intent} | user: ${fromId}`);
+
+        // Primary check: known harmful intents (scam, abuse)
+        // Secondary check: FUD / negative sentiment — only runs if primary didn't catch it
+        const harmful = HARMFUL_INTENTS.has(intent)
+            || await checkWatchedFUD(text);
+
+        if (!harmful) return; // benign — leave it alone
+
+        // Delete the specific message
+        try {
+            await ctx.telegram.deleteMessage(msg.chat.id, msg.message_id);
+            console.log(`[TG-WATCH] Deleted message ${msg.message_id} (intent: ${intent})`);
+        } catch (err) {
+            console.error(`[TG-WATCH] Delete failed for ${msg.message_id}:`, err.message);
+        }
+
+        const actionTaken = 'message deleted';
+
+        // Log evidence to file for Telegram abuse reports
+        const evidenceEntry = {
+            ts:        new Date().toISOString(),
+            userId:    fromId,
+            username:  msg.from.username ?? null,
+            firstName: msg.from.first_name ?? null,
+            lastName:  msg.from.last_name  ?? null,
+            chatId:    msg.chat.id,
+            messageId: msg.message_id,
+            trigger:   HARMFUL_INTENTS.has(intent) ? intent : 'fud/negative sentiment',
+            content:   text.slice(0, 1000),
+        };
+        try {
+            const logPath = path.join(__dirname, '..', 'data', 'tg-watch-log.jsonl');
+            fs.appendFileSync(logPath, JSON.stringify(evidenceEntry) + '\n', 'utf8');
+        } catch (err) {
+            console.error('[TG-WATCH] Evidence log write failed:', err.message);
+        }
+
+        // Notify every cached admin via DM — includes one-tap profile link for manual reporting
+        const who       = msg.from.username ? `@${msg.from.username}` : `ID ${fromId}`;
+        const name      = [msg.from.first_name, msg.from.last_name].filter(Boolean).join(' ');
+        const trigger   = evidenceEntry.trigger;
+        const note = [
+            `🚨 Watched user alert`,
+            `User: ${who}${name ? ` (${name})` : ''}`,
+            `Detected as: ${trigger}`,
+            ``,
+            `Deleted message:`,
+            `"${text.slice(0, 400)}"`,
+            ``,
+            `Action taken: ${actionTaken}.`,
+            ``,
+            `To report to Telegram: tg://user?id=${fromId}`,
+            `(Open that link → tap ⋮ → Report)`,
+        ].join('\n');
+
+        for (const adminId of _getNotifyAdmins()) {
+            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+        }
+    }
 
     // ── Private DM handler ────────────────────────────────────────────────────
 
@@ -144,7 +341,261 @@ function createTelegramAdapter({
             return;
         }
 
-        await ctx.reply('Send /start to open the staff panel.');
+        // ── Moderation commands — admin DM only, not registered publicly ──────
+        // Strip @botname suffix Telegram sometimes appends: "/tgban@RiverAiBot 123" → "/tgban 123"
+        const text = (msg.text?.trim() ?? '').replace(/^(\/\w+)@\w+/, '$1');
+
+        // /tgban — ban mode: auto-ban the user every time they rejoin
+        if (text.startsWith('/tgban ')) {
+            const parts    = text.split(/\s+/);
+            const targetId = parts[1];
+            const reason   = parts.slice(2).join(' ') || 'Staff ban';
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgban <userId> [reason]');
+                return;
+            }
+            const result = addPermaBan(targetId, { reason, mode: 'ban' });
+            watchedUsers.delete(targetId); // not needed in watch set for ban-mode
+            if (result === 'added' || result === 'updated') {
+                try {
+                    await ctx.telegram.banChatMember(chatIdStr, Number(targetId), { revoke_messages: true });
+                    await ctx.reply(`✅ User ${targetId} → ban mode.\n\nBanned from the group now. Will be auto-banned on every rejoin attempt.`);
+                } catch (err) {
+                    await ctx.reply(`✅ User ${targetId} → ban mode.\n⚠️ Live ban failed (may not be in group currently): ${err.message}`);
+                }
+            } else {
+                await ctx.reply(`ℹ️ User ${targetId} is already in ban mode. Use /tgwatch ${targetId} to switch to watch mode.`);
+            }
+            return;
+        }
+
+        // /tgkick — one-time kick: removed from the group once, then dropped to watch mode (free to rejoin after that)
+        if (text.startsWith('/tgkick ')) {
+            const parts    = text.split(/\s+/);
+            const targetId = parts[1];
+            const reason   = parts.slice(2).join(' ') || 'Staff kick';
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgkick <userId> [reason]');
+                return;
+            }
+            const result = addPermaBan(targetId, { reason, mode: 'kick' });
+            watchedUsers.delete(targetId);
+            if (result === 'added' || result === 'updated') {
+                try {
+                    await ctx.telegram.banChatMember(chatIdStr, Number(targetId));
+                    await ctx.telegram.unbanChatMember(chatIdStr, Number(targetId), { only_if_banned: true });
+                    // Kick already happened live — drop straight to watch mode instead of waiting for a rejoin to consume it.
+                    addPermaBan(targetId, { reason, mode: 'watch' });
+                    watchedUsers.add(targetId);
+                    await ctx.reply(`✅ User ${targetId} kicked from the group now.\n\nDropped to watch mode — they can rejoin freely; harmful messages will still be auto-deleted.`);
+                } catch (err) {
+                    await ctx.reply(`✅ User ${targetId} → pending kick.\n⚠️ Live kick failed (may not be in group currently): ${err.message}\n\nThey'll be kicked once on their next join attempt, then dropped to watch mode.`);
+                }
+            } else {
+                await ctx.reply(`ℹ️ User ${targetId} is already in kick mode. Use /tgban or /tgwatch to change.`);
+            }
+            return;
+        }
+
+        // /tgmute — persistent mute: stored in ban store, re-applied on every rejoin
+        if (text.startsWith('/tgmute ')) {
+            const parts    = text.split(/\s+/);
+            const targetId = parts[1];
+            const reason   = parts.slice(2).join(' ') || 'Staff mute';
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgmute <userId> [reason]');
+                return;
+            }
+            addPermaBan(targetId, { reason, mode: 'mute' });
+            watchedUsers.add(targetId);
+            try {
+                await ctx.telegram.restrictChatMember(chatIdStr, Number(targetId), {
+                    permissions: {
+                        can_send_messages:       false,
+                        can_send_audios:         false,
+                        can_send_documents:      false,
+                        can_send_photos:         false,
+                        can_send_videos:         false,
+                        can_send_video_notes:    false,
+                        can_send_voice_notes:    false,
+                        can_send_polls:          false,
+                        can_send_other_messages: false,
+                    },
+                });
+                await ctx.reply(`✅ User ${targetId} → permanent mute.\n\nMuted now. Will be re-muted on every rejoin, even after captcha/verification.`);
+            } catch (err) {
+                await ctx.reply(`✅ User ${targetId} → permanent mute (stored).\n⚠️ Live mute failed (may not be in group): ${err.message}`);
+            }
+            return;
+        }
+
+        // /tgunmute — drop from mute back to watch mode (still monitored, no longer re-muted on rejoin)
+        if (text.startsWith('/tgunmute ')) {
+            const parts    = text.split(/\s+/);
+            const targetId = parts[1];
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgunmute <userId>');
+                return;
+            }
+            const record = _loadBans()[targetId];
+            if (!record || record.mode !== 'mute') {
+                await ctx.reply(`❌ User ${targetId} is not in mute mode.`);
+                return;
+            }
+            addPermaBan(targetId, { mode: 'watch' });
+            try {
+                await ctx.telegram.restrictChatMember(chatIdStr, Number(targetId), {
+                    permissions: {
+                        can_send_messages:       true,
+                        can_send_audios:         true,
+                        can_send_documents:      true,
+                        can_send_photos:         true,
+                        can_send_videos:         true,
+                        can_send_video_notes:    true,
+                        can_send_voice_notes:    true,
+                        can_send_polls:          true,
+                        can_send_other_messages: true,
+                    },
+                });
+                await ctx.reply(`✅ User ${targetId} unmuted → dropped back to watch mode.\n\nThey can send messages again. Harmful messages will still be auto-deleted.`);
+            } catch (err) {
+                await ctx.reply(`✅ User ${targetId} unmuted (mode set to watch).\n⚠️ Live unmute failed: ${err.message}`);
+            }
+            return;
+        }
+
+        // /tgwatch — watch mode: let them stay, delete on harmful messages
+        if (text.startsWith('/tgwatch ')) {
+            const parts    = text.split(/\s+/);
+            const targetId = parts[1];
+            const reason   = parts.slice(2).join(' ') || 'Staff watch';
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgwatch <userId> [reason]');
+                return;
+            }
+            const result = addPermaBan(targetId, { reason, mode: 'watch' });
+            watchedUsers.add(targetId);
+            if (result === 'added' || result === 'updated') {
+                await ctx.reply(`✅ User ${targetId} → watch mode.\n\nThey can stay in the group. Harmful messages (scam, FUD, abuse) will be auto-deleted. Use /tgmute, /tgkick, or /tgban to escalate manually.`);
+            } else {
+                await ctx.reply(`ℹ️ User ${targetId} is already in watch mode. Use /tgban ${targetId} to switch to ban mode.`);
+            }
+            return;
+        }
+
+        // /tgunkick — drop from kick back to watch mode
+        if (text.startsWith('/tgunkick ')) {
+            const targetId = text.split(/\s+/)[1];
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgunkick <userId>');
+                return;
+            }
+            const record = _loadBans()[targetId];
+            if (!record || record.mode !== 'kick') {
+                await ctx.reply(`❌ User ${targetId} is not in kick mode.`);
+                return;
+            }
+            addPermaBan(targetId, { mode: 'watch' });
+            watchedUsers.add(targetId);
+            await ctx.reply(`✅ User ${targetId} → dropped from kick to watch mode.\n\nThey can stay in the group. Harmful messages will be auto-deleted.`);
+            return;
+        }
+
+        // /tgunwatch — remove from watchlist entirely (clean slate, no more monitoring)
+        if (text.startsWith('/tgunwatch ')) {
+            const targetId = text.split(/\s+/)[1];
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgunwatch <userId>');
+                return;
+            }
+            const record = _loadBans()[targetId];
+            if (!record || record.mode !== 'watch') {
+                await ctx.reply(`❌ User ${targetId} is not in watch mode. Use /tgunmute, /tgunkick, or /tgunban as appropriate.`);
+                return;
+            }
+            removePermaBan(targetId);
+            watchedUsers.delete(targetId);
+            await ctx.reply(`✅ User ${targetId} removed from watchlist. No longer monitored.`);
+            return;
+        }
+
+        // /tgunban — remove from all lists entirely
+        if (text.startsWith('/tgunban ')) {
+            const targetId = text.split(/\s+/)[1];
+            if (!/^\d+$/.test(targetId)) {
+                await ctx.reply('Usage: /tgunban <userId>');
+                return;
+            }
+            const removed = removePermaBan(targetId);
+            watchedUsers.delete(targetId);
+            if (removed) {
+                try {
+                    await ctx.telegram.unbanChatMember(chatIdStr, Number(targetId), { only_if_banned: true });
+                    await ctx.reply(`✅ User ${targetId} removed from all lists and unbanned.`);
+                } catch (err) {
+                    await ctx.reply(`✅ User ${targetId} removed from all lists.\n⚠️ Unban call failed: ${err.message}`);
+                }
+            } else {
+                await ctx.reply(`❌ User ${targetId} is not on any moderation list.`);
+            }
+            return;
+        }
+
+        // /tglist — show all entries with their modes
+        if (text === '/tglist') {
+            const store   = _loadBans();
+            const entries = Object.values(store);
+            if (entries.length === 0) {
+                await ctx.reply('No users on the moderation list.');
+                return;
+            }
+            const lines = entries.map(e => {
+                const modeLabel = e.mode === 'ban' ? '🚫 ban' : e.mode === 'kick' ? '👢 kick' : '👁 watch';
+                const who       = e.username ? `@${e.username}` : String(e.userId);
+                return `${modeLabel} — ${who}\n  ID: ${e.userId}\n  Reason: ${e.reason ?? 'none'}\n  Rejoins: ${e.rejoinCount}`;
+            });
+            await ctx.reply(`Moderation list (${entries.length}):\n\n${lines.join('\n\n')}`);
+            return;
+        }
+
+        // /tgalerts on|off — opt in/out of moderation alert DMs
+        if (text === '/tgalerts on') {
+            const set = _loadAlertAdmins();
+            set.add(fromId);
+            _saveAlertAdmins(set);
+            await ctx.reply('✅ You are now subscribed to moderation alerts.');
+            return;
+        }
+        if (text === '/tgalerts off') {
+            const set = _loadAlertAdmins();
+            set.delete(fromId);
+            _saveAlertAdmins(set);
+            await ctx.reply('✅ You have unsubscribed from moderation alerts.');
+            return;
+        }
+        if (text === '/tgalerts') {
+            const set      = _loadAlertAdmins();
+            const status   = set.has(fromId) ? 'subscribed ✅' : 'not subscribed ❌';
+            const count    = set.size;
+            await ctx.reply(`Alert status: ${status}\nTotal subscribed admins: ${count}\n\nUse /tgalerts on or /tgalerts off to change.`);
+            return;
+        }
+
+        await ctx.reply(
+            'Send /start to open the staff panel.\n\n' +
+            'Escalation (↑ up, ↓ down):\n' +
+            '/tgwatch <userId> [reason]  — monitor, delete harmful msgs\n' +
+            '/tgmute <userId> [reason]   — permanent mute (survives rejoin/captcha)\n' +
+            '/tgkick <userId> [reason]   — kicked on every rejoin\n' +
+            '/tgban <userId> [reason]    — banned on every rejoin\n' +
+            '\nDe-escalation:\n' +
+            '/tgunwatch <userId>  — remove from watchlist entirely\n' +
+            '/tgunmute <userId>   — unmute → drops to watch mode\n' +
+            '/tgunkick <userId>   — unkick → drops to watch mode\n' +
+            '/tgunban <userId>    — full clean slate, remove from all lists\n' +
+            '\n/tglist — view all users\n' +
+            '/tgalerts on|off — moderation alert DMs'
+        );
     }
 
     // ── Inline keyboard callback handler ─────────────────────────────────────
@@ -192,11 +643,17 @@ function createTelegramAdapter({
             // ── Step 3 (report only): choose AI model ─────────────────────────
             if (parts.length === 3 && action === 'report') {
                 await ctx.editMessageText(
-                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]}\n\nSelect AI model:`, {
-                    reply_markup: { inline_keyboard: [[
-                        { text: '⚡ Haiku (fast)',    callback_data: `${data}:haiku`  },
-                        { text: '🧠 Sonnet (smarter)', callback_data: `${data}:sonnet` },
-                    ]] },
+                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]}\n\nSelect AI model:\n(🔄 force skips the cache and regenerates)`, {
+                    reply_markup: { inline_keyboard: [
+                        [
+                            { text: '⚡ Haiku (fast)',     callback_data: `${data}:haiku`  },
+                            { text: '🧠 Sonnet (smarter)', callback_data: `${data}:sonnet` },
+                        ],
+                        [
+                            { text: '🔄 Haiku (force)',  callback_data: `${data}:haiku:force`  },
+                            { text: '🔄 Sonnet (force)', callback_data: `${data}:sonnet:force` },
+                        ],
+                    ] },
                 });
                 await ctx.answerCbQuery();
                 return;
@@ -237,16 +694,18 @@ function createTelegramAdapter({
                 return;
             }
 
-            // ── Generate report (report:period:platform:model) ────────────────
-            if (parts.length === 4 && action === 'report') {
-                await ctx.answerCbQuery('Generating report…');
+            // ── Generate report (report:period:platform:model[:force]) ────────
+            if ((parts.length === 4 || parts.length === 5) && action === 'report') {
+                const force = parts[4] === 'force';
+                await ctx.answerCbQuery(force ? 'Regenerating report…' : 'Generating report…');
                 await ctx.editMessageText(
-                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]} · ${modelKey === 'sonnet' ? 'Sonnet' : 'Haiku'}\n\n⏳ Generating…`
+                    `📊 Community Report · ${PERIOD_LABEL[period]} · ${PLATFORM_LABEL[platform]} · ${modelKey === 'sonnet' ? 'Sonnet' : 'Haiku'}${force ? ' · 🔄 Force' : ''}\n\n⏳ ${force ? 'Regenerating' : 'Generating'}…`
                 );
 
                 try {
                     const reportType = period === 'day' ? 'daily' : 'weekly';
-                    const result = await buildCommunityReport({ platform, reportType, model: modelKey });
+                    const model = modelKey === 'sonnet' ? 'claude-sonnet-4-6' : 'claude-haiku-4-5-20251001';
+                    const result = await buildCommunityReport({ platform, reportType, model, force });
 
                     if (!result.text) {
                         await ctx.editMessageText('No user messages found for this period.');
@@ -261,14 +720,18 @@ function createTelegramAdapter({
                         result.dcChinese?.length > 0 ? `${result.dcChinese.length} Chinese (Discord)` : null,
                         result.tgChinese?.length > 0 ? `${result.tgChinese.length} Chinese (Telegram)`: null,
                     ].filter(Boolean).join(' + ');
+                    const cacheNote = result.fromCache ? ' — cached' : '';
 
                     const typeLabel = period === 'week' ? 'Weekly' : 'Daily';
-                    const header = `📊 ${typeLabel} Community Report (${PLATFORM_LABEL[platform]})\n(${countLine} messages analysed)\n\n`;
-                    const full   = header + text;
+                    const header = `📊 ${typeLabel} Community Report (${PLATFORM_LABEL[platform]})\n(${countLine} messages analysed${cacheNote})\n\n`;
+                    // The report text always comes out of Claude in Discord-style **bold** markdown,
+                    // regardless of which platform asked for it (including a cached report originally
+                    // generated for Discord) — sanitize for Telegram's HTML parse mode before sending.
+                    const full = sanitizeForTelegram(header + text);
 
-                    await ctx.editMessageText('✅ Report ready:');
+                    await ctx.editMessageText(result.fromCache ? '✅ Report ready (from cache):' : '✅ Report ready:');
                     for (const chunk of splitMessage(full)) {
-                        await ctx.reply(chunk);
+                        await ctx.reply(chunk, { parse_mode: 'HTML' });
                     }
                 } catch (err) {
                     console.error('[TG DM] Report error:', err.message);
@@ -283,6 +746,40 @@ function createTelegramAdapter({
             try { await ctx.answerCbQuery('Something went wrong.'); } catch {}
         }
     });
+
+    // ── Timed auto-answer (Scenario 3) ──────────────────────────────────────────
+    // Mirrors src/commands.js's batching: messages from the same user in the same
+    // topic that arrive while a batch is already pending get folded into it (same
+    // timer/deadline) instead of starting a competing one.
+
+    // Cancels a pending Scenario 3 batch (timer + both index entries) without answering it.
+    function cancelPendingBatch(key) {
+        const pending = state.pendingQuestions.get(key);
+        if (!pending) return null;
+        clearTimeout(pending.timer);
+        state.pendingQuestions.delete(key);
+        for (const m of pending.messages) state.pendingMsgIndex.delete(m.id);
+        return pending;
+    }
+
+    // Fires the batched answer for a pending Scenario 3 entry.
+    async function fireAutoAnswer(key) {
+        const pending = state.pendingQuestions.get(key);
+        if (!pending) return;
+        state.pendingQuestions.delete(key);
+        for (const m of pending.messages) state.pendingMsgIndex.delete(m.id);
+
+        const { userId, channelId, lastMessage } = pending;
+        const combined = pending.messages.map(m => m.content).filter(c => c.trim()).join('\n');
+        if (!combined.trim()) {
+            console.log(`[TG] Skipped batch for ${userId} — empty content`);
+            return;
+        }
+
+        const target = makeTgTarget(bot, lastMessage.chatId, lastMessage.threadId, lastMessage.messageId);
+        console.log(`[TG] Answering batch for ${userId} (${pending.messages.length} message(s))`);
+        await answerQuestion({ question: combined, targetMessage: target, userId, channelId });
+    }
 
     // ── Group message handler ─────────────────────────────────────────────────
 
@@ -299,7 +796,12 @@ function createTelegramAdapter({
 
             if (String(msg.chat.id) !== chatIdStr) return;
 
-            const threadId = msg.message_thread_id ?? null;
+            // Telegram omits message_thread_id for messages sent in a forum's "General"
+            // topic (its real ID is always 1, but the API never sets the field for it).
+            // Normalize to 1 for topic-matching/logging/channelId, but keep the raw value
+            // for replies — sendMessage without message_thread_id already routes to General.
+            const rawThreadId = msg.message_thread_id ?? null;
+            const threadId    = rawThreadId ?? 1;
 
             // Log-only topics (e.g. Chinese channel) — record message but never respond
             if (logOnlyTopicSet.size > 0 && logOnlyTopicSet.has(String(threadId ?? ''))) {
@@ -326,14 +828,18 @@ function createTelegramAdapter({
             // Log every message (same as Discord intent log)
             logTelegramMessage(msg, staff);
 
-            // Self-resolution — cancel pending timer if user signals they're sorted
-            for (const [msgId, pending] of state.pendingQuestions) {
-                if (pending.userId === userId && pending.channelId === channelId && looksResolved(text)) {
-                    clearTimeout(pending.timer);
-                    state.pendingQuestions.delete(msgId);
-                    console.log(`[TG] Cancelled ${msgId} — user ${userId} signalled self-resolution`);
-                    break;
-                }
+            // Watched user — bypass all scenario routing, run targeted analysis. Checked here
+            // (before Scenario 0/0.5/1, which can each return early) so a watched user can't
+            // dodge moderation just by replying to the bot or @mentioning it.
+            if (!staff && watchedUsers.has(String(fromId))) {
+                await handleWatchedMessage(ctx, msg, fromId, text, threadId);
+                return;
+            }
+
+            // Self-resolution — cancel pending batch if user signals they're sorted
+            if (looksResolved(text) && state.pendingQuestions.has(key)) {
+                const cancelled = cancelPendingBatch(key);
+                console.log(`[TG] Cancelled batch (${cancelled.messages.length} msg) — user ${userId} signalled self-resolution`);
             }
 
             // ── Scenario 0 — Reply to bot's CLARIFY question ──────────────────
@@ -345,7 +851,7 @@ function createTelegramAdapter({
                 const conv     = convKey ? state.conversationState.get(convKey) : null;
                 if (conv && convKey.split('::')[0] === userId) {
                     const updatedHistory = [...conv.history, { role: 'user', content: text }];
-                    const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                    const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
                     console.log(`[TG] Scenario 0 — CLARIFY continuation for ${userId}`);
                     await answerQuestion({ question: text, targetMessage: target, userId, channelId, existingHistory: updatedHistory });
                     return;
@@ -355,14 +861,30 @@ function createTelegramAdapter({
             // ── Scenario 0.5 — Reply to a regular bot answer ──────────────────
 
             if (replyToId && botId && msg.reply_to_message?.from?.id === botId && !staff && text.trim().split(/\s+/).length > 1) {
+                // Being a reply to the bot's last message doesn't mean it's addressed to the bot —
+                // in a busy thread the bot's message may just be the most recent one. Gate on intent
+                // the same way Scenario 3 does, so agreement/venting/side-conversation doesn't get answered.
+                const intent = await classifyMessageIntent(text, null);
+                logTelegramIntent(msg.message_id, intent);
+
+                if (intent === 'staff-ping') {
+                    const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
+                    await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
+                    return;
+                }
+                if (!RESPOND_INTENTS.has(intent)) {
+                    console.log(`[TG] Scenario 0.5 — skipped, intent '${intent}' does not warrant a response`);
+                    return;
+                }
+
                 const botAnswer = msg.reply_to_message.text || '';
                 const { context: newContext, sources: newSources } = await searchKB(text);
                 const history = [
                     { role: 'assistant', content: botAnswer },
                     { role: 'user', content: `Relevant context:\n${newContext}\n\nFollow-up: ${text}` },
                 ];
-                const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
-                console.log(`[TG] Scenario 0.5 — follow-up reply from ${userId}`);
+                const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
+                console.log(`[TG] Scenario 0.5 — follow-up reply from ${userId} (intent: ${intent})`);
                 await answerQuestion({ question: text, targetMessage: target, userId, channelId, existingHistory: history, ragSources: newSources });
                 return;
             }
@@ -380,13 +902,13 @@ function createTelegramAdapter({
                 logTelegramIntent(msg.message_id, intent);
                 console.log(`[TG] Scenario 1 — @mention from ${userId} (intent: ${intent}, staff: ${staff})`);
                 if (intent === 'staff-ping') {
-                    const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                    const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
                     await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
                     return;
                 }
                 // Direct @mention → always answer, same as Discord Scenario 1.
                 // Non-RESPOND_INTENTS still reach answerQuestion; Claude handles them gracefully.
-                const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
                 await answerQuestion({ question, targetMessage: target, userId, channelId });
                 return;
             }
@@ -397,13 +919,12 @@ function createTelegramAdapter({
             // mark them as staff-engaged so the bot backs off
             if (staff) {
                 if (replyToId) {
-                    const tgPendingKey = `tg_pending_${replyToId}`;
-                    const pending = state.pendingQuestions.get(tgPendingKey);
+                    const refKeyStaff = state.pendingMsgIndex.get(`tg_${replyToId}`);
+                    const pending     = refKeyStaff ? state.pendingQuestions.get(refKeyStaff) : null;
                     if (pending) {
-                        clearTimeout(pending.timer);
-                        state.pendingQuestions.delete(tgPendingKey);
+                        cancelPendingBatch(refKeyStaff);
                         state.staffEngaged.set(`${pending.userId}::${channelId}`, Date.now());
-                        console.log(`[TG] Staff replied — cancelled pending timer for msg ${replyToId}`);
+                        console.log(`[TG] Staff replied — cancelled pending batch for ${pending.userId}`);
                     } else {
                         // Staff replied to a non-pending message — still mark engagement
                         const repliedToFrom = msg.reply_to_message?.from;
@@ -413,6 +934,16 @@ function createTelegramAdapter({
                             console.log(`[TG] Staff engaged with ${targetUserId}`);
                         }
                     }
+                } else {
+                    // Plain staff message (no reply) — treat as engagement with anyone
+                    // currently pending an auto-answer in this topic, so the bot
+                    // doesn't answer over staff who are actively handling it inline.
+                    for (const [pendingKey, pending] of state.pendingQuestions) {
+                        if (pending.channelId !== channelId) continue;
+                        cancelPendingBatch(pendingKey);
+                        state.staffEngaged.set(`${pending.userId}::${channelId}`, Date.now());
+                        console.log(`[TG] Staff active in ${channelId} — cancelled pending auto-answer for ${pending.userId}`);
+                    }
                 }
                 return; // Never auto-reply to staff messages
             }
@@ -420,17 +951,16 @@ function createTelegramAdapter({
             // Community step-in — classify reply before intent gate; reuse result in Scenario 3
             let cachedIntent = null;
             if (replyToId) {
-                const tgRefKey = `tg_pending_${replyToId}`;
-                const pendingForRef = state.pendingQuestions.get(tgRefKey);
+                const tgRefKey      = state.pendingMsgIndex.get(`tg_${replyToId}`);
+                const pendingForRef = tgRefKey ? state.pendingQuestions.get(tgRefKey) : null;
                 if (pendingForRef && pendingForRef.userId !== userId) {
                     cachedIntent = await classifyMessageIntent(text, null);
                     logTelegramIntent(msg.message_id, cachedIntent);
                     if (cachedIntent === 'community-help') {
-                        clearTimeout(pendingForRef.timer);
-                        state.pendingQuestions.delete(tgRefKey);
-                        console.log(`[TG] Cancelled ${tgRefKey} — genuine community-help from ${userId}`);
+                        cancelPendingBatch(tgRefKey);
+                        console.log(`[TG] Cancelled batch for ${pendingForRef.userId} — genuine community-help from ${userId}`);
                     } else {
-                        console.log(`[TG] Kept timer for ${tgRefKey} — reply is '${cachedIntent}', not genuine help`);
+                        console.log(`[TG] Kept timer for ${pendingForRef.userId} — reply is '${cachedIntent}', not genuine help`);
                     }
                 }
             }
@@ -460,7 +990,7 @@ function createTelegramAdapter({
             console.log(`[TG] Intent: ${intent} | user: ${userId} | topic: ${threadId}${priorUserContext ? ' (with prior context)' : ''}`);
 
             if (intent === 'staff-ping') {
-                const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
+                const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
                 await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
                 return;
             }
@@ -483,17 +1013,31 @@ function createTelegramAdapter({
             const postStaff = staffTs && (Date.now() - staffTs) < state.POST_STAFF_CONTEXT_MS;
             const waitMs = postStaff ? state.POST_STAFF_WAIT_MS : state.STAFF_WAIT_MS;
 
-            // Staff-wait timer — queue the reply, cancel if an admin responds first
-            const tgPendingKey = `tg_pending_${msg.message_id}`;
-            const timer = setTimeout(async () => {
-                if (!state.pendingQuestions.has(tgPendingKey)) return;
-                state.pendingQuestions.delete(tgPendingKey);
-                const target = makeTgTarget(ctx, msg.chat.id, threadId, msg.message_id);
-                await answerQuestion({ question: text, targetMessage: target, userId, channelId });
-            }, waitMs);
-
-            state.pendingQuestions.set(tgPendingKey, { question: text, userId, channelId, timer, storedAt: Date.now() });
-            console.log(`[TG] Queued ${tgPendingKey} — fires in ${waitMs / 1000}s${postStaff ? ' (post-staff, shortened)' : ''} if no admin reply`);
+            // Staff-wait timer — queue the reply, cancel if an admin responds first.
+            // If a batch is already pending for this user in this topic, fold this message
+            // into it instead of starting a competing timer (same deadline, one combined answer).
+            const tgMsgId       = `tg_${msg.message_id}`;
+            // Only chatId/threadId/messageId are needed to reconstruct a reply target later
+            // (see fireAutoAnswer, which uses the shared `bot` for the telegram client) — storing
+            // the full Telegraf ctx here would keep the whole Update payload alive for the batch's
+            // lifetime (up to STAFF_WAIT_MS) for no benefit.
+            const lastMessage   = { chatId: msg.chat.id, threadId: rawThreadId, messageId: msg.message_id };
+            const existingBatch = state.pendingQuestions.get(key);
+            if (existingBatch) {
+                existingBatch.messages.push({ id: tgMsgId, content: text, ts: Date.now() });
+                existingBatch.lastMessage = lastMessage;
+                state.pendingMsgIndex.set(tgMsgId, key);
+                console.log(`[TG] Merged ${tgMsgId} into pending batch for ${userId} (${existingBatch.messages.length} message(s) now)`);
+            } else {
+                const timer = setTimeout(() => fireAutoAnswer(key), waitMs);
+                state.pendingQuestions.set(key, {
+                    messages: [{ id: tgMsgId, content: text, ts: Date.now() }],
+                    userId, channelId, timer, lastMessage,
+                    storedAt: Date.now(),
+                });
+                state.pendingMsgIndex.set(tgMsgId, key);
+                console.log(`[TG] Queued ${tgMsgId} — fires in ${waitMs / 1000}s${postStaff ? ' (post-staff, shortened)' : ''} if no admin reply`);
+            }
 
         } catch (err) {
             console.error('[TG] Handler error:', err.message);
@@ -507,7 +1051,7 @@ function createTelegramAdapter({
     const ACTIVE_STATUSES = new Set(['member', 'administrator', 'creator', 'restricted']);
     const GONE_STATUSES   = new Set(['left', 'kicked']);
 
-    bot.on('chat_member', (ctx) => {
+    bot.on('chat_member', async (ctx) => {
         try {
             const update = ctx.update.chat_member;
             if (String(update.chat.id) !== chatIdStr) return;
@@ -517,11 +1061,106 @@ function createTelegramAdapter({
             const user      = update.new_chat_member.user;
 
             if (GONE_STATUSES.has(oldStatus) && ACTIVE_STATUSES.has(newStatus)) {
+                if (isPermaBanned(user.id)) {
+                    const record = _loadBans()[String(user.id)];
+                    const mode   = record?.mode ?? 'watch';
+                    const count  = bumpRejoin(user.id);
+                    const who    = user.username ? `@${user.username}` : `ID ${user.id}`;
+
+                    if (mode === 'ban') {
+                        try {
+                            await ctx.telegram.banChatMember(chatIdStr, user.id, { revoke_messages: true });
+                            console.log(`[TG] Auto-banned ${user.id} on rejoin #${count}`);
+                        } catch (err) {
+                            console.error(`[TG] Auto-ban failed for ${user.id}:`, err.message);
+                        }
+                        const note = `🚫 Banned user ${who} tried to rejoin (attempt #${count}). Auto-banned.`;
+                        for (const adminId of _getNotifyAdmins()) {
+                            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+                        }
+                    } else if (mode === 'kick') {
+                        try {
+                            await ctx.telegram.banChatMember(chatIdStr, user.id);
+                            await ctx.telegram.unbanChatMember(chatIdStr, user.id, { only_if_banned: true });
+                            console.log(`[TG] Auto-kicked ${user.id} on rejoin #${count}`);
+                        } catch (err) {
+                            console.error(`[TG] Auto-kick failed for ${user.id}:`, err.message);
+                        }
+                        // One-time kick: drop to watch mode so they aren't kicked on future rejoins.
+                        addPermaBan(user.id, { reason: record?.reason ?? null, mode: 'watch' });
+                        watchedUsers.add(String(user.id));
+                        const note = `👢 Kicked user ${who} on rejoin (attempt #${count}). Dropped to watch mode — they can rejoin freely now; harmful messages will still be auto-deleted.`;
+                        for (const adminId of _getNotifyAdmins()) {
+                            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+                        }
+                    } else if (mode === 'mute') {
+                        watchedUsers.add(String(user.id));
+                        try {
+                            await ctx.telegram.restrictChatMember(chatIdStr, user.id, {
+                                permissions: {
+                                    can_send_messages:       false,
+                                    can_send_audios:         false,
+                                    can_send_documents:      false,
+                                    can_send_photos:         false,
+                                    can_send_videos:         false,
+                                    can_send_video_notes:    false,
+                                    can_send_voice_notes:    false,
+                                    can_send_polls:          false,
+                                    can_send_other_messages: false,
+                                },
+                            });
+                            console.log(`[TG] Auto-muted ${user.id} on rejoin #${count}`);
+                        } catch (err) {
+                            console.error(`[TG] Auto-mute failed for ${user.id}:`, err.message);
+                        }
+                        const note = `🔇 Muted user ${who} rejoined (attempt #${count}). Auto-muted.`;
+                        for (const adminId of _getNotifyAdmins()) {
+                            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+                        }
+                    } else {
+                        watchedUsers.add(String(user.id));
+                        console.log(`[TG-WATCH] Watched user ${user.id} rejoined — attempt #${count}. Monitoring active.`);
+                        const note = `👁 Watched user ${who} has rejoined (attempt #${count}).\n\nMonitoring active — harmful messages will be auto-deleted.`;
+                        for (const adminId of _getNotifyAdmins()) {
+                            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+                        }
+                    }
+                    return;
+                }
                 logTgMemberEvent('join', user, update.chat.id);
                 console.log(`[TG] Member joined: ${user.username ?? user.id}`);
             } else if (ACTIVE_STATUSES.has(oldStatus) && GONE_STATUSES.has(newStatus)) {
                 logTgMemberEvent('leave', user, update.chat.id);
                 console.log(`[TG] Member left: ${user.username ?? user.id}`);
+            } else if (oldStatus === 'restricted' && newStatus === 'member') {
+                // A bot (captcha/verification) just restored this user's permissions.
+                // If they're in permanent mute mode, re-apply the restriction immediately.
+                const record = _loadBans()[String(user.id)];
+                if (record?.mode === 'mute') {
+                    const who = user.username ? `@${user.username}` : `ID ${user.id}`;
+                    try {
+                        await ctx.telegram.restrictChatMember(chatIdStr, user.id, {
+                            permissions: {
+                                can_send_messages:       false,
+                                can_send_audios:         false,
+                                can_send_documents:      false,
+                                can_send_photos:         false,
+                                can_send_videos:         false,
+                                can_send_video_notes:    false,
+                                can_send_voice_notes:    false,
+                                can_send_polls:          false,
+                                can_send_other_messages: false,
+                            },
+                        });
+                        console.log(`[TG] Re-muted ${user.id} after captcha/verification unlock`);
+                        const note = `🔇 Muted user ${who} was unlocked by captcha/verification and re-muted.`;
+                        for (const adminId of _getNotifyAdmins()) {
+                            try { await ctx.telegram.sendMessage(adminId, note); } catch {}
+                        }
+                    } catch (err) {
+                        console.error(`[TG] Re-mute failed for ${user.id}:`, err.message);
+                    }
+                }
             }
         } catch (err) {
             console.error('[TG] chat_member handler error:', err.message);
