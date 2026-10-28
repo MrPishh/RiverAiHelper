@@ -1,20 +1,13 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Syncs docs and blog KB from sitemaps. Tracks Claude API usage stats.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Syncs the docs and blog parts of the knowledge base from their sitemaps, keeps
+ * their _index.json files, and tracks Claude API usage (calls, tokens, cost).
+ * syncBlog cross-checks sitemap <lastmod> against each post's own publish dates
+ * before trusting it — see docs/DECISIONS.md.
  * Exports: syncDocs, syncBlog, registerDocInIndex, registerBlogInIndex,
- *          loadUsageStats, trackUsage, BLOG_SITEMAP_URL
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * Usage stat price constants        PRICE_INPUT etc.              13
- * loadUsageStats()                  read data/usage-stats.json    21
- * trackUsage()                      update stats + console log    40
- * syncDocs()                        pull docs sitemap             62
- * registerDocInIndex()              write to docs/_index.json    138
- * syncBlog()                        pull blog sitemap + scrape   158
- * registerBlogInIndex()             write to blogs/_index.json   283
- * ─────────────────────────────────────────────────────────────────────────── */
+ *          loadUsageStats, trackUsage, price constants, USAGE_PATH, sitemap URLs
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs   = require('fs');
 const path = require('path');
@@ -23,6 +16,7 @@ const { ensureDir } = require('./utils');
 
 // ─── Usage tracking ───────────────────────────────────────────────────────────
 
+// Usage stats file and model prices (US$ per 1M tokens) used for the /usage-stats cost estimate.
 const ROOT_DIR           = path.join(__dirname, '..');
 const USAGE_PATH         = path.join(ROOT_DIR, 'data', 'usage-stats.json');
 const PRICE_INPUT        = 3.00;   // per 1M tokens, claude-sonnet-4-6
@@ -30,10 +24,12 @@ const PRICE_OUTPUT       = 15.00;
 const PRICE_HAIKU_INPUT  = 0.80;   // per 1M tokens, claude-haiku-4-5
 const PRICE_HAIKU_OUTPUT = 4.00;
 
+// A zeroed usage counter.
 function emptyBucket() {
     return { calls: 0, inputTokens: 0, outputTokens: 0 };
 }
 
+// Reads data/usage-stats.json, upgrading the old single-bucket format if found.
 function loadUsageStats() {
     const blank = { since: new Date().toISOString(), sonnet: emptyBucket(), haiku: emptyBucket(), monthly: {} };
     if (!fs.existsSync(USAGE_PATH)) return blank;
@@ -53,6 +49,7 @@ function loadUsageStats() {
     } catch { return blank; }
 }
 
+// Adds one API call to the all-time and this-month counters for its model (sonnet or haiku).
 function trackUsage(inputTokens, outputTokens, model = 'sonnet') {
     const stats     = loadUsageStats();
     const monthKey  = new Date().toISOString().slice(0, 7); // "YYYY-MM"
@@ -73,8 +70,11 @@ function trackUsage(inputTokens, outputTokens, model = 'sonnet') {
 
 // ─── Docs sync ────────────────────────────────────────────────────────────────
 
+// Docs sitemap. It has no <lastmod>, so a normal sync only finds added and removed pages.
 const DOCS_SITEMAP_URL = 'https://docs.riverai.inc/sitemap-pages.xml';
 
+// Adds new docs pages and removes pages gone from the sitemap; forceAll re-scrapes every page
+// (except files carrying <!-- EXCLUDE --> markers). Returns counts and the files written.
 async function syncDocs(forceAll = false) {
     const docsDir   = path.join(ROOT_DIR, 'knowledge-base', 'docs');
     const indexPath = path.join(docsDir, '_index.json');
@@ -163,6 +163,7 @@ async function syncDocs(forceAll = false) {
     return { added, updated, removed, failed, total: index.pages.length, processedFiles };
 }
 
+// Adds or refreshes one page in docs/_index.json (used by !add-doc-text).
 function registerDocInIndex(url, slug, file) {
     const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'docs', '_index.json');
     let index = { sitemapUrl: DOCS_SITEMAP_URL, lastChecked: null, pages: [] };
@@ -180,9 +181,12 @@ function registerDocInIndex(url, slug, file) {
 
 // ─── Blog sync ────────────────────────────────────────────────────────────────
 
+// Blog sitemap, and the configured date floor: posts older than this are never synced.
 const BLOG_SITEMAP_URL = 'https://blog.riverai.inc/sitemap-posts.xml';
 const BLOG_SINCE_DATE  = new Date('2025-05-15');
 
+// Adds new and re-scrapes changed blog posts from the sitemap, respecting the date floor, the
+// exclusion list and the lastmod cross-check. Returns counts, flagged posts and files written.
 async function syncBlog() {
     const blogsDir  = path.join(ROOT_DIR, 'knowledge-base', 'blogs');
     const indexPath = path.join(blogsDir, '_index.json');
@@ -391,6 +395,7 @@ async function syncBlog() {
     };
 }
 
+// Adds or refreshes one post in blogs/_index.json (used by /blog add and !add-blog-text).
 function registerBlogInIndex(url, slug, file) {
     const indexPath = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
     let index = { sitemapUrl: BLOG_SITEMAP_URL, lastChecked: null, pages: [] };

@@ -1,27 +1,30 @@
 # telegram/
 
-Telegram member join/leave tracker. Receives `chat_member` Telegram updates (forwarded from `telegram-adapter.js`) and logs every join/leave to `tg-member-log.jsonl`.
+Telegram join/leave tracker: `telegram-adapter.js` passes each `chat_member` join or leave here, and it is logged and counted.
 
 ## Files
 
-| File | Purpose |
+| File | What it owns |
 |---|---|
-| `tg-member-stats.js` | Log writer + stats functions |
-| `tg-member-log.jsonl` | Auto-appended join/leave log (gitignored, never commit) |
+| `tg-member-stats.js` | Log writer and counting. |
+| `tg-member-log.jsonl` | Join/leave log (local only, never commit). |
 
-## Log record format
+## How it works
+
+Each event appends:
 
 ```json
 { "ts": "2026-06-01T12:00:00.000Z", "type": "join", "userId": 987654321, "username": "bob", "chatId": "-1002060657220" }
 ```
 
-## Requirements
+Exports:
 
-The bot must be an **admin** in the Telegram group. Telegram only delivers `chat_member` updates to admin bots. Without admin status, join/leave events will never arrive and this log will remain empty.
+- `logTgMemberEvent(type, user, chatId)` — called by `telegram-adapter.js` on each join or leave.
+- `getTgMemberStats(from, to)` — `{ joins, leaves }` for a date range.
 
-`allowedUpdates: ['message', 'chat_member']` must be set in `bot.launch()` — already configured in `telegram/telegram-adapter.js`.
+A user rejoining while on the moderation list is handled by the adapter (ban / kick / mute) and is not logged as a join.
 
-## Exports
+## Notes
 
-- `logTgMemberEvent(type, user, chatId)` — called by `telegram-adapter.js` on each join/leave event
-- `getTgMemberStats(from, to)` — returns `{ joins, leaves }` for a date range
+- The bot must be a group **admin** — Telegram delivers `chat_member` updates only to admin bots. Without it this log stays empty.
+- `chat_member` must be in `allowedUpdates` in `bot.launch()` — already set in `telegram/telegram-adapter.js`.

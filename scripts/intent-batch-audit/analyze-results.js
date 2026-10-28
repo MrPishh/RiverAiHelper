@@ -1,16 +1,30 @@
 'use strict';
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * One-time batch audit, step 2 of 2: downloads the Batch API results for the batch
+ * in batch-id.txt, tallies the reviewer's verdicts per intent category and writes
+ * results-summary.json. Run after prepare-and-submit.js once the batch has ended.
+ * Not part of the running bot.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env'), quiet: true });
 const Anthropic = require('@anthropic-ai/sdk');
 
+// ─── Inputs ──────────────────────────────────────────────────────────────────
+
+// Inputs written by prepare-and-submit.js, and a lookup from each request's custom_id back to its message.
 const OUT_DIR = __dirname;
 const BATCH_ID = fs.readFileSync(path.join(OUT_DIR, 'batch-id.txt'), 'utf8').trim();
 const messages = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'messages.json'), 'utf8'));
 const byCustomId = new Map(messages.map(m => [`${m.platform}_${m.id}`, m]));
 
+// Anthropic client (key from .env).
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ─── Results ─────────────────────────────────────────────────────────────────
+
+// Parses one reviewer reply (VERDICT: CORRECT | INCORRECT … | AMBIGUOUS …) into an object.
 function parseVerdict(text) {
     const t = text.trim();
     if (/^VERDICT:\s*CORRECT/i.test(t)) return { verdict: 'CORRECT' };

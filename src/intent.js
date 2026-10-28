@@ -1,33 +1,21 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Intent classification factory + logging for Discord and Telegram.
- * Two-tier scammer-side detection: hard sync (Layer 1) + soft+Haiku (Layer 2).
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Intent classification for Discord and Telegram (Haiku, 15 categories) and the
+ * intent logs. Also the scammer-side scam detection that runs before
+ * classification: Layer 1 (hard regex, no API cost) and Layer 2 (soft regex +
+ * a focused Haiku YES/NO check), plus the FUD check for watched Telegram users.
  * Exports: createIntentModule, RESPOND_INTENTS, ALL_INTENT_CATEGORIES,
  *          INTENT_LOG_PATH, TG_INTENT_LOG_PATH, TICKET_LOG_PATH, COLLAB_LOG_PATH,
  *          logToTicketFile, logToCollabFile
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * RESPOND_INTENTS, ALL_INTENT_CATEGORIES                          38
- * SCAM_CONTENT_PATTERNS           Layer 1 hard-sync patterns      75
- * SCAM_SOFT_PATTERNS              Layer 2 regex pre-filter        98
- * normalizeScamContent()          leet + space obfuscation fix   110
- * detectScamContentSync()         Layer 1 — no API cost          118
- * hasSoftScamSignal()             Layer 2 pre-filter             123
- * logToTicketFile/logToCollabFile write-time logging (module-lvl) 35
- * createIntentModule()            factory                        139
- *   detectScamContentLLM()        Layer 2 Haiku YES/NO           143
- *   classifyMessageIntent()       main Haiku classifier          158
- *   logMessageIntent()            Discord raw message log        213
- *   logIntentClassification()     classified intent record       238
- *   logTelegramMessage()          Telegram raw log               245
- *   logTelegramIntent()           Telegram classified record     266
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs   = require('fs');
 const path = require('path');
 
+// ─── Log files ───────────────────────────────────────────────────────────────
+
+// Log files in intent/: live Discord and Telegram logs, and write-only ticket/collab logs.
 const ROOT_DIR           = path.join(__dirname, '..');
 const INTENT_LOG_PATH    = path.join(ROOT_DIR, 'intent', 'dc-intent-log.jsonl');
 const TG_INTENT_LOG_PATH = path.join(ROOT_DIR, 'intent', 'tg-intent-log.jsonl');
@@ -57,11 +45,16 @@ function _writeToFile(filePath, message) {
     } catch {}
 }
 
+// Write-time loggers for support-ticket and collab channels.
 function logToTicketFile(message) { _writeToFile(TICKET_LOG_PATH, message); }
 function logToCollabFile(message)  { _writeToFile(COLLAB_LOG_PATH,  message); }
 
+// ─── Categories and classifier prompt ────────────────────────────────────────
+
+// The only intents the bot answers; everything else is logged and left alone.
 const RESPOND_INTENTS = new Set(['help-seeking', 'troubleshooting', 'onboarding', 'factual-question']);
 
+// Every valid category — Haiku's reply is checked against this list (anything else becomes help-seeking).
 const ALL_INTENT_CATEGORIES = [
     'help-seeking', 'troubleshooting', 'onboarding', 'factual-question',
     'community-hype', 'safety-alert', 'scam-content', 'content-promotion', 'referral-sharing',
@@ -149,8 +142,10 @@ const SCAM_SOFT_PATTERNS = [
 // leet-speak pass rewrites '@' -> 'a', which would silently swallow the literal '@' this needs.
 const BARE_BOT_MENTION_PATTERN = /^@[a-z0-9_]{2,}bot$/i;
 
+// Leet-speak substitutions undone before matching scam patterns (e.g. "gu1de" → "guide").
 const LEET_MAP_CONTENT = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '6': 'g', '7': 't', '@': 'a' };
 
+// Undoes common obfuscation (spaced-out letters, leet speak) so the scam patterns can match.
 function normalizeScamContent(content) {
     return content
         // collapse spaced-out letters: "t e a m" → "team", "d m" → "dm"
@@ -159,11 +154,13 @@ function normalizeScamContent(content) {
         .replace(/[0134567@]/g, c => LEET_MAP_CONTENT[c] ?? c);
 }
 
+// Layer 1: true when a hard scam pattern matches — classified as scam-content with no API call.
 function detectScamContentSync(content) {
     const normalized = normalizeScamContent(content);
     return SCAM_CONTENT_PATTERNS.some(p => p.test(normalized));
 }
 
+// Layer 2 pre-filter: true when a context-dependent pattern matches and Haiku should decide.
 function hasSoftScamSignal(content) {
     if (BARE_BOT_MENTION_PATTERN.test(content.trim())) return true;
     const normalized = normalizeScamContent(content);
@@ -194,6 +191,8 @@ Use the sender identity, reply context, and recent channel messages provided to 
 
 Reply with ONLY: YES or NO`;
 
+// ─── Classifier factory ──────────────────────────────────────────────────────
+
 // Factory — call with the shared anthropic client and config to get bound functions.
 function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }) {
 
@@ -215,6 +214,8 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         }
     }
 
+    // Classifies one message: scam layers 1–2 first, then Haiku with channel, reply and thread context.
+    // Returns a category name; falls back to help-seeking on error (fail open).
     async function classifyMessageIntent(content, message = null, priorUserContext = null, spoofMatch = null) {
         if (detectScamContentSync(content)) return 'scam-content';
 
@@ -282,6 +283,7 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         }
     }
 
+    // Appends a raw Discord message record to dc-intent-log.jsonl.
     function logMessageIntent(message, botUserId, isStaff = false) {
         try {
             const content = message.content || '';
@@ -307,6 +309,7 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         }
     }
 
+    // Appends a { type: "classified" } record for a Discord message (joined to the raw record by id).
     function logIntentClassification(messageId, intent) {
         try {
             const record = { platform: 'discord', type: 'classified', id: messageId, intent, ts: new Date().toISOString() };
@@ -314,6 +317,7 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         } catch {}
     }
 
+    // Appends a raw Telegram message record to tg-intent-log.jsonl.
     function logTelegramMessage(msg, isStaff = false) {
         try {
             const content = msg.text || '';
@@ -335,6 +339,7 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         } catch {}
     }
 
+    // Appends a { type: "classified" } record for a Telegram message.
     function logTelegramIntent(messageId, intent) {
         try {
             const record = { platform: 'telegram', type: 'classified', id: messageId, intent, ts: new Date().toISOString() };

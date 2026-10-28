@@ -1,12 +1,21 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Legacy knowledge loader. Answers now come from rag.js; only getSourceFiles() is
+ * still used — by the keyword fallback that labels sources in the staff
+ * explanation embed.
+ * Exports: getSourceFiles
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs = require('fs');
 const path = require('path');
 
+// Folders whose Markdown files are read.
 const ROOT_DIR = path.join(__dirname, '..');
 const KB_DIR   = path.join(ROOT_DIR, 'knowledge-base');
 const CL_DIR   = path.join(ROOT_DIR, 'channel-learning');
 
+// Recursively reads every non-empty .md file under `dir` as { label, content }.
 function readMdFiles(dir, labelPrefix) {
     const sections = [];
     if (!fs.existsSync(dir)) return sections;

@@ -1,27 +1,29 @@
 # discord/
 
-Discord member join/leave tracker. Registers Discord gateway events at startup and logs every join/leave to `member-log.jsonl`.
+Discord join/leave tracker: registers the gateway events at start-up and logs every join and leave.
 
 ## Files
 
-| File | Purpose |
+| File | What it owns |
 |---|---|
-| `discord-member-stats.js` | Event registration + stats functions |
-| `member-log.jsonl` | Auto-appended join/leave log (gitignored, never commit) |
+| `discord-member-stats.js` | Event registration and counting. |
+| `member-log.jsonl` | Join/leave log (local only, never commit). |
 
-## Log record format
+## How it works
+
+`registerMemberEvents(client)` is called once from `bot.js` inside `clientReady`; no other setup is needed. Each event appends:
 
 ```json
 { "ts": "2026-06-01T12:00:00.000Z", "type": "join", "userId": "1234567890", "username": "alice", "guildId": "1212686319596216350" }
 ```
 
-## Setup
+Exports:
 
-`registerMemberEvents(client)` is called once in `bot.js` inside `clientReady`. No additional config needed.
+- `registerMemberEvents(client)` — attach the listeners.
+- `getMemberStats(from, to)` — `{ joins, leaves }` for a date range.
+- `getWeeklyStats()` — the same for the last complete Mon–Sun week.
+- `getWeekRange()` / `getDayRange()` — re-exported from `src/utils.js`.
 
-## Exports
+## Notes
 
-- `registerMemberEvents(client)` — attach event listeners to Discord client
-- `getMemberStats(from, to)` — returns `{ joins, leaves }` for a date range
-- `getWeeklyStats()` — convenience wrapper, returns stats for the current Mon–Sun week
-- `getWeekRange()` / `getDayRange()` — date range helpers (also exported from `src/utils.js`)
+- Counts only events since logging began; it does not read Discord's history.

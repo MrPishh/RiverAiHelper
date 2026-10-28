@@ -1,14 +1,26 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Turns a web page into clean Markdown for the knowledge base: direct fetch, then
+ * jsdom → Readability → Turndown. Falls back to the site's RSS feed when the page is
+ * blocked (e.g. by Cloudflare). Also reads a post's publish/modified dates, which
+ * syncBlog uses to tell a real edit from a site redeploy.
+ * Exports: htmlToMarkdown, scrapeSingleArticle, fetchPublishMeta
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs    = require('fs');
 const path  = require('path');
 const https = require('https');
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+// Project root (currently unused in this file).
 const ROOT_DIR = path.join(__dirname, '..');
 
 // Some blog hosts use self-signed or locally-issued certs that Node rejects.
 const relaxedAgent = new https.Agent({ rejectUnauthorized: false });
 
+// Headers that make requests look like a normal desktop browser — some blog hosts refuse bare clients.
 const BROWSER_HEADERS = {
     'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
     'Accept':          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -18,6 +30,7 @@ const BROWSER_HEADERS = {
 
 // ─── Fetch helper ─────────────────────────────────────────────────────────────
 
+// Fetches a URL with browser-like headers and a 15-second timeout, so a hanging site cannot stall a sync.
 async function fetchUrl(url, extraHeaders = {}) {
     const fetch = (await import('node-fetch')).default;
 
@@ -42,6 +55,7 @@ async function fetchUrl(url, extraHeaders = {}) {
 //   2. @mozilla/readability — extract article body (strips nav/footer/ads)
 //   3. turndown + GFM     — convert to Markdown, preserving tables
 
+// Extracts the article body from raw HTML and converts it to Markdown (tables kept).
 async function htmlToMarkdown(html, url) {
     const { JSDOM }        = require('jsdom');
     const { Readability }  = require('@mozilla/readability');
@@ -74,6 +88,7 @@ async function htmlToMarkdown(html, url) {
 // Ghost and most blog platforms expose full article HTML in their RSS feed.
 // Cloudflare typically does not block RSS endpoints.
 
+// Looks for the article in the site's RSS/Atom feeds and converts its HTML; returns null if not found.
 async function fetchFromRSS(articleUrl) {
     const { origin, pathname } = new URL(articleUrl);
 
@@ -142,7 +157,9 @@ async function fetchFromRSS(articleUrl) {
 // Only available via the direct-fetch path — the RSS fallback only carries the
 // article body, not the page <head>, so both fields come back null there.
 
+// Reads article:published_time, article:modified_time and the title from a page's <head>.
 function extractPublishMeta(html) {
+    // First capture group of `re` in the page, or null.
     const pick = (re) => (html.match(re) || [])[1] || null;
     return {
         publishedTime: pick(/property=["']article:published_time["']\s+content=["'](.*?)["']/),
@@ -151,6 +168,7 @@ function extractPublishMeta(html) {
     };
 }
 
+// Fetches a page and returns its publish metadata; all three fields are null on any failure.
 async function fetchPublishMeta(url) {
     try {
         const response = await fetchUrl(url);
@@ -165,6 +183,7 @@ async function fetchPublishMeta(url) {
 // 1. Try direct page fetch + Readability + Markdown
 // 2. On 403/block, fall back to RSS feed
 
+// Scrapes one article to Markdown (direct fetch, then RSS). Throws if both fail.
 async function scrapeSingleArticle(url) {
     // Attempt 1 — direct fetch
     try {

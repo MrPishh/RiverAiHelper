@@ -1,39 +1,27 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Pure helpers — no side effects, no API calls, no shared state.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Small shared helpers with no API calls: date ranges and folder labels, Discord
+ * message helpers, the name-spoof detector (Layer 3) helpers, message splitting,
+ * and the two knowledge writers (announcement/tweet capture, Q&A learning).
  * Exports: getWeekRange, getDayRange, getMonthLabel, getWeekLabel,
  *          appendToMonthlyWeeklyFile, ensureDir, isStaff, isBotMentioned,
  *          stripBotMention, looksResolved, trackerKey, saveQAPair,
  *          normalizeDisplayName, looksLikeSpoofedName, looksLikeHelperOffer,
  *          splitMessage
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * getWeekRange() / getDayRange()   date range for log queries      37
- * getMonthLabel() / getWeekLabel() folder/file name builders       57
- * ensureDir()                      mkdir -p wrapper                69
- * appendToMonthlyWeeklyFile()      write to ann/tweet week files   75
- * isStaff()                        role-based staff check          92
- * isBotMentioned()                 check if bot @mentioned         97
- * stripBotMention()                remove <@botId> from content   101
- * looksResolved()                  self-resolution pattern check  108
- * trackerKey()                     userId::channelId string       112
- * normalizeDisplayName()           leet-sub + strip for spoof     121
- * levenshtein()                    edit distance for name match   129
- * looksLikeSpoofedName()           Layer 3 spoof detector         148
- * looksLikeHelperOffer()           DM / help-offer pattern        162
- * splitMessage()                   chunk text at maxLen, newline-aware 171
- * saveQAPair()                     write to channel-learning/     187
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
+
+// ─── Setup ────────────────────────────────────────────────────────────────────
 
 const fs   = require('fs');
 const path = require('path');
 
+// Project root — knowledge-base/ and channel-learning/ paths are built from it.
 const ROOT_DIR = path.join(__dirname, '..');
 
 // ─── Date/folder helpers ──────────────────────────────────────────────────────
 
+// The most recent complete Monday–Sunday week (ending today if today is Sunday).
 function getWeekRange() {
     const now = new Date();
     const day = now.getDay();
@@ -46,6 +34,7 @@ function getWeekRange() {
     return { from: mondayStart, to: sundayEnd };
 }
 
+// Today, from 00:00:00 to 23:59:59.
 function getDayRange() {
     const from = new Date();
     from.setHours(0, 0, 0, 0);
@@ -54,10 +43,12 @@ function getDayRange() {
     return { from, to };
 }
 
+// Current month name, e.g. "October" — used in folder names like October_ann.
 function getMonthLabel() {
     return new Date().toLocaleString('en-US', { month: 'long' });
 }
 
+// week1–week4 by day of month (days 22–31 are all week4).
 function getWeekLabel() {
     const day = new Date().getDate();
     if (day <= 7)  return 'week1';
@@ -66,12 +57,14 @@ function getWeekLabel() {
     return 'week4';
 }
 
+// Creates a folder (and parents) if it does not exist.
 function ensureDir(dirPath) {
     if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
     }
 }
 
+// Appends a captured announcement or tweet to knowledge-base/<type>/<Month>_<ann|tweet>/weekN.md.
 function appendToMonthlyWeeklyFile(type, content) {
     const month      = getMonthLabel();
     const week       = getWeekLabel();
@@ -89,15 +82,18 @@ function appendToMonthlyWeeklyFile(type, content) {
 // ─── Discord helpers ──────────────────────────────────────────────────────────
 // botUserId is passed explicitly so these functions don't close over discordClient.
 
+// True when the member has any staff role.
 function isStaff(member, staffRoleIds) {
     if (!member || staffRoleIds.length === 0) return false;
     return staffRoleIds.some(id => member.roles.cache.has(id));
 }
 
+// True when the message @mentions the bot.
 function isBotMentioned(message, botUserId) {
     return message.mentions.users.has(botUserId);
 }
 
+// Removes the bot's @mention from message text.
 function stripBotMention(content, botUserId) {
     return content
         .replace(`<@${botUserId}>`, '')
@@ -105,19 +101,23 @@ function stripBotMention(content, botUserId) {
         .trim();
 }
 
+// True when a message sounds like the user sorted it out ("ok", "fixed", "working now"…).
 function looksResolved(text) {
     return /\b(ok|okay|fixed|solved|works|working|sorted|got.?it|nvm|never.?mind|problem.?solved|issue.?resolved|all.?good|good.?now|it.?s (working|fixed|ok|good)|disconnected|logged.?in.?again|no.?longer|not.?an.?issue)\b/i.test(text);
 }
 
+// Key used by every per-user, per-channel state Map: "userId::channelId".
 function trackerKey(userId, channelId) {
     return `${userId}::${channelId}`;
 }
 
 // ─── Spoof-detection helpers ──────────────────────────────────────────────────
 
+// Leet-speak substitutions, and padding words impersonators add to a staff name ("real", "admin"…).
 const LEET_MAP       = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '6': 'g', '7': 't', '@': 'a' };
 const STRIP_WORDS_RE = /\b(official|real|support|admin|mod|helper|team|river)\b/g;
 
+// Reduces a display name to its bare letters for comparison (lowercase, leet undone, padding removed).
 function normalizeDisplayName(name) {
     return name
         .toLowerCase()
@@ -126,6 +126,7 @@ function normalizeDisplayName(name) {
         .replace(/[^a-z]/g, '');
 }
 
+// Edit distance between two strings.
 function levenshtein(a, b) {
     if (a === b) return 0;
     const m = a.length, n = b.length;
@@ -157,8 +158,10 @@ function looksLikeSpoofedName(senderDisplayName, staffNameCache) {
     return { matched: false };
 }
 
+// Phrases that offer private help or a DM — the second half of the impersonation pattern.
 const HELPER_OFFER_RE = /\b(dm\s*me|message\s*me|contact\s*me(\s+privately)?|reach\s*me|send\s*me\s*a\s*[dp]m|i\s+can\s+help|how\s+can\s+i\s+help|i('ll|'d|\s+will|\s+would)\s+help|i\s+can\s+assist|let\s+me\s+help|help\s+you(\s+out)?\s+privately|outside\s+(the\s+)?channel|in\s+(private|my\s+dms?|direct)|inbox\s*(me|us)|check\s+(your\s+)?(inbox|requests?|dms?)|sent?\s+(you\s+)?(a\s+)?(?:friend\s+)?request)\b/i;
 
+// True when the message offers private help or a DM.
 function looksLikeHelperOffer(content) {
     return HELPER_OFFER_RE.test(content);
 }
@@ -168,6 +171,7 @@ function looksLikeHelperOffer(content) {
 
 // Splits text into chunks no longer than maxLen, breaking at the last newline before the
 // limit when possible (falls back to a hard cut if no newline is found).
+// Default 4096 is Telegram's message length limit; Discord callers pass 2000.
 function splitMessage(text, maxLen = 4096) {
     if (text.length <= maxLen) return [text];
     const chunks = [];
@@ -184,6 +188,8 @@ function splitMessage(text, maxLen = 4096) {
     return chunks;
 }
 
+// Q&A learning: appends a user question and the staff reply to channel-learning/<channel>/qa-log.md
+// (local only — never committed).
 function saveQAPair(channelName, question, answer) {
     const filepath  = path.join(ROOT_DIR, 'channel-learning', channelName, 'qa-log.md');
     ensureDir(path.dirname(filepath));

@@ -1,31 +1,27 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Persistent scammer infraction store → data/scammer-list.json.
- * Keyed by Discord user ID — survives username and display name changes.
- * Exports: recordInfraction, updateInfractionActions, getRecord, getAllRecords, clearUser, trimInfractions
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * load() / save()                  JSON file I/O                  24
- * recordInfraction()               write new infraction record    35
- * updateInfractionActions()        patch in actions after the fact 58
- * getRecord() / getAllRecords()     read infraction history        66
- * clearUser()                      remove ALL records for a user   75
- * trimInfractions()                remove N most-recent records    85
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Persistent scammer infraction store (data/scammer-list.json), keyed by Discord
+ * user ID so it survives username and display-name changes. Written by
+ * takeScamAction; read and managed through /scam-record.
+ * Exports: recordInfraction, updateInfractionActions, getRecord, getAllRecords,
+ *          clearUser, trimInfractions
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs   = require('fs');
 const path = require('path');
 
+// Where the infraction store lives.
 const ROOT_DIR   = path.join(__dirname, '..');
 const STORE_PATH = path.join(ROOT_DIR, 'data', 'scammer-list.json');
 
+// Reads the whole store ({} if missing).
 function load() {
     try { return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8')); }
     catch { return {}; }
 }
 
+// Writes the whole store.
 function save(store) {
     fs.mkdirSync(path.dirname(STORE_PATH), { recursive: true });
     fs.writeFileSync(STORE_PATH, JSON.stringify(store, null, 2), 'utf8');
@@ -64,10 +60,12 @@ function updateInfractionActions(userId, infractionCount, actionsStr) {
     save(store);
 }
 
+// One user's record, or null.
 function getRecord(userId) {
     return load()[userId] ?? null;
 }
 
+// Every record, keyed by user ID.
 function getAllRecords() {
     return load();
 }

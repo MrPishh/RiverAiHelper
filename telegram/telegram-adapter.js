@@ -1,37 +1,12 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Full Telegram bot adapter (Telegraf). Full parity with Discord:
- * all Scenarios 0–3, community step-in, staff-wait timers, spoof detection,
- * staff DM panel with inline keyboard.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * The Telegram bot (Telegraf), at parity with Discord: Scenarios 0, 0.5, 1 and 3,
+ * staff-wait timers and batching, community step-in, self-resolution, the staff
+ * DM panel (reports and member stats), the moderation system (watch / mute /
+ * kick / ban, re-applied on rejoin) and join/leave tracking.
  * Exports: createTelegramAdapter
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * sanitizeForTelegram()            <#channelId> → Discord deep link 117
- * makeTgTarget()                   reply-target wrapper            129
- * isAdmin()                        cached admin check (10-min TTL) 150
- * permaBan helpers                 load/save/check/add/remove       44
- * createTelegramAdapter()          factory                         167
- *   handlePrivateDM()              staff panel DM flow             314
- *     /tgban /tgunban /tgbanlist   perma-ban staff commands        338
- *   ── Callback query handler ──   inline keyboard steps           592
- *     Step 1: period               week / day                      605
- *     Step 2: platform             Discord / Telegram / Both       618
- *     Step 3: AI model (report)    Haiku / Sonnet + force variant   632
- *     Generate stats                                               651
- *     Generate report               model + force → real model ID  686
- *   cancelPendingBatch/fireAutoAnswer()  batched Scenario 3 answer  736
- *   ── Group message handler ──    main text event                 770
- *     Private DM gate                                              778
- *     Scenario 0                   CLARIFY continuation            823
- *     Scenario 0.5                 reply to any bot answer         839
- *     Scenario 1                   @mention                        870
- *     Scenario 3                   unprompted auto-answer, batched  894
- *     Community step-in            classify reply, cancel batch    935
- *     staffEngaged / POST_STAFF    timer logic                     953
- *   Join/leave tracking + auto-re-ban on rejoin (chat_member)      1034
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs            = require('fs');
 const path          = require('path');
@@ -45,17 +20,21 @@ const { logTgMemberEvent } = require('../weekly-report/member-stats/telegram/tg-
 
 const PERMA_BAN_PATH = path.join(__dirname, '..', 'data', 'tg-perma-ban.json');
 
+// Reads the moderation store ({} if missing).
 function _loadBans() {
     try { return JSON.parse(fs.readFileSync(PERMA_BAN_PATH, 'utf8')); }
     catch { return {}; }
 }
+// Writes the moderation store.
 function _saveBans(store) {
     fs.mkdirSync(path.dirname(PERMA_BAN_PATH), { recursive: true });
     fs.writeFileSync(PERMA_BAN_PATH, JSON.stringify(store, null, 2), 'utf8');
 }
+// True when the user is on the moderation list in any mode.
 function isPermaBanned(userId) {
     return !!_loadBans()[String(userId)];
 }
+// Adds a user or changes their mode. Returns 'added', 'updated' (mode changed) or 'exists'.
 function addPermaBan(userId, { username = null, reason = null, mode = 'watch' } = {}) {
     const store = _loadBans();
     const key   = String(userId);
@@ -72,6 +51,7 @@ function addPermaBan(userId, { username = null, reason = null, mode = 'watch' } 
     }
     return 'exists';
 }
+// Removes a user from the list; true if they were on it.
 function removePermaBan(userId) {
     const store = _loadBans();
     const key   = String(userId);
@@ -80,6 +60,7 @@ function removePermaBan(userId) {
     _saveBans(store);
     return true;
 }
+// Counts one more rejoin attempt and returns the new count.
 function bumpRejoin(userId) {
     const store = _loadBans();
     const key   = String(userId);
@@ -97,14 +78,17 @@ function bumpRejoin(userId) {
 
 const ALERT_ADMINS_PATH = path.join(__dirname, '..', 'data', 'tg-alert-admins.json');
 
+// Admin IDs subscribed to alert DMs.
 function _loadAlertAdmins() {
     try { return new Set(JSON.parse(fs.readFileSync(ALERT_ADMINS_PATH, 'utf8'))); }
     catch { return new Set(); }
 }
+// Writes the subscribed admin IDs.
 function _saveAlertAdmins(set) {
     fs.mkdirSync(path.dirname(ALERT_ADMINS_PATH), { recursive: true });
     fs.writeFileSync(ALERT_ADMINS_PATH, JSON.stringify([...set], null, 2), 'utf8');
 }
+// Who receives an alert: subscribed admins, or every cached admin when nobody has subscribed.
 function _getNotifyAdmins() {
     const opted = _loadAlertAdmins();
     return opted.size > 0 ? opted : adminCache; // fall back to all admins if none opted in
@@ -112,6 +96,7 @@ function _getNotifyAdmins() {
 
 // ─── Telegram markdown sanitiser ─────────────────────────────────────────────
 
+// The River Discord server — used to turn <#channelId> mentions into Discord links. Update it if the server changes.
 const GUILD_ID = '1212686319596216350';
 
 // Converts Discord-flavored text (from Claude, e.g. answers or reports) into Telegram
@@ -136,6 +121,8 @@ function sanitizeForTelegram(text) {
 
 // ─── Target message wrapper ───────────────────────────────────────────────────
 
+// Wraps a Telegram chat/topic/message as a { reply(text) } target, so answerQuestion() can
+// reply on Telegram exactly as it does on Discord.
 function makeTgTarget(ctx, chatId, threadId, replyToMsgId) {
     return {
         reply: async (text) => {
@@ -158,6 +145,7 @@ const ADMIN_CACHE_TTL = 10 * 60 * 1000;
 let adminCache   = new Set();
 let adminCacheTs = 0;
 
+// True when the user is a group admin (Telegram admins count as staff).
 async function isAdmin(telegram, chatId, userId) {
     const now = Date.now();
     if (now - adminCacheTs > ADMIN_CACHE_TTL) {
@@ -175,6 +163,7 @@ async function isAdmin(telegram, chatId, userId) {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
+// Factory — builds the Telegraf bot with all handlers. Returns { launch, stop, getMemberCount }.
 function createTelegramAdapter({
     token,
     allowedChatId,
@@ -213,6 +202,7 @@ function createTelegramAdapter({
     );
     if (watchedUsers.size > 0) console.log(`[TG] Watchlist seeded: ${watchedUsers.size} user(s)`);
 
+    // Intents that get a watched user's message deleted straight away (FUD is checked separately).
     const HARMFUL_INTENTS = new Set(['scam-content', 'community-conduct']);
 
     bot.telegram.getMe().then(me => {
@@ -322,6 +312,8 @@ function createTelegramAdapter({
 
     // ── Private DM handler ────────────────────────────────────────────────────
 
+    // Staff DMs: admins only. /start opens the panel; /tg… commands manage the moderation list;
+    // anything else gets the command help.
     async function handlePrivateDM(ctx, msg) {
         const fromId = msg.from.id;
         const admin  = await isAdmin(ctx.telegram, chatIdStr, fromId);

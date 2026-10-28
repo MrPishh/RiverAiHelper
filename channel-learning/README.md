@@ -1,12 +1,8 @@
-# Channel Learning
+# channel-learning/
 
-Auto-populated Q&A pairs learned from staff replies in Discord channels. Used as part of the RAG knowledge base.
+Q&A pairs the bot learns from staff replies in Discord channels. They are indexed with the knowledge base, so future similar questions benefit from real staff answers.
 
-## How it works
-
-When a staff member replies to a user question in `#general` or `#support`, the bot saves the exchange as a Q&A pair. These pairs are indexed alongside docs, blogs, and corrections so future similar questions benefit from real staff answers.
-
-## Structure
+## Files
 
 ```
 channel-learning/
@@ -16,9 +12,13 @@ channel-learning/
     qa-log.md    ← Q&A pairs learned from staff replies in #support
 ```
 
+**Only this README is in git.** The `qa-log.md` files contain community members' questions and stay on the bot's machine — never commit or upload them.
+
+## How it works
+
+When a staff member replies to a user's question in #general or #support, the bot appends the question and the staff reply to that channel's `qa-log.md` (`saveQAPair` in `src/utils.js`). `buildIndex()` indexes these files alongside the knowledge base.
+
 ## Notes
 
-- Files are auto-appended by the bot — do not edit manually
-- Indexed in RAG at startup via `buildIndex()`
-- Quality depends on staff reply quality — vague or incorrect staff replies will be learned too
-- If a bad pair is saved, edit `qa-log.md` directly and run `/sync-knowledge` to rebuild the index
+- The files are appended by the bot — do not edit them by hand, except to remove a bad pair.
+- Quality depends on the staff replies: a vague or wrong reply is learned too. To remove a bad pair, edit `qa-log.md` and run `/sync type:Knowledge` to rebuild the index.

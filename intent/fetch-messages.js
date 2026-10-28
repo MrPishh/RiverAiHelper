@@ -1,8 +1,19 @@
-// Temporary script to fetch messages from a channel since a given date
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Utility script: prints every human message in a Discord channel since
+ * SINCE_DATE as JSON on stdout, for manual intent analysis.
+ * Run: node intent/fetch-messages.js <channel-id>   (defaults to #general)
+ * Not part of the running bot.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+// Channel to read (first command-line argument, else #general) and how far back to go.
 const CHANNEL_ID = process.argv[2] || '1212717429319540790';
 const SINCE_DATE = new Date('2026-05-09T00:00:00Z');
+
+// ─── Fetch ───────────────────────────────────────────────────────────────────
 
 // Discord snowflake for a given date: ((ms - DISCORD_EPOCH) << 22n)
 const DISCORD_EPOCH = 1420070400000n;
@@ -11,6 +22,7 @@ function dateToSnowflake(date) {
   return ((ms - DISCORD_EPOCH) << 22n).toString();
 }
 
+// Pages through the channel 100 messages at a time and prints the human ones as compact JSON.
 async function fetchMessages() {
   const fetch = (await import('node-fetch')).default;
   const afterSnowflake = dateToSnowflake(SINCE_DATE);
@@ -42,6 +54,7 @@ async function fetchMessages() {
     process.stderr.write(`Page ${page}: fetched ${msgs.length} messages (total ${allMessages.length})\n`);
 
     if (msgs.length < 100) break;
+    // Short pause between pages to stay well inside Discord's rate limit.
     await new Promise(r => setTimeout(r, 300));
   }
 

@@ -1,20 +1,20 @@
 # member-stats/
 
-Tracks server member joins and leaves for both Discord and Telegram. Each platform has its own subfolder with its own log file and stats module. Both use an identical interface.
+Logs member joins and leaves for Discord and Telegram and counts them for any date range. Each platform has its own subfolder, log file and module, with the same counting interface.
 
-## Structure
+## Files
 
 ```
 member-stats/
   discord/
-    discord-member-stats.js  ← Event listener + stats functions
-    member-log.jsonl         ← Auto-appended join/leave log (gitignored)
+    discord-member-stats.js  ← Event listener + counting
+    member-log.jsonl         ← Join/leave log (local only)
   telegram/
-    tg-member-stats.js       ← Log writer + stats functions
-    tg-member-log.jsonl      ← Auto-appended join/leave log (gitignored)
+    tg-member-stats.js       ← Log writer + counting
+    tg-member-log.jsonl      ← Join/leave log (local only)
 ```
 
-## Log format (both platforms)
+## How it works
 
 One JSON record per line:
 
@@ -22,20 +22,18 @@ One JSON record per line:
 { "ts": "2026-06-01T12:00:00.000Z", "type": "join", "userId": "123456", "username": "alice", "guildId": "..." }
 ```
 
-`type` is either `"join"` or `"leave"`.
-
-## Shared interface
-
-Both modules export a `getMemberStats(from, to)` function that takes two `Date` objects and returns `{ joins, leaves }` — count of join and leave events within that range.
+`type` is `"join"` or `"leave"` (Telegram records have `chatId` instead of `guildId`).
 
 | Export | Discord | Telegram |
 |---|---|---|
-| `getMemberStats(from, to)` | ✅ | ✅ |
-| `getWeeklyStats()` | ✅ (wrapper for Mon–Sun week) | ✗ |
-| `registerMemberEvents(client)` | ✅ (call at startup) | ✗ (triggered by Telegraf `chat_member` event) |
-| `logTgMemberEvent(type, user, chatId)` | ✗ | ✅ (called from telegram-adapter.js) |
+| `getMemberStats(from, to)` / `getTgMemberStats(from, to)` | ✅ | ✅ |
+| `getWeeklyStats()` — last complete Mon–Sun week | ✅ | ✗ |
+| `registerMemberEvents(client)` — call once at start-up | ✅ | ✗ (the Telegram adapter's `chat_member` handler instead) |
+| `logTgMemberEvent(type, user, chatId)` — called by the adapter | ✗ | ✅ |
 
-## Requirements
+Both counting functions take two `Date`s and return `{ joins, leaves }`.
 
-- **Discord**: No special requirements — `guildMemberAdd` and `guildMemberRemove` events fire for any bot in the server.
-- **Telegram**: The bot must be an **admin** in the group. Telegram only sends `chat_member` updates to admin bots. Also requires `allowedUpdates: ['message', 'chat_member']` in the Telegraf `bot.launch()` call (already set in `telegram-adapter.js`).
+## Notes
+
+- **Discord:** no special setup — `guildMemberAdd` / `guildMemberRemove` fire for any bot with the GuildMembers intent.
+- **Telegram:** the bot must be a group admin (Telegram sends `chat_member` updates only to admin bots), and `chat_member` must be in `allowedUpdates` (already set in `telegram-adapter.js`).

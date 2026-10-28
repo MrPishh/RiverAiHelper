@@ -1,31 +1,17 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Registers all /slash commands with Discord and handles interactions.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * All Discord slash commands: their definitions (COMMANDS, sent to Discord on
+ * startup) and the interaction handler. Every command is staff-only.
+ * /check-permissions has a handler but is deliberately not registered.
  * Exports: registerSlashCommands, createSlashHandler, COMMANDS
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * COMMANDS[]                      command definitions              35
- * postDraftResults()               shared /sync draft-followup helper 286
- * registerSlashCommands()         POST definitions to Discord     231
- *   ── Interaction handler ──                                    244
- * createSlashHandler()            factory                         246
- *   /toggle                       Discord/Telegram/ScamBlocker    309
- *   /report                       weekly/daily, model, force      334
- *   /member-stats                 join/leave counts               355
- *   /usage-stats                  Claude API token counts         405
- *   /sync                         KB sync (Knowledge/Blog/Doc)    444
- *                                 — correction drafts fire-and-forget
- *                                 via postDraftResults(), never awaited
- *   /blog                         Add / Exclude / Include post    505
- *   /scam-record                  View / List / Clear infractions 564
- *   /check-permissions            disabled — not registered       658
- *   /add-correction               add/update corrections/ file    718
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
+
+// ─── Setup ────────────────────────────────────────────────────────────────────
 
 const fs       = require('fs');
 const path     = require('path');
+// Project root — knowledge-base/ paths are built from it.
 const ROOT_DIR = path.join(__dirname, '..');
 
 const { REST, Routes, ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
@@ -33,6 +19,7 @@ const { isEnabled, toggle, getStatus } = require('./toggles');
 
 // ─── Command definitions ──────────────────────────────────────────────────────
 
+// Definitions sent to Discord by registerSlashCommands(). Adding an entry registers the command.
 const COMMANDS = [
     {
         name:        'toggle',
@@ -200,7 +187,7 @@ const COMMANDS = [
         ],
     },
     // 'check-permissions' intentionally omitted from COMMANDS — not registered with Discord.
-    // Handler still exists below (~line 655) for when it's re-enabled; add it back here to register it.
+    // Handler still exists below (§ /check-permissions) for when it's re-enabled; add it back here to register it.
     {
         name:        'add-correction',
         description: 'Add or update a correction in the knowledge base (outranks docs and blogs in RAG)',
@@ -229,6 +216,7 @@ const COMMANDS = [
 
 // ─── Registration ─────────────────────────────────────────────────────────────
 
+// Replaces the guild's slash commands with COMMANDS (called on every startup).
 async function registerSlashCommands(clientUser, guildId, token) {
     const rest = new REST({ version: '10' }).setToken(token);
     try {
@@ -244,6 +232,7 @@ async function registerSlashCommands(clientUser, guildId, token) {
 
 // ─── Interaction handler ──────────────────────────────────────────────────────
 
+// Factory — binds the client, config and modules, and returns the interactionCreate handler.
 function createSlashHandler(discordClient, config, modules) {
     const {
         STAFF_ROLE_IDS,
@@ -294,6 +283,7 @@ function createSlashHandler(discordClient, config, modules) {
         }).catch(err => console.error('[Monitor] Draft batch failed:', err.message));
     }
 
+    // Handles one slash command: staff check, then one branch per command name.
     return async function handleInteraction(interaction) {
         try {
         if (!interaction.isChatInputCommand()) return;
@@ -631,6 +621,7 @@ function createSlashHandler(discordClient, config, modules) {
                     `${r.infractions.length > 1 ? ' ⚠️' : ''} | last: <t:${Math.floor(new Date(r.lastSeen).getTime() / 1000)}:d>`
                 );
                 let body = lines.join('\n');
+                // Discord caps a message at 2000 characters.
                 if (body.length > 1900) body = body.slice(0, 1900) + `\n…(${entries.length} total — truncated)`;
                 await interaction.editReply(`**Scammer List — ${entries.length} user(s)**\n${body}`);
                 return;

@@ -1,12 +1,20 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Discord join/leave tracking: logs every join and leave to member-log.jsonl (local
+ * only) and counts them for any date range (/member-stats).
+ * Exports: registerMemberEvents, getWeeklyStats, getMemberStats, getWeekRange, getDayRange
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
 const { getWeekRange, getDayRange } = require('../../../src/utils');
 
+// Join/leave log, one JSON record per line.
 const LOG_PATH = path.join(__dirname, 'member-log.jsonl');
 
+// Appends one 'join' or 'leave' record.
 function logEvent(type, member) {
     const record = {
         ts:       new Date().toISOString(),
@@ -20,6 +28,7 @@ function logEvent(type, member) {
     } catch {}
 }
 
+// { joins, leaves } between two dates.
 function getMemberStats(from, to) {
     let joins = 0, leaves = 0;
     try {
@@ -38,11 +47,13 @@ function getMemberStats(from, to) {
     return { joins, leaves };
 }
 
+// { joins, leaves } for the last complete Mon–Sun week.
 function getWeeklyStats() {
     const { from, to } = getWeekRange();
     return getMemberStats(from, to);
 }
 
+// Starts logging guildMemberAdd / guildMemberRemove (called once on clientReady).
 function registerMemberEvents(client) {
     client.on('guildMemberAdd',    (member) => logEvent('join',  member));
     client.on('guildMemberRemove', (member) => logEvent('leave', member));

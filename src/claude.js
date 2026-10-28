@@ -1,11 +1,20 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Everything that answers a question with Claude: scam-concern detection on the
+ * asker's question, the system prompt, RAG retrieval + Haiku re-ranking, live price
+ * injection, the Sonnet call, reply chunking and the per-conversation state.
+ * Exports: createClaudeModule (a factory — call it once from bot.js)
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 const { getLivePrices, isPricingQuestion } = require('./price-fetcher');
 
 // ─── Scam concern detection ───────────────────────────────────────────────────
 
+// Safety message injected into the system prompt when the asker seems worried about a scam.
+// Quoted to users word for word — do not paraphrase it here.
 const SCAM_CONCERN_BLOCK = [
     'SCAM SAFETY: If a user asks whether support they received is real, whether a DM or external site is from River,',
     'or whether a link/app is legitimate, ALWAYS include the following message — do not paraphrase or shorten it:',
@@ -25,9 +34,12 @@ const SCAM_CONCERN_BLOCK = [
     '— end of scam safety message —',
 ].join('\n');
 
+// Words that make a question worth the Haiku scam check when the regex screen below misses,
+// and the official support-ticket channel (the bot's escalation target).
 const SCAM_SOFT_SIGNALS  = /\b(scam|real|legit|legitimate|official|verify|trust|safe|fake|phish|fraud|suspicious|dm|direct message|seed|private key|wallet|recover)\b/i;
 const TICKET_CHANNEL_ID  = '1212718437164388392';
 
+// Victim-side regex screen (Layer 4): true when the question clearly asks whether something is a scam.
 function detectScamConcernSync(question) {
     const q = question.toLowerCase();
     return [
@@ -48,6 +60,7 @@ function detectScamConcernSync(question) {
 // Factory — binds anthropic client and state to all exported functions.
 function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackUsage }) {
 
+    // Victim-side Haiku check (Layer 5) for questions the regex screen missed. Fails safe: true on error.
     async function detectScamConcernLLM(question) {
         try {
             const resp = await anthropic.messages.create({
@@ -62,6 +75,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         }
     }
 
+    // Should this answer include the scam-safety block? Regex first, then Haiku only if soft signals appear.
     async function isScamConcern(question) {
         if (detectScamConcernSync(question)) return true;
         if (SCAM_SOFT_SIGNALS.test(question)) return await detectScamConcernLLM(question);
@@ -70,6 +84,8 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── System prompt ────────────────────────────────────────────────────────
 
+    // Builds the system prompt. A function, not a constant, so a /sync reload of core facts
+    // takes effect on the next call.
     function getSystemPrompt(includeScamBlock = false, isFollowUp = false) {
         const factsBlock = state.coreFacts.value
             ? `CORE PROJECT FACTS (always true — use these to correct misconceptions):\n${state.coreFacts.value}\n`
@@ -158,6 +174,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Response sanitiser ───────────────────────────────────────────────────
 
+    // Removes --- dividers, wraps bare URLs in <angle brackets> (no Discord preview) and collapses blank lines.
     function sanitizeResponse(text) {
         let result = text.replace(/^\s*-{3,}\s*$/gm, '');
         result = result.replace(
@@ -170,6 +187,8 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Source keyword matcher (used by explanation embed only) ─────────────
 
+    // Old keyword matcher: the 3 KB files sharing the most words with the question. Only a fallback
+    // for source attribution when RAG sources have expired.
     function identifyRelevantSources(question) {
         const qWords = new Set(question.toLowerCase().split(/\W+/).filter(w => w.length > 3));
         return getSourceFiles()
@@ -204,6 +223,8 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         });
     }
 
+    // Calls Sonnet with the conversation and parses the reply into { type, answer, sources }
+    // (type = ANSWER, CLARIFY or ESCALATE).
     async function askClaude(history, includeScamBlock = false) {
         const isFollowUp = history.length > 1;
         const response = await anthropic.messages.create({
@@ -288,6 +309,8 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         }
     }
 
+    // First turn of a conversation: retrieves and re-ranks KB chunks, adds live prices for price
+    // questions and the rotating referral code, and returns { history, sources }.
     async function buildInitialHistory(question) {
         state.referralCode.idx++;
         const referralCode = state.REFERRAL_CODES[state.referralCode.idx % state.REFERRAL_CODES.length];
@@ -309,6 +332,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             if (prices.riverPts !== null) {
                 const per1k = (prices.riverPts * 1000).toFixed(3);
                 const per1m = Math.round(prices.riverPts * 1_000_000).toLocaleString();
+                // Source link offered only if asked: CoinMarketCap 70% of the time, OKX otherwise.
                 const ptsLink = Math.random() < 0.7
                     ? '<https://coinmarketcap.com/currencies/riverpts/>'
                     : '<https://web3.okx.com/token/bsc/0xfc6be825925b7a83d131e33b46efef9084f0e014>';
@@ -331,6 +355,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Conversation state helpers ───────────────────────────────────────────
 
+    // Stores a conversation and keeps the botMsgId → conversation index in step.
     function setConversation(key, convState) {
         const existing = state.conversationState.get(key);
         if (existing && existing.botMsgId) state.botMsgIndex.delete(existing.botMsgId);
@@ -338,6 +363,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         if (convState.botMsgId) state.botMsgIndex.set(convState.botMsgId, key);
     }
 
+    // Removes a conversation and its botMsgId index entry.
     function deleteConversation(key) {
         const existing = state.conversationState.get(key);
         if (existing && existing.botMsgId) state.botMsgIndex.delete(existing.botMsgId);
@@ -346,6 +372,8 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Core answer function ─────────────────────────────────────────────────
 
+    // Main entry point for every answer (Discord and Telegram): escalates to a ticket after too many
+    // answers, builds or continues the history, calls Claude, sends the reply and updates state.
     async function answerQuestion({ question, targetMessage, userId, channelId, existingHistory = null, ragSources = null }) {
         const key          = `${userId}::${channelId}`;
         const tracker      = state.rephrasingTracker.get(key);
@@ -444,6 +472,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Prune stale state entries (runs hourly) ──────────────────────────────
 
+    // Hourly clean-up (cron in bot.js): drops expired entries from every state Map.
     function pruneStaleEntries() {
         const now      = Date.now();
         const ONE_HOUR = 60 * 60 * 1000;
@@ -465,6 +494,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
         for (const [key, ts] of state.staffEngaged) {
             if (now - ts > state.STAFF_ENGAGED_WINDOW_MS) state.staffEngaged.delete(key);
         }
+        // Safety net only — a batch normally fires or is cancelled long before this (10 min past its wait).
         for (const [key, val] of state.pendingQuestions) {
             if (now - val.storedAt > state.STAFF_WAIT_MS + 10 * 60 * 1000) {
                 clearTimeout(val.timer);
@@ -479,6 +509,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
     // ─── Core facts loader ────────────────────────────────────────────────────
 
+    // Reads knowledge-base/core-facts.md into state.coreFacts (injected into every system prompt).
     function loadCoreFacts() {
         const p = path.join(__dirname, '..', 'knowledge-base', 'core-facts.md');
         if (fs.existsSync(p)) {

@@ -1,28 +1,21 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * RAG engine — chunks MD files, embeds via Voyage AI, cosine similarity search.
- * TOP_K=8, CHUNK_SIZE=1500, OVERLAP=150. Skips *_ann and *_tweet subfolders.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * RAG engine: splits every knowledge-base and channel-learning Markdown file into
+ * overlapping chunks, embeds them with Voyage AI (only changed chunks), caches the
+ * vectors on disk and answers searches by cosine similarity. Raw *_ann and
+ * *_tweet folders and <!-- EXCLUDE --> sections are never indexed.
  * Exports: buildIndex, searchKB
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * SOURCE_PRIORITY[]                 correction > blog > docs      21
- * sourceBoost()                     priority score multiplier     27
- * chunkText()                       split into overlapping chunks 36
- * hashText()                        cache key per chunk           49
- * loadCache() / saveCache()         .embeddings-cache.json I/O    55
- * collectMdFiles()                  walk KB dirs, skip _ann etc.  67
- * buildIndex()                      embed all chunks, fill cache  87
- * cosine()                          vector dot-product similarity152
- * searchKB()                        query → {context,sources,rawChunks} 163
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs     = require('fs');
 const path   = require('path');
 const crypto = require('crypto');
 const { embed } = require('./embedder');
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+// Folders that are indexed, and the on-disk embedding cache.
 const ROOT_DIR   = path.join(__dirname, '..');
 const KB_DIR     = path.join(ROOT_DIR, 'knowledge-base');
 const CL_DIR     = path.join(ROOT_DIR, 'channel-learning');
@@ -42,6 +35,7 @@ const SOURCE_PRIORITY = [
     { prefix: 'knowledge-base/announcements', boost: 1.1  },
 ];
 
+// Score multiplier for a chunk from this file (corrections 1.3, blogs/announcements 1.1, others 1.0).
 function sourceBoost(fileLabel) {
     for (const { prefix, boost } of SOURCE_PRIORITY) {
         if (fileLabel.startsWith(prefix)) return boost;
@@ -51,6 +45,8 @@ function sourceBoost(fileLabel) {
 
 // ─── Chunking ─────────────────────────────────────────────────────────────────
 
+// Splits text into CHUNK_SIZE pieces overlapping by CHUNK_OVERLAP. Fragments of 50 characters
+// or fewer are dropped — too short to be worth embedding.
 function chunkText(text) {
     const chunks = [];
     let start = 0;
@@ -64,24 +60,28 @@ function chunkText(text) {
     return chunks;
 }
 
+// Short content hash — a chunk is re-embedded only when its hash changes.
 function hashText(text) {
     return crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
 }
 
 // ─── Cache I/O ────────────────────────────────────────────────────────────────
 
+// Reads the embedding cache (empty cache if missing or unreadable).
 function loadCache() {
     if (!fs.existsSync(CACHE_PATH)) return { version: 1, chunks: [] };
     try { return JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')); }
     catch { return { version: 1, chunks: [] }; }
 }
 
+// Writes the embedding cache.
 function saveCache(cache) {
     fs.writeFileSync(CACHE_PATH, JSON.stringify(cache), 'utf8');
 }
 
 // ─── File discovery ───────────────────────────────────────────────────────────
 
+// Every indexable .md file under `dir` (skips *_ann/*_tweet folders and _-prefixed files).
 function collectMdFiles(dir, label) {
     const results = [];
     if (!fs.existsSync(dir)) return results;
@@ -167,6 +167,7 @@ async function buildIndex() {
 
 // ─── Cosine similarity ────────────────────────────────────────────────────────
 
+// Cosine similarity of two vectors (0 when either is all zeros).
 function cosine(a, b) {
     let dot = 0, na = 0, nb = 0;
     for (let i = 0; i < a.length; i++) { dot += a[i] * b[i]; na += a[i] * a[i]; nb += b[i] * b[i]; }

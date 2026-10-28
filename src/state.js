@@ -1,42 +1,30 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * All shared mutable state. Root of dependency tree — no local requires.
- * Import this in every module that needs shared Maps or timing constants.
- *
- * Contents                                                      ~Line
- * ─────────────────────────────────────────────────────────────────
- * Timing constants                 STAFF_WAIT_MS, CONV_EXPIRY_MS  28
- *   (STAFF_ENGAGED_WINDOW_MS, POST_STAFF_WAIT_MS, POST_STAFF_CONTEXT_MS,
- *    REPHRASE_WINDOW_MS, COMMUNITY_DISC_WINDOW_MS, MAX_BOT_ANSWERS_BEFORE_TICKET)
- * REFERRAL_CODES / referralCode    rotation index wrapper          40
- * coreFacts                        { value: string }               49
- * State Maps                                                       56
- *   pendingQuestions               userId::channelId → Scenario 3 batch + timer
- *   pendingMsgIndex                msgId → userId::channelId (O(1) lookup into pendingQuestions)
- *   rephrasingTracker              userId::channelId → answer count
- *   recentQuestions                userId::channelId → last question
- *   conversationState              userId::channelId → history
- *   botMsgIndex                    botMsgId → convKey (O(1) lookup)
- *   ragSourcesMap                  botMsgId → {sources, storedAt}
- *   staffEngaged                   userId::channelId → timestamp
- *   recentCommunityDiscussion      userId::channelId → prior context
- * staffNameCache / staffNameCacheTs  normalizedName → displayName   86
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * All shared state — every Map and timing constant — exported as one object so
+ * every module holds the same live references. Root of the dependency tree: it
+ * requires no project module. Timer values are explained in docs/REFERENCE.md.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 // ─── Timing constants ─────────────────────────────────────────────────────────
 
+// How long to wait for a staff reply before auto-answering (STAFF_WAIT_MINUTES, default 5).
 const STAFF_WAIT_MS              = parseInt(process.env.STAFF_WAIT_MINUTES || '5', 10) * 60 * 1000;
+// Window in which answers to the same user are counted; after MAX_BOT_ANSWERS_BEFORE_TICKET
+// answers the bot sends them to a support ticket instead.
 const REPHRASE_WINDOW_MS         = 2 * 60 * 60 * 1000;
 const MAX_BOT_ANSWERS_BEFORE_TICKET = 2;
+// How long a conversation stays alive for follow-ups.
 const CONV_EXPIRY_MS             = 30 * 60 * 1000;
 const STAFF_ENGAGED_WINDOW_MS    = 3 * 60 * 1000;   // 3 min hard block after staff replies to a user
 const POST_STAFF_WAIT_MS         = 3 * 60 * 1000;   // shorter wait for same user after staffEngaged expires
 const POST_STAFF_CONTEXT_MS      = 20 * 60 * 1000;  // how long POST_STAFF_WAIT applies (20 min window)
+// How long a user's community-discussion message is kept as context for their next message.
 const COMMUNITY_DISC_WINDOW_MS   = 30 * 60 * 1000;
 
 // ─── Referral codes ───────────────────────────────────────────────────────────
 
+// Registration referral codes the bot hands out, rotated per answer.
 const REFERRAL_CODES = ['JosephineOral', 'MrPishh'];
 
 // ─── Shared state ─────────────────────────────────────────────────────────────

@@ -1,46 +1,46 @@
 # weekly-report/
 
-Automated reporting system for community activity. Generates reports from intent logs and tracks server member join/leave events. All features are triggered by staff commands — nothing runs automatically.
+Community reports and member join/leave stats. Reports are made on request by staff — nothing runs on a schedule.
 
-> **Navigation:** `community-report/community-report.js` has a QUICK REFERENCE block at the top with all function names and line numbers — read lines 1–30 to navigate without loading the full 385-line file.
+## Files
 
-## Structure
+| Folder | What it owns |
+|---|---|
+| `community-report/` | Reads the intent logs, asks Claude to summarise them, posts or returns the report — see `community-report/README.md`. |
+| `member-stats/` | Logs Discord and Telegram joins and leaves and counts them — see `member-stats/README.md`. |
 
-```
-weekly-report/
-  member-stats/
-    discord/    ← Logs Discord join/leave events, provides stats functions
-    telegram/   ← Logs Telegram join/leave events, provides stats functions
-  community-report/
-    community-report.js  ← Reads intent logs, asks Haiku to summarise, posts to reports channel
-```
+## How it works
 
-## Staff commands that use this module
+### Commands that use it
 
 | Command | What it does |
 |---|---|
-| `/member-stats period: platform:` | Show member counts + join/leave for a period (week/day) and platform |
-| `/report period:week platform: aimodel: force:` | Generate weekly community report (Mon–Sun) → posts to `REPORTS_CHANNEL_ID` |
-| `/report period:day platform: aimodel: force:` | Generate daily community report (today) → posts to `REPORTS_CHANNEL_ID` |
+| `/report period:week platform: [aimodel:] [force:]` | Weekly community report (last complete Mon–Sun) → `REPORTS_CHANNEL_ID`. |
+| `/report period:day platform: [aimodel:] [force:]` | Daily report (today) → `REPORTS_CHANNEL_ID`. |
+| `/member-stats period: [platform:]` | Member counts plus joins and leaves for the period. |
 
-`aimodel` picks Haiku (default) or Sonnet. `force` (optional, default off) bypasses the cache described below and regenerates even if this exact period/platform/model was already reported.
+`aimodel` picks Haiku (default) or Sonnet. `force` bypasses the cache and regenerates.
 
-Staff can also trigger the same report generation from the Telegram DM staff panel (`/start` → 📊 Community Report → period → platform → model, with a second "🔄 force" button row) — it calls the same `buildCommunityReport()` and shares the same cache described below, so a report already generated from Discord is reused from Telegram (and vice versa) as long as the platform/model/period match.
+The Telegram staff panel (`/start` → Community Report → period → platform → model, or a "force" button) calls the same report builder and shares the same cache, so a report already made on Discord is reused on Telegram and the other way round, as long as platform, model and period match.
 
-## How reports are generated
+### How a report is made
 
-1. Staff runs `/report period:week` (Discord) or walks the Telegram DM panel
-2. `community-report.js` reads `intent/dc-intent-log.jsonl`, `intent/tg-intent-log.jsonl`, and `intent/ticket-log.jsonl` for the selected date range
-3. Filters to user messages only (no staff, no bots) from `#general`, `#support`, support ticket channels, the Chinese Discord channel, and the Chinese Telegram topic
-4. Sends messages to Claude Haiku (or Sonnet, if selected) with a prompt asking for three sections: Common Problems, FAQs, Conversation Highlights. If Chinese-channel messages are present, Claude is instructed to analyse them but write the report in English
-5. Posts the formatted report to the Discord channel set in `REPORTS_CHANNEL_ID`, or replies in the Telegram DM, depending on where it was triggered
+1. Staff run `/report` (Discord) or use the Telegram panel.
+2. `community-report.js` reads `intent/dc-intent-log.jsonl`, `intent/tg-intent-log.jsonl` and `intent/ticket-log.jsonl` for the period.
+3. It keeps non-staff messages from #general, #support, support tickets, Telegram, and — when configured — the Chinese Discord channel and Telegram topic.
+4. Claude writes three sections: Common Problems, Frequently Asked Questions, Conversation Highlights. Chinese messages are analysed but the report is always in English.
+5. The report is posted to `REPORTS_CHANNEL_ID`, or sent in the Telegram DM.
 
-Chinese channels are opt-in — set `CHINESE_DISCORD_CHANNEL_ID` and/or `CHINESE_TELEGRAM_TOPIC_ID` in `.env` to include them. If both are unset the report behaves exactly as before.
+Chinese channels are opt-in: set `CHINESE_DISCORD_CHANNEL_ID` and/or `CHINESE_TELEGRAM_TOPIC_ID`.
 
-**Caching:** both daily and weekly reports are cached in `report-cache.json`, keyed by `platform::model::fromDate::toDate` (plus `::cn` when Chinese channels are configured), for 14 days. A repeat request with the same parameters — from either platform — returns instantly with no API call, unless `force:true` is passed.
+**Caching:** daily and weekly reports are cached in `community-report/report-cache.json` (local only) for 14 days, keyed by `platform::model::from::to` (plus `::cn` when Chinese channels are configured). A repeat request returns instantly with no API call unless `force` is set.
 
-## How member stats work
+### How member stats work
 
-- Discord: `registerMemberEvents(client)` is called at startup and listens for `guildMemberAdd` / `guildMemberRemove` events. Every join/leave is appended to `member-stats/discord/member-log.jsonl`.
-- Telegram: The bot's `chat_member` Telegram update (requires bot to be admin) fires on join/leave. Events are appended to `member-stats/telegram/tg-member-log.jsonl`.
-- Both use the same `getMemberStats(from, to)` pattern — pass a date range, get `{ joins, leaves }`.
+- **Discord:** `registerMemberEvents(client)` runs at start-up and logs every `guildMemberAdd` / `guildMemberRemove` to `member-stats/discord/member-log.jsonl`.
+- **Telegram:** the adapter's `chat_member` handler (bot must be admin) logs to `member-stats/telegram/tg-member-log.jsonl`.
+- Both count with the same pattern — pass a date range, get `{ joins, leaves }`.
+
+## Notes
+
+- All logs and the report cache are local only (ignored by git).

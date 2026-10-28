@@ -1,28 +1,12 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Reads intent/ticket/collab logs, builds Claude prompt, posts report to Discord.
- * Daily and weekly reports cached 14 days (keyed by platform::model::from::to[::cn]);
- * pass force:true to bypass the cache and regenerate.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Community reports: reads the intent, ticket and Chinese-channel logs for a day
+ * or a Mon–Sun week, asks Claude for three sections (Common Problems, FAQs,
+ * Conversation Highlights) and posts the result. Reports are cached for 14 days
+ * per platform/model/period; force:true regenerates.
  * Exports: generateCommunityReport, buildCommunityReport, MODEL_HAIKU, MODEL_SONNET
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * loadCache() / saveCache()        report-cache.json I/O           44
- * cacheKey()                       platform::model::from::to key   57
- * readDiscordMessages()            dc-intent-log.jsonl             64
- * readAndGroupThreads()            group ticket/collab by thread   87
- * formatThreads()                  threads → readable text        113
- * readTicketMessages()             ticket-log.jsonl               121
- * readCollabMessages()             collab-log.jsonl               133
- * readTelegramMessages()           tg-intent-log.jsonl            138
- * readChineseDiscordMessages()     Chinese Discord channel log    158
- * readChineseTelegramMessages()    Chinese Telegram topic log     177
- * redactSensitive()                strip 0x private keys          198
- * buildPrompt()                    assemble sections for Claude   208
- * buildCommunityReport()           call Claude, return report     240
- * generateCommunityReport()        full pipeline + post to Discord337
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs   = require('fs');
 const path = require('path');
@@ -31,21 +15,28 @@ const { INTENT_LOG_PATH, TG_INTENT_LOG_PATH, TICKET_LOG_PATH, COLLAB_LOG_PATH } 
 const { getWeekRange, getDayRange, splitMessage } = require('../../src/utils');
 const { trackUsage } = require('../../src/kb-sync');
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+// Each message is cut to this many characters before it goes into the prompt.
 const MAX_MSG_LENGTH = 280;
 
+// Model IDs a report can use (Haiku is the default).
 const MODEL_HAIKU  = 'claude-haiku-4-5-20251001';
 const MODEL_SONNET = 'claude-sonnet-4-6';
 
+// Report cache file (local only).
 const CACHE_PATH    = path.join(__dirname, 'report-cache.json');
 const CACHE_TTL_MS  = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
+// Reads the report cache ({} if missing).
 function loadCache() {
     try { return JSON.parse(fs.readFileSync(CACHE_PATH, 'utf8')); }
     catch { return {}; }
 }
 
+// Drops entries older than 14 days, then writes the cache.
 function saveCache(cache) {
     const now = Date.now();
     for (const key of Object.keys(cache)) {
@@ -54,6 +45,7 @@ function saveCache(cache) {
     try { fs.writeFileSync(CACHE_PATH, JSON.stringify(cache, null, 2), 'utf8'); } catch {}
 }
 
+// Cache key: platform::model::from::to, plus ::cn when Chinese channels are configured.
 function cacheKey(platform, model, from, to, hasChinese) {
     const suffix = hasChinese ? '::cn' : '';
     return `${platform}::${model}::${from.toISOString()}::${to.toISOString()}${suffix}`;
@@ -61,6 +53,7 @@ function cacheKey(platform, model, from, to, hasChinese) {
 
 // ─── Message readers ──────────────────────────────────────────────────────────
 
+// Non-staff #general and #support messages in the period.
 function readDiscordMessages(from, to, generalChannelId, supportChannelId) {
     const result = { general: [], support: [] };
     try {
@@ -110,6 +103,7 @@ function readAndGroupThreads(filePath, from, to, legacySkipSource) {
     return threads;
 }
 
+// Turns grouped threads into prompt text (a multi-message thread becomes a numbered block).
 function formatThreads(threads) {
     return Array.from(threads.values()).map(entries => {
         entries.sort((a, b) => a.ts - b.ts);
@@ -118,6 +112,7 @@ function formatThreads(threads) {
     });
 }
 
+// Support-ticket messages in the period, grouped by ticket channel.
 function readTicketMessages(from, to) {
     // Skip legacy records written before the two-file split (old combined log had source:'collab')
     const threads = readAndGroupThreads(TICKET_LOG_PATH, from, to, 'collab');
@@ -135,6 +130,7 @@ function readCollabMessages(from, to) {
     return formatThreads(threads);
 }
 
+// Non-staff Telegram messages in the period (the Chinese topic excluded — it has its own section).
 function readTelegramMessages(from, to, excludeTopicId = null) {
     const messages = [];
     try {
@@ -155,6 +151,7 @@ function readTelegramMessages(from, to, excludeTopicId = null) {
     return messages;
 }
 
+// Non-staff messages from the Chinese Discord channel in the period.
 function readChineseDiscordMessages(from, to, channelId) {
     const messages = [];
     try {
@@ -174,6 +171,7 @@ function readChineseDiscordMessages(from, to, channelId) {
     return messages;
 }
 
+// Non-staff messages from the Chinese Telegram topic in the period.
 function readChineseTelegramMessages(from, to, topicId) {
     const messages = [];
     try {
@@ -199,12 +197,16 @@ function redactSensitive(text) {
     return text.replace(PRIVATE_KEY_RE, '[REDACTED]');
 }
 
+// ─── Prompt ──────────────────────────────────────────────────────────────────
+
+// One prompt section: a heading and numbered messages.
 function fmt(msgs, label) {
     return msgs.length
         ? `## ${label}\n${msgs.map((m, i) => `${i + 1}. ${m}`).join('\n')}`
         : `## ${label}\n(no messages this period)`;
 }
 
+// The full report prompt: context rules, every section, and the required three-part format.
 function buildPrompt(sections, reportType) {
     const periodDesc  = reportType === 'daily' ? 'today' : 'the past week (Monday to Sunday)';
     const body        = sections.map(([msgs, label]) => fmt(msgs, label)).join('\n\n');
@@ -237,6 +239,7 @@ Write a concise ${reportType === 'daily' ? 'daily' : 'weekly'} community report 
 
 // ─── Core builder — returns report data without posting anywhere ──────────────
 
+// Builds a report (from cache unless force) without posting it. Used directly by the Telegram panel.
 async function buildCommunityReport(anthropic, {
     GENERAL_CHANNEL_ID,
     SUPPORT_CHANNEL_ID,
@@ -334,6 +337,7 @@ async function buildCommunityReport(anthropic, {
 
 // ─── Discord poster — wraps builder and posts to REPORTS_CHANNEL_ID ──────────
 
+// Builds a report and posts it to REPORTS_CHANNEL_ID (used by /report).
 async function generateCommunityReport(discordClient, {
     GENERAL_CHANNEL_ID,
     SUPPORT_CHANNEL_ID,

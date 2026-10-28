@@ -1,31 +1,19 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Passive KB health checks — triggered by sync commands, never standalone.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Passive knowledge-base health checks, run as part of /sync (never on their own):
+ * flags correction files a newly synced article may have outdated (Haiku), drafts
+ * proposed updates for human review (Sonnet, never auto-applied), and scans new
+ * announcements for facts worth adding to the curated announcement files.
  * Exports: createMonitorModule
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * CURATED_MAP                      category → curated file         36
- * loadScanState() / saveScanState() _scan-state.json I/O           44
- * loadCorrectionFiles()            read corrections/ for check     57
- * loadIndexedBlogUrls()            blog URLs to strip from ann     70
- * getRawAnnouncementFiles()        walk *_ann/weekN.md             78
- * parseAnnouncementEntries()       split entries by --- separator  92
- * stripIndexedBlogUrls()           remove already-indexed reposts 106
- * createMonitorModule()            factory                        115
- *   draftCorrectionUpdate()        drafts update to _drafts/       126
- *                                  (or NO_CHANGE_NEEDED) for one flagged correction
- *   checkCorrectionStaleness()     fast Haiku-only flag list on    179
- *                                  full correction text — never blocks sync reply
- *   draftCorrectionUpdates()       batch-drafts flagged pairs,     235
- *                                  called separately, not awaited by sync reply
- *   scanAnnouncementsForNewFacts() auto-extract → curated file    253
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs   = require('fs');
 const path = require('path');
 
+// ─── Paths ───────────────────────────────────────────────────────────────────
+
+// Knowledge-base folders and state files this module reads and writes.
 const ROOT_DIR          = path.join(__dirname, '..');
 const CORRECTIONS_DIR   = path.join(ROOT_DIR, 'knowledge-base', 'corrections');
 const CORRECTION_DRAFTS_DIR = path.join(CORRECTIONS_DIR, '_drafts');
@@ -33,6 +21,7 @@ const ANNOUNCEMENTS_DIR = path.join(ROOT_DIR, 'knowledge-base', 'announcements')
 const SCAN_STATE_PATH   = path.join(ANNOUNCEMENTS_DIR, '_scan-state.json');
 const BLOGS_INDEX_PATH  = path.join(ROOT_DIR, 'knowledge-base', 'blogs', '_index.json');
 
+// Announcement scan: Haiku category → curated file the summary is appended to.
 const CURATED_MAP = {
     EXCHANGE:  'exchanges-and-token.md',
     MILESTONE: 'ecosystem-milestones.md',
@@ -41,6 +30,7 @@ const CURATED_MAP = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Reads _scan-state.json (when announcements were last scanned).
 function loadScanState() {
     if (!fs.existsSync(SCAN_STATE_PATH)) {
         // First run — initialise to now so only future announcements are scanned.
@@ -50,10 +40,12 @@ function loadScanState() {
     catch { return { lastScanned: new Date().toISOString() }; }
 }
 
+// Writes _scan-state.json.
 function saveScanState(state) {
     fs.writeFileSync(SCAN_STATE_PATH, JSON.stringify(state, null, 2), 'utf8');
 }
 
+// Every live correction file (drafts and _-prefixed files skipped) with its full text.
 function loadCorrectionFiles() {
     if (!fs.existsSync(CORRECTIONS_DIR)) return [];
     return fs.readdirSync(CORRECTIONS_DIR)
@@ -67,6 +59,7 @@ function loadCorrectionFiles() {
         }));
 }
 
+// URLs of every blog post already in the KB (from blogs/_index.json).
 function loadIndexedBlogUrls() {
     if (!fs.existsSync(BLOGS_INDEX_PATH)) return new Set();
     try {
@@ -75,6 +68,7 @@ function loadIndexedBlogUrls() {
     } catch { return new Set(); }
 }
 
+// Paths of every raw weekly announcement file (announcements/<Month>_ann/weekN.md).
 function getRawAnnouncementFiles() {
     if (!fs.existsSync(ANNOUNCEMENTS_DIR)) return [];
     const files = [];
@@ -89,6 +83,7 @@ function getRawAnnouncementFiles() {
     return files;
 }
 
+// Splits a raw announcement file into { ts, content } entries.
 function parseAnnouncementEntries(text) {
     // Format written by appendToMonthlyWeeklyFile: \n\n---\n*<ISO timestamp>*\n<content>
     const parts   = text.split(/\n\n---\n/).filter(Boolean);
@@ -103,6 +98,8 @@ function parseAnnouncementEntries(text) {
     return entries;
 }
 
+// Replaces links to already-indexed blog posts with a placeholder, so blog reposts are not
+// treated as new facts. Note: matches blog.river.inc links only (pre-migration domain).
 function stripIndexedBlogUrls(content, indexedUrls) {
     return content.replace(/https?:\/\/blog\.river\.inc\/[^\s)]+/g, url => {
         const clean = url.replace(/[.,!?)\]]+$/, '');
@@ -112,6 +109,7 @@ function stripIndexedBlogUrls(content, indexedUrls) {
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
 
+// Factory — binds the Anthropic client and usage tracker to the health checks.
 function createMonitorModule(anthropic, { trackUsage = null } = {}) {
 
     // ── Correction draft generation ────────────────────────────────────────────

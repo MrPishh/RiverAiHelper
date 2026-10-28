@@ -1,13 +1,20 @@
 'use strict';
-/**
- * One-shot diagnostic: checks the bot's Discord permissions across every
- * configured channel. Run with: node scripts/check-perms.js
- */
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * One-shot diagnostic: checks the bot's Discord permissions (View, Read History,
+ * Send, Embed Links) in every channel configured in .env, plus the guild-level
+ * permissions the scam blocker needs. Logs in, prints a report and exits.
+ * Run: node scripts/check-perms.js
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const { Client, GatewayIntentBits, PermissionFlagsBits } = require('discord.js');
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+// Bot token — the script logs in as the bot itself.
 const TOKEN = process.env.DISCORD_TOKEN;
 
+// Every channel to check, and whether the bot must post there (needsSend) and send embeds (needsEmbed).
 const CHANNELS = [
     { id: process.env.ANNOUNCEMENTS_CHANNEL_ID,    label: '📢 Announcements',       needsSend: false, needsEmbed: false },
     { id: process.env.TWEETS_CHANNEL_ID,            label: '🐦 Tweets',              needsSend: false, needsEmbed: false },
@@ -25,6 +32,9 @@ const CHANNELS = [
     })),
 ];
 
+// ─── Report ──────────────────────────────────────────────────────────────────
+
+// Minimal client — the Guilds intent is enough to read channel permissions.
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once('clientReady', async () => {

@@ -1,39 +1,23 @@
 'use strict';
 
-/* ─── QUICK REFERENCE ────────────────────────────────────────────────────────
- * Full messageCreate handler + all !text staff commands. Wires Scenarios 0–3,
- * ticket/collab logging gate, spoof detector (Layer 3), and Q&A learning.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * The Discord messageCreate handler: ticket/collab logging gate, name-spoof
+ * detector (Layer 3), staff text commands (!add-blog-text, !add-doc-text), the
+ * @bot explanation embed, knowledge capture, Q&A learning, and answer routing
+ * (Scenarios 0, 0.5, 1, 2, 3). Also takeScamAction (delete + escalating timeout +
+ * alert) used by every scenario that detects scam content.
  * Exports: registerMessageHandler
- *
- * Function / Section                                           ~Line
- * ─────────────────────────────────────────────────────────────────
- * registerMessageHandler()        factory                         37
- *   cancelPendingBatch()          cancel pending Scenario 3 batch  67
- *   fireAutoAnswer()              answer a merged batch            79
- *   scheduleAutoAnswer()          Scenario 3 timer / batch merge  107
- *   sendExplanationEmbed()        @bot + msg-link embed           147
- *   escalatedTimeoutMs()          scam timeout escalation         230
- *   formatTimeoutLabel()          human-readable timeout          234
- *   takeScamAction()              delete + timeout + alert        242
- *   ── Message handler event ──                                  314
- *   Ticket / collab gate          early-return, log only          329
- *   Spoof detector (Layer 3)      name-impersonation check        349
- *   !add-blog-text                staff text command + attach     388
- *   !add-doc-text                 staff text command + attach     450
- *   @bot explain embed            staff trigger                   505
- *   Q&A learning                  saveQAPair on staff reply       532
- *   Scenario 0                    CLARIFY continuation            562
- *   Scenario 0.5                  reply to any bot answer         578
- *   Scenario 1                    direct @mention                 628
- *   Scenario 2                    @mention as reply, or own       656
- *                                  question attributed to asker
- *   Scenario 3                    unprompted auto-answer, batched 739
- * ─────────────────────────────────────────────────────────────────────────── */
+ * ────────────────────────────────────────────────────────────────────────── */
+
+// ─── Setup ────────────────────────────────────────────────────────────────────
 
 const fs       = require('fs');
 const path     = require('path');
+// Project root — knowledge-base/ paths are built from it.
 const ROOT_DIR = path.join(__dirname, '..');
 const { isEnabled } = require('./toggles');
+
+// ─── Message handler factory ─────────────────────────────────────────────────
 
 // Factory — binds discordClient, state, config, and sub-modules to the message handler.
 function registerMessageHandler(discordClient, state, config, modules) {
@@ -106,6 +90,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
         }
     }
 
+    // Scenario 3: queues an auto-answer after the staff-wait timer, or folds the message into
+    // the user's already-pending batch.
     function scheduleAutoAnswer(message) {
         const { id: msgId, content: question, author: { id: userId }, channelId } = message;
         const key = trackerKey(userId, channelId);
@@ -150,6 +136,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
 
     // ─── Explanation embed ────────────────────────────────────────────────────
 
+    // Staff "@bot <message link>": posts an embed to the staff channel showing the question,
+    // the answer and which KB sources were used.
     async function sendExplanationEmbed({ requestMessage, linkGuildId, linkChannelId, botMessageId }) {
         if (!STAFF_EXPLANATION_CHANNEL_ID) {
             await requestMessage.reply('No explanation channel is configured.');
@@ -204,6 +192,7 @@ function registerMessageHandler(discordClient, state, config, modules) {
                 ?? await discordClient.channels.fetch(STAFF_EXPLANATION_CHANNEL_ID);
             if (!staffCh?.isTextBased()) return;
 
+            // Field values are cut to 1020 characters: Discord rejects an embed field longer than 1024.
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)
                 .setTitle('Bot Answer Explanation')
@@ -233,10 +222,12 @@ function registerMessageHandler(discordClient, state, config, modules) {
     const SCAM_TIMEOUT_BASE_MS = 60 * 60 * 1000; // 1 hour — base unit for escalation
     const SCAM_TIMEOUT_MAX_MS  = 28 * 24 * 60 * 60 * 1000; // 28 days — Discord hard cap
 
+    // Timeout for the Nth infraction: N hours, capped at 28 days.
     function escalatedTimeoutMs(nextCount) {
         return Math.min(nextCount * SCAM_TIMEOUT_BASE_MS, SCAM_TIMEOUT_MAX_MS);
     }
 
+    // Human-readable timeout length, e.g. "3h timeout" or "1d 2h timeout".
     function formatTimeoutLabel(ms) {
         const totalHours = Math.round(ms / SCAM_TIMEOUT_BASE_MS);
         if (totalHours < 24) return `${totalHours}h timeout`;
@@ -245,6 +236,8 @@ function registerMessageHandler(discordClient, state, config, modules) {
         return hours > 0 ? `${days}d ${hours}h timeout` : `${days}d timeout`;
     }
 
+    // Records the infraction, deletes the message, times the member out and posts an alert embed.
+    // Does nothing when the scam-blocker toggle is OFF (detection is still logged by the caller).
     async function takeScamAction(message, member, reason) {
         if (!isEnabled('scam-blocker')) return;
 

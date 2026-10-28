@@ -1,7 +1,15 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Embedding provider adapter for RAG. Only Voyage AI (voyage-3-lite) is supported;
+ * EMBEDDING_PROVIDER picks the provider so another can be added here without
+ * touching rag.js. Retries with exponential backoff when rate limited (HTTP 429).
+ * Exports: embed
+ * ────────────────────────────────────────────────────────────────────────── */
+
 require('dotenv').config();
 
+// Which embedding provider to use (from .env; default voyage).
 const PROVIDER = (process.env.EMBEDDING_PROVIDER || 'voyage').toLowerCase();
 
 // embed(texts: string[]) → float[][]
@@ -13,6 +21,7 @@ async function embed(texts) {
     }
 }
 
+// Calls the Voyage AI embeddings API; on 429 waits 2s, 4s, 8s… and retries up to `retries` times.
 async function embedVoyage(texts, retries = 5) {
     const apiKey = process.env.VOYAGE_API_KEY;
     if (!apiKey) throw new Error('VOYAGE_API_KEY is not set in .env');

@@ -1,22 +1,37 @@
 'use strict';
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * One-time script (run in June 2026): backfills human messages from the Chinese
+ * Discord channel since SINCE_DATE into intent/dc-intent-log.jsonl, skipping
+ * message IDs already logged live. Run: node intent/backfill-chinese.js
+ * Not part of the running bot.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 
 const fs   = require('fs');
 const path = require('path');
 
+// ─── Settings ────────────────────────────────────────────────────────────────
+
 // Monday of the current week (June 1, 2026) — start of backfill window
 const SINCE_DATE = new Date('2026-06-01T00:00:00Z');
 
+// Channel to backfill, and the Discord intent log the records are appended to.
 const CHANNEL_ID = process.env.CHINESE_DISCORD_CHANNEL_ID;
 const LOG_PATH   = path.join(__dirname, 'dc-intent-log.jsonl');
 
+// ─── Backfill ────────────────────────────────────────────────────────────────
+
+// Discord's epoch (2015-01-01) in milliseconds — message IDs (snowflakes) count from it.
 const DISCORD_EPOCH = 1420070400000n;
 
+// Converts a date to the smallest message ID created at that moment, for the API's `after=` paging.
 function dateToSnowflake(date) {
     const ms = BigInt(date.getTime());
     return ((ms - DISCORD_EPOCH) << 22n).toString();
 }
 
+// Pages through the channel's history and appends each new human message as an intent-log record.
 async function backfill() {
     if (!CHANNEL_ID) {
         console.error('CHINESE_DISCORD_CHANNEL_ID is not set in .env — aborting.');
@@ -65,6 +80,7 @@ async function backfill() {
         process.stderr.write(`Page ${page}: fetched ${msgs.length} (total ${all.length})\n`);
 
         if (msgs.length < 100) break;
+        // Short pause between pages to stay well inside Discord's rate limit.
         await new Promise(r => setTimeout(r, 300));
     }
 

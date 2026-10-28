@@ -15,28 +15,10 @@ This file exists so any new Claude Code session can read it and immediately unde
 - Live price fetching: ON — `src/price-fetcher.js` (Dexscreener, 5-min cache, auto-injects on price questions)
 - RAG indexed: 45 docs · 47 blogs · 11 corrections · 17 governance · 3 announcement curated files
 
-### File Map
-| File | Purpose |
-|---|---|
-| `bot.js` | Entry point — client wiring, staff name cache cron |
-| `src/state.js` | All shared Maps + timing constants + REFERRAL_CODES |
-| `src/utils.js` | Date helpers, Discord helpers, spoof-detection |
-| `src/intent.js` | Intent classification (Haiku), logging, scammer-side detection (Layers 1–2) |
-| `src/kb-sync.js` | Sync docs/blog from sitemaps, usage stats tracking |
-| `src/claude.js` | answerQuestion, system prompt, RAG reranking, scam concern, live price injection |
-| `src/commands.js` | messageCreate handler, all !text staff commands, Scenarios 0–3, spoof detector (Layer 3) |
-| `src/slash-commands.js` | All /slash command registration + handlers |
-| `src/kb-monitor.js` | Correction staleness check, announcement auto-scan |
-| `src/rag.js` | Chunks MD files, Voyage AI embeddings, cosine search (TOP_K=8, CHUNK=1500) |
-| `src/price-fetcher.js` | Live RIVERPTS/$RIVER prices from Dexscreener, 5-min cache, `isPricingQuestion()` |
-| `src/scam-tracker.js` | Scammer infraction store → `data/scammer-list.json` |
-| `src/toggles.js` | Platform toggle (Discord/Telegram/Scam Blocker), persisted to `data/toggles.json` |
-| `src/embedder.js` | Voyage AI adapter (voyage-3-lite) |
-| `telegram/telegram-adapter.js` | Full Telegram bot adapter (Telegraf), full Discord parity |
-| `weekly-report/community-report/community-report.js` | Weekly/daily community reports, 14-day cache |
-
-### Key Timer Constants (all defined in `src/state.js`)
-`STAFF_WAIT=5min` · `STAFF_ENGAGED=3min` · `POST_STAFF=3min (20min window)` · `CONV_EXPIRY=30min` · `REPHRASE_WINDOW=2hr`
+### Where things are
+- **Files:** `CLAUDE.md` § File map and § Where to look for… — exact lines in `CODE_INDEX.md`
+- **Settings, commands, events, timers:** `docs/REFERENCE.md` (`STAFF_WAIT`=5 min · `STAFF_ENGAGED`=3 min · `POST_STAFF`=3 min in a 20-min window · `CONV_EXPIRY`=30 min · `REPHRASE_WINDOW`=2 h)
+- **How it fits together, glossary:** `docs/ARCHITECTURE.md` · **Why things are this way:** `docs/DECISIONS.md`
 
 ### Top Pending Items
 - **Batch intent log analysis** — started 2026-08-18, `msgbatch_01PzBGupfcCBv6nBYyawno9f` (Anthropic Batch API, Sonnet reviewer, 50% cost saving) — see "Time-based reminders" below for detail
@@ -44,129 +26,13 @@ This file exists so any new Claude Code session can read it and immediately unde
 - **Log rotation** — implement when any intent log hits ~5 MB
 - **Telegram proactive scam-blocking** — Discord has `takeScamAction` (delete + timeout + alert) wired into every scenario that classifies intent; Telegram only moderates already-`watchedUsers`-flagged accounts reactively, with no equivalent action for a first-time offender's live message. Flagged 2026-08-18, not yet decided/built.
 
-> For section details use the Table of Contents below. Navigate with `Read(offset=N)` — grep for the `## Section Name` to get the line number.
-
----
-
-## Table of Contents
-
-- [What This Bot Does](#what-this-bot-does)
-- [File Map](#file-map)
-- [Answer Flow](#answer-flow-how-the-bot-responds)
-- [Intent Classification System](#intent-classification-system)
-- [Staff Commands](#staff-commands)
-- [Sitemaps](#sitemaps)
-- [Network Note](#network-note)
-- [Corrections System](#corrections-system)
-- [KB Monitor](#kb-monitor)
-- [Backfilling Missed Announcements](#backfilling-missed-announcements)
-- [Key Technical Decisions](#key-technical-decisions-why-not-just-what)
-- [RAG Design Decisions](#rag-design-decisions)
-- [Core Facts Design](#core-facts-design)
-- [Multi-Turn Conversation Design](#multi-turn-conversation-design)
-- [RAG Source Attribution](#rag-source-attribution)
-- [Referral Code Rotation](#referral-code-rotation)
-- [System Prompt Features](#system-prompt-features-getsystemprompt)
-- [Known Issues / Gotchas](#known-issues--gotchas)
-- [RAG Index State](#rag-index-state)
-- [Pending / Discussed But Not Done](#pending--discussed-but-not-done)
-- [Timer Reference](#timer-reference)
-- [.env Variables](#env-variables)
+> The generated section list at the top of this file gives every section's line — jump straight to it.
 
 ---
 
 ## What This Bot Does
 
 A Discord support bot for **River Protocol** that answers community questions using Claude (claude-sonnet-4-6). It uses RAG (Retrieval-Augmented Generation) with Voyage AI embeddings so only the most relevant knowledge base chunks are sent to Claude per question — not the entire KB.
-
----
-
-## File Map
-
-All modules listed below (except `bot.js`) live in `src/`. The reorganisation from root into `src/` was completed 2026-06-01.
-
-| File | Purpose |
-|---|---|
-| `bot.js` | Thin entry point — creates clients, wires all `src/` modules, fires `clientReady`, launches Telegram bot, calls Discord `login`. Also contains `buildStaffNameCache(guild, staffRoleIds)` — builds `state.staffNameCache` at startup and refreshes every 24 hrs via cron |
-| `src/state.js` | All shared Maps + timing constants + REFERRAL_CODES. No local requires (root of dependency tree). Also exports `staffNameCache` (Map of normalizedName → originalDisplayName) and `staffNameCacheTs` for the spoof detector |
-| `src/utils.js` | Pure helpers: date/folder utils (`getWeekRange`, `getDayRange`), Discord helpers (`isStaff`, `isBotMentioned`, `stripBotMention`), `looksResolved`, `saveQAPair`. Also exports spoof-detection helpers: `normalizeDisplayName`, `looksLikeSpoofedName`, `looksLikeHelperOffer` |
-| `src/intent.js` | Factory `createIntentModule(anthropic, { SUPPORT_CHANNEL_ID })` → `classifyMessageIntent`, `logMessageIntent`, `logIntentClassification`, `logTelegramMessage`, `logTelegramIntent`, `RESPOND_INTENTS`, `logToTicketFile`, `logToCollabFile`. Also exports module-level `logToTicketFile(message)` and `logToCollabFile(message)` (write-time only — no classification) and path constants `INTENT_LOG_PATH`, `TG_INTENT_LOG_PATH`, `TICKET_LOG_PATH`, `COLLAB_LOG_PATH`. Contains module-level `detectScamContentSync(content)` — scammer-side tier-1 regex that short-circuits Haiku for bio/profile redirects and t.me/wa.me links |
-| `src/kb-sync.js` | `syncDocs`, `syncBlog`, `registerDocInIndex`, `registerBlogInIndex`, `loadUsageStats`, `trackUsage` |
-| `src/claude.js` | Factory `createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackUsage })` → `getSystemPrompt`, `askClaude`, `answerQuestion`, `pruneStaleEntries`, `loadCoreFacts`, `isScamConcern`. Also contains `rerankChunks` (internal — Haiku re-ranker that filters retrieved KB chunks before they reach Claude) |
-| `src/commands.js` | Factory `registerMessageHandler(discordClient, state, config, modules)` — full `messageCreate` event + all `!text` staff commands. Ticket channel early-return: checks `message.channel.parentId` against `SUPPORT_TICKET_CATEGORY_IDS` / `COLLAB_CATEGORY_IDS` sets — logs non-staff messages via `logToTicketFile` / `logToCollabFile`, never responds. Chinese channel: logs via `logMessageIntent` then returns early (no classification, no response — batch processing planned). Spoof detection block: runs after Chinese early-return, classifies matching messages as `scam-content` in the intent log (no active blocking yet) |
-| `src/slash-commands.js` | `registerSlashCommands()` registers all `/slash` commands with Discord. `createSlashHandler()` handles interactions. Same dependency-injection pattern as `commands.js`. |
-| `src/kb-monitor.js` | Factory `createMonitorModule(anthropic)` → `checkCorrectionStaleness`, `scanAnnouncementsForNewFacts`. Passive KB health monitor. |
-| `src/rag.js` | RAG engine — chunks MD files, embeds via Voyage AI, cosine similarity search. TOP_K=8, CHUNK_SIZE=1500, OVERLAP=150. `collectMdFiles` skips `*_ann` and `*_tweet` monthly subfolders at directory level — raw Discord captures, not curated content. |
-| `src/embedder.js` | Voyage AI embedding provider (`voyage-3-lite`). Retry on 429. Swap via `EMBEDDING_PROVIDER` in `.env` |
-| `src/knowledge-loader.js` | Legacy. Only `getSourceFiles()` remains — used by explanation embeds for source attribution |
-| `src/blog-scraper.js` | Scrapes URLs to Markdown: jsdom → Readability → Turndown+GFM. RSS fallback on 403 |
-| `src/toggles.js` | Platform reply toggle. `isEnabled(platform)`, `toggle(platform)`, `getStatus()`. State persisted to `data/toggles.json` — survives restarts. |
-| `data/toggles.json` | Persisted toggle state `{ discord: true, telegram: true, "scam-blocker": false }`. Auto-created on first toggle; `data/` auto-created if missing. |
-| `data/usage-stats.json` | Persisted Claude API token counts and estimated cost. Auto-created on first answer; `data/` auto-created if missing. |
-| `data/scammer-list.json` | Persistent scammer infraction log. Keyed by Discord user ID — survives username/display name changes. Written by `src/scam-tracker.js` on every scam-blocker action. Managed via `/scam-record` slash command. |
-| `src/scam-tracker.js` | Scammer infraction store — `recordInfraction`, `getRecord`, `getAllRecords`, `removeInfraction`, `clearUser`. No local requires. |
-| `logs/` | Log files outside PM2's log stream. Gitignored. `logs/.gitkeep` tracks the folder in git. |
-| `scripts/check-perms.js` | One-shot diagnostic: checks View / Read / Send / Embed Links for every configured channel. Run with `node scripts/check-perms.js`. Reads channel IDs from `.env`. |
-| `telegram/telegram-adapter.js` | Telegram bot adapter using Telegraf. Full parity with Discord: intent gate, staff-admin detection (cached 10 min), staff-wait timer, staff-engaged suppression, Scenario 0/0.5/@mention handling, self-resolution detection, community step-in cancellation, community-discussion follow-up detection, `staff-ping` redirect. Logs all messages to `tg-intent-log.jsonl`. DM staff panel: `/start` opens inline keyboard (Report / Stats); persistent "≡ Menu" button set via `setChatMenuButton` + `setMyCommands` at startup. **Moderation system:** perma-ban store (`data/tg-perma-ban.json`) with four modes — `watch` (delete harmful msgs), `mute` (permanent mute, re-applied on rejoin and captcha unlock), `kick` (removed on every rejoin), `ban` (banned on every rejoin). FUD secondary check via `checkWatchedFUD` in `src/intent.js`. Alert DMs sent to subscribed admins on every action. |
-| `weekly-report/member-stats/discord/discord-member-stats.js` | Logs Discord join/leave events to `member-log.jsonl`. `getMemberStats(from, to)` returns join/leave counts for any date range. Registered via `registerMemberEvents(client)` in `clientReady` |
-| `weekly-report/member-stats/telegram/tg-member-stats.js` | Logs Telegram join/leave events to `tg-member-log.jsonl`. `getTgMemberStats(from, to)` returns join/leave counts for any date range. |
-| `weekly-report/community-report/community-report.js` | Reads intent logs + ticket log for a date range. Sends to Haiku/Sonnet to produce three-section report: Common Problems, FAQs, Conversation Highlights. Posts to REPORTS_CHANNEL_ID. Supports `reportType: 'weekly'` or `'daily'`. Includes Chinese Discord channel and Telegram topic when `CHINESE_DISCORD_CHANNEL_ID` / `CHINESE_TELEGRAM_TOPIC_ID` are set — Claude analyses Chinese messages but writes the report in English. Both daily and weekly reports are cached in `report-cache.json` (daily caching added 2026-08-18; previously weekly-only), keyed by `platform::model::fromDate::toDate` (plus `::cn` suffix when Chinese channels are configured) — repeat runs with the same parameters return instantly with no API call, from either Discord or Telegram, whichever asks first. Pass `force: true` to bypass the cache and regenerate. Cache entries expire after 14 days. `max_tokens` is 800. |
-| `weekly-report/community-report/report-cache.json` | Weekly report cache. Auto-created on first `/report period:week` run. Never edit manually |
-| `intent/` | `dc-intent-log.jsonl`, `tg-intent-log.jsonl`, `ticket-log.jsonl`, `intent-taxonomy.md`, `theory-notes.md`, `fetch-messages.js`, `backfill-chinese.js` |
-| `README.md` | Human-readable project overview: file descriptions, all staff commands, all .env vars, KB folder structure |
-| `CONTEXT.md` | This file. Read at the start of every session. |
-
-### Knowledge Base Structure
-
-```
-knowledge-base/
-  core-facts.md                  ← Static facts always injected into Claude system prompt
-  docs/
-    _docs-context.md             ← Curation notes, known issues, sync rules
-    _index.json                  ← Tracks URL, slug, file, lastScraped per docs page
-    *.md                         ← Scraped docs pages (slug-named, e.g. intro-quickstart.md)
-  blogs/
-    _blogs-context.md            ← Curation notes, exclusion rules, overlap map, sync rules
-    _index.json                  ← Tracks URL, slug, file, lastmod, lastScraped per post
-    *.md                         ← Scraped blog posts (slug-named)
-    May_blog/ etc.               ← Monthly folders for manually added posts (/blog action:Add)
-  governance/
-    _governance-context.md       ← 17 curated files, narrative order, excluded topic IDs, sync rules
-    *.md                         ← First posts only from gov.riverai.inc/c/proposal-lab/5
-  announcements/
-    _announcements-context.md    ← Curation notes, cross-reference status, sync rules
-    exchanges-and-token.md       ← Token address, exchange listings, DEX integrations
-    ecosystem-milestones.md      ← Audits, investments, season stats, launch timeline, brand upgrade
-    important-notices.md         ← Bridge pause, operational alerts, safety notices
-    May_ann/ etc.                ← Auto-saved raw announcements (EXCLUDED from RAG — use curated files)
-  tweets/
-    _tweets-context.md           ← Decision: tweets not indexed (mirrors announcements, low signal)
-    May_tweet/ etc.              ← Auto-saved raw tweets (EXCLUDED from RAG)
-  corrections/
-    _corrections-context.md      ← Authority hierarchy, when to add corrections, file descriptions
-    conversion-mechanism.md      ← Deep reference: Conversion 1.0→2.0→3.0, S5 params, tone guidance
-    river4fun-outdated-features.md ← Removed features: staking pool, River Pts voting
-    referral-program.md          ← Referral code guidance, registration vs own code, rotation codes
-    tokenomics-unlock-schedule.md ← Definitive RIVER unlock schedule for all non-dynamic categories
-    binance-river-airdrop.md     ← River × Binance Wallet campaign: 21 RIVER distributed in two tranches in 2026 (final). Legitimate, safe to hold/sell.
-    official-support-and-scam-safety.md ← Official support policy, safety message, red flags. RAG source for scam-related questions.
-    river4fun-zero-points.md            ← Zero points despite daily posting: points update daily (tweeting) vs weekly (satUSD liquidity); primary cause is Twitter shadowban — includes exact search method for both @river4fun and @riverdotinc; non-Twitter earning via S5 blog. Corrects old season advice about tagging partner projects.
-  .embeddings-cache.json         ← Voyage AI vector cache (auto-generated, do not edit)
-
-channel-learning/
-  general/qa-log.md              ← Q&A pairs learned from staff replies in #general
-  support/qa-log.md              ← Q&A pairs learned from staff replies in #support
-
-intent/
-  dc-intent-log.jsonl            ← Discord: two record types — raw message log (platform, ts, id, content, isStaff, etc.)
-  |                                 and classified intent records ({platform:"discord", type:"classified", id, intent, ts})
-  tg-intent-log.jsonl            ← Telegram: same structure, platform:"telegram". Separate file for platform-level analysis
-  ticket-log.jsonl               ← Discord support ticket messages. Records: { platform, ts, id, channelId, channel, authorId, author, content }. Non-staff only. No source field — file assignment IS the classification. Bot never responds in ticket channels — logging only
-  collab-log.jsonl               ← Discord collab/business inquiry messages. Same record format as ticket-log.jsonl. Excluded from reports — reserved for future Business Proposals section.
-  intent-taxonomy.md             ← Category registry: intents, context rules, examples, edge cases
-  theory-notes.md                ← Reference: SDT, Speech Act Theory, Bayesian, Control/Queuing/Decision Theory
-  fetch-messages.js              ← Utility: pull historical messages from Discord REST API
-```
 
 ---
 
@@ -227,9 +93,10 @@ Returns the category string. On API error, falls back to `'help-seeking'` (fail 
 
 | Scenario | What is classified | On `staff-ping` | On `scam-content` |
 |---|---|---|---|
-| 1 (direct @mention) | The question (mention stripped) | Short redirect reply to `#support`, no answer | Not applicable — direct @mentions skip scam filter |
-| 2 (@mention as reply) | The original message being answered | Short redirect reply, no answer | Not applicable |
-| 3 (no mention) | The raw message content | Skip `scheduleAutoAnswer()` entirely | Skip `scheduleAutoAnswer()` entirely |
+| 0.5 (reply to a bot answer) | The reply text | Short redirect reply, no answer | `takeScamAction` |
+| 1 (direct @mention) | The question (mention stripped) | Short redirect reply to `#support`, no answer | `takeScamAction` |
+| 2 (@mention as reply) | The original message being answered (never the mentioning user's own text) | Short redirect reply, no answer | `takeScamAction` on the original message's author |
+| 3 (no mention) | The raw message content | Skip `scheduleAutoAnswer()` entirely | `takeScamAction`; no answer |
 | Community reply to pending | The reply content | — | Timer kept alive — scam reply does not cancel the pending answer |
 
 Scenario 0 skips classification — the user's explicit reply to an active CLARIFY/ANSWER conversation is itself the intent signal. Scenario 0.5 (both platforms, since 2026-07-10) classifies the reply text and gates on `RESPOND_INTENTS` before answering — see Answer Flow above.
@@ -259,103 +126,6 @@ The old heuristic passed any message with `?` or ≥ 8 words. "You should clear 
 
 ---
 
-## Staff Commands
-
-All staff commands are **slash commands** (`/command`). Two manual-attachment helpers (`!add-blog-text`, `!add-doc-text`) remain as text commands because they require a file attachment and have no slash equivalent.
-
-**Sync** — `/sync` is one command with a `type` dropdown (Knowledge / Blog).
-
-| Command | What It Does |
-|---|---|
-| `/sync type:Knowledge` | Reload core-facts.md, scan announcements, rebuild full RAG index |
-| `/sync type:Blog` | Pull new/changed posts from blog sitemap (auto-detects updates via lastmod) |
-
-**Blog management** — `/blog` is one command with an `action` dropdown + required `url`.
-
-| Command | What It Does |
-|---|---|
-| `/blog action:Add url:<url>` | Scrape single blog post → save to knowledge-base/blogs/ |
-| `/blog action:Exclude url:<url>` | Remove post from KB and skip on all future `/sync type:Blog` runs |
-| `/blog action:Include url:<url>` | Remove URL from exclusion list; re-scraped on next `/sync type:Blog` |
-
-**Doc management** — `/doc` subcommands.
-
-| Command | What It Does |
-|---|---|
-| `/doc sync` | Pull new/removed pages from docs sitemap |
-| `/doc sync force:true` | Force re-scrape all doc pages regardless of changes |
-| `/doc add url:<url>` | Scrape single doc page → save to knowledge-base/docs/ |
-
-**Knowledge corrections**
-
-| Command | What It Does |
-|---|---|
-| `/add-correction slug:<slug> text:<text>` | Add/update a correction in `knowledge-base/corrections/<slug>.md`. Ranks above docs and blogs in RAG. Also accepts a file attachment. |
-
-**Toggles** — `/toggle` is one command with a `platform` dropdown.
-
-| Command | What It Does |
-|---|---|
-| `/toggle platform:Discord` | Toggle Discord auto-replies ON/OFF. State persisted across restarts |
-| `/toggle platform:Telegram` | Toggle Telegram auto-replies ON/OFF. State persisted across restarts |
-| `/toggle platform:Scam Blocker` | Toggle scam-blocker ON/OFF (default OFF). When ON: delete + escalating timeout + alert embed. |
-| `/toggle platform:Show current status` | Show current ON/OFF state for all three toggles |
-
-**Scam tracking** — `/scam-record` is one command with an `action` dropdown.
-
-| Command | What It Does |
-|---|---|
-| `/scam-record action:View user:<user>` | Show all infractions — detection reason, channel, message, timeout applied. Repeat offenders flagged. |
-| `/scam-record action:List` | List all users in the scammer record, sorted by infraction count (highest first). |
-| `/scam-record action:Clear user:<user>` | Remove all infractions for a user (use for false positives). |
-| `/scam-record action:Clear user:<user> count:-N` | Remove the N most recent infractions only. If N ≥ total, clears entirely. |
-
-**Telegram moderation** *(admin DM to bot only — not registered as public commands)*
-
-Escalation ladder (↑ up, ↓ down with the de-escalation counterparts):
-
-| Command | Mode | Behaviour |
-|---|---|---|
-| `/tgwatch <userId> [reason]` | watch | Stays in group. Harmful msgs auto-deleted. Alert DM sent. |
-| `/tgmute <userId> [reason]` | mute | Permanently muted. Re-muted on every rejoin and after captcha/verification bot unlocks. |
-| `/tgkick <userId> [reason]` | kick | Removed on every rejoin (can try again). |
-| `/tgban <userId> [reason]` | ban | Banned on every rejoin, messages revoked. |
-| `/tgunwatch <userId>` | — | Remove from watchlist entirely (clean slate). |
-| `/tgunmute <userId>` | → watch | Lift permanent mute, drop to watch mode. |
-| `/tgunkick <userId>` | → watch | Drop from kick to watch mode. |
-| `/tgunban <userId>` | — | Remove from all lists, unban from group. |
-| `/tglist` | — | Show all users with mode, reason, rejoin count. |
-| `/tgalerts on\|off` | — | Subscribe/unsubscribe from moderation alert DMs. |
-
-Alert DM format: user identity, detected-as label, full message text (up to 400 chars), action taken, `tg://user?id=<id>` link for Telegram reporting.
-
-Store: `data/tg-perma-ban.json` — keyed by userId string. Fields: `userId`, `username`, `reason`, `mode`, `bannedAt`, `rejoinCount`, `lastRejoin`. Survives restarts.
-
-**Stats & reports**
-
-| Command | What It Does |
-|---|---|
-| `/usage-stats` | Show Claude API calls, token counts, estimated cost |
-| `/member-stats period: [platform:]` | Show member counts + join/leave for a period (week/day) and platform. Defaults to Both. |
-| `/report period:week platform: [aimodel:]` | Generate weekly community report → REPORTS_CHANNEL_ID. aimodel defaults to Haiku. |
-| `/report period:day platform: [aimodel:]` | Generate daily community report → REPORTS_CHANNEL_ID. aimodel defaults to Haiku. |
-
-**Diagnostics** *(disabled — exists in code, not registered)*
-
-| Command | What It Does |
-|---|---|
-| `/check-permissions` | Show bot's actual Discord permissions for each configured channel |
-
-**Text commands** *(no slash equivalent — require file attachment)*
-
-| Command | What It Does |
-|---|---|
-| `!add-blog-text <url>` + attach | Manual blog add for Cloudflare-protected pages. Attach .md/.html/.txt (use MarkDownload extension). |
-| `!add-doc-text <url>` + attach | Manual doc add with attachment — same workflow. |
-| @bot + Discord message link | Staff only: post explanation embed showing which KB sources drove that answer. |
-
----
-
 ## Sitemaps
 
 | Site | Sitemap URL | Pages | Notes |
@@ -367,24 +137,18 @@ Store: `data/tg-perma-ban.json` — keyed by userId string. Fields: `userId`, `u
 
 Because the site's own redeploy also bumped `lastmod` on ~40 already-indexed blog posts (zero content change, confirmed via each post's `article:published_time`/`article:modified_time`), `syncBlog` no longer trusts sitemap `lastmod` alone — see "lastmod verification" below. The actual post-migration `/sync type:Blog` run: 40 updated, 0 added, 0 removed, 1 filtered (held for review, see below), 91 legacy pre-floor posts correctly stayed excluded.
 
-**`<!-- EXCLUDE -->` marker preservation:** a URL-keyed delete-and-recreate (like the domain migration) would normally wipe a hand-added `<!-- EXCLUDE -->` marker, since the fresh scrape has no marker. `syncDocs`/`syncBlog` in `src/kb-sync.js` capture which filenames carry the marker *before* any rewrite and reinsert it on write. Verified intact after the real post-migration sync on all 8 marked files: docs' `intro-publish-your-docs.md`; blogs' `river-follow-up-2.md`, `river-action-follow-up-ch.md`, `river-together-4m-river-pts.md`, `2026-new-year-challenge.md`, `s4-best-creators.md`, `dynamic-airdrop-conversion-2.md`, `dynamic-airdrop-conversion-3.md`. The blog `index.excluded` URL-list (`/exclude-blog`) is currently empty. Governance is manually curated (not code-synced), so it's unaffected by any of this.
+**`<!-- EXCLUDE -->` marker preservation:** a URL-keyed delete-and-recreate (like the domain migration) would normally wipe a hand-added `<!-- EXCLUDE -->` marker, since the fresh scrape has no marker. `syncDocs`/`syncBlog` in `src/kb-sync.js` capture which filenames carry the marker *before* any rewrite and reinsert it on write. Verified intact after the real post-migration sync on all 8 marked files: docs' `intro-publish-your-docs.md`; blogs' `river-follow-up-2.md`, `river-action-follow-up-ch.md`, `river-together-4m-river-pts.md`, `2026-new-year-challenge.md`, `s4-best-creators.md`, `dynamic-airdrop-conversion-2.md`, `dynamic-airdrop-conversion-3.md`. The blog `index.excluded` URL-list (`/blog action:Exclude`) is currently empty. Governance is manually curated (not code-synced), so it's unaffected by any of this.
 
 **lastmod verification (added 2026-09-04, `syncBlog` in `src/kb-sync.js`):** sitemap `lastmod` can move on a redeploy alone, with zero editorial change — not safe on its own to gate `BLOG_SINCE_DATE` or "did this post change." `fetchPublishMeta()` in `src/blog-scraper.js` reads each post's own `article:published_time`/`article:modified_time`/`og:title` (Ghost's immutable content dates) as a cross-check:
-- A candidate that's new-to-the-index but whose true `published_time` is still pre-floor is **not** silently added or silently dropped — it's held out of the KB and reported in the `/sync type:Blog` Discord reply under "Held back for review," with title + date, so a human decides via `/include-blog`. Real example from the migration sync: `blog.riverai.inc/river/` (`published_time` 2025-05-13, two days pre-floor) — flagged, then manually reviewed: it carries the `announcement` tag (a real, live tag page, just not featured in the site's nav) alongside already-indexed posts like `season2-airdrop-is-live` and `season-6-is-live`, so it's legitimate current content, not orphaned. Manually added 2026-09-04 (`knowledge-base/blogs/river.md`) since it fell outside the automated floor — future `/sync type:Blog` runs will maintain it normally (matches by URL) from here on.
+- A candidate that's new-to-the-index but whose true `published_time` is still pre-floor is **not** silently added or silently dropped — it's held out of the KB and reported in the `/sync type:Blog` Discord reply under "Held back for review," with title + date, so a human decides via `/blog action:Include`. (The bot's own reply still says `/include-blog` — an old command name; see Pending.) Real example from the migration sync: `blog.riverai.inc/river/` (`published_time` 2025-05-13, two days pre-floor) — flagged, then manually reviewed: it carries the `announcement` tag (a real, live tag page, just not featured in the site's nav) alongside already-indexed posts like `season2-airdrop-is-live` and `season-6-is-live`, so it's legitimate current content, not orphaned. Manually added 2026-09-04 (`knowledge-base/blogs/river.md`) since it fell outside the automated floor — future `/sync type:Blog` runs will maintain it normally (matches by URL) from here on.
 - `knowledge-base/blogs/_excluded-legacy.json` — a self-maintaining registry (title + true `published_time`, keyed by URL) of every post ever seen failing the `BLOG_SINCE_DATE` floor. Seeded 2026-09-04 with all 91 currently-known legacy (pre-floor) posts. A URL is only ever fetched once to populate its entry; after that it's a free lookup. Lets a future flagged candidate be checked against known legacy titles ("previously known as X") instead of judged with zero history.
 - An already-indexed post whose `lastmod` changed but whose `article:modified_time` matches what's on file is recognized as a redeploy artifact and the rescrape is skipped (falls back to a normal rescrape if inconclusive — no regression for that case).
 
-**`/doc sync` vs `/doc sync force:true`:** Docs sitemap has no lastmod dates so regular sync only catches new/removed pages. Use `force` to re-scrape all on content updates.
+**`/sync type:Doc` vs `/sync type:Doc force:true`:** the docs sitemap has no lastmod dates, so a regular sync only catches new and removed pages. Use `force` to re-scrape all pages after content updates.
 
 **`/sync type:Blog`:** Blog (Ghost) has lastmod on every post so it auto-detects updates — no force flag needed.
 
-**Both `/sync type:Blog` and `/doc sync` have been run (most recently 2026-09-04, post-migration) — 47 blog posts (46 from sync + `river.md` manually added, see above) and 45 docs pages are indexed.**
-
----
-
-## Network Note
-
-`docs.riverai.inc` and `blog.riverai.inc` are blocked by the user's ISP (Cisco SSE filter). **Cloudflare WARP must be enabled** on the machine for the bot to scrape these sites. Without WARP, all scrape commands will fail with HTTP 403.
+**Both `/sync type:Blog` and `/sync type:Doc` have been run (most recently 2026-09-04, post-migration) — 47 blog posts (46 from sync + `river.md` manually added, see above) and 45 docs pages are indexed.**
 
 ---
 
@@ -403,13 +167,13 @@ Files here are indexed like all other KB content but ranked 1.3× higher than do
 **Automatic staleness detection:** `/sync type:Blog` and `/sync type:Doc` also flag correction files that a newly synced article may have superseded, and draft a proposed update for review — see [KB Monitor](#kb-monitor). Drafts are never auto-applied to the live correction file.
 
 ### `<!-- EXCLUDE -->` markers
-Add these HTML comment tags in any `.md` file in the KB to mark a section as permanently outdated. The `rag.js` chunker strips these blocks before indexing — the excluded content is never embedded, never retrieved. Files containing these markers are automatically protected from being overwritten by `/doc sync force:true`.
+Add these HTML comment tags in any `.md` file in the KB to mark a section as permanently outdated. The `rag.js` chunker strips these blocks before indexing — the excluded content is never embedded, never retrieved. Docs files containing these markers are skipped by `/sync type:Doc force:true`.
 
 ### Dynamic blog effective date
 `blogs/_index.json` tracks three fields:
 - `configuredSinceDate` — the original `BLOG_SINCE_DATE` from config (2025-05-15). Never changes.
 - `effectiveSinceDate` — the current scraping floor. Only advances when posts are deliberately deleted from disk. Never recalculated automatically on a normal sync (that was a bug that was fixed).
-- `sinceHistory` — array logging every advance: `{ changedAt, from, to }`. Shown in `/sync type:Blog` output as "Floor history".
+- `sinceHistory` — array logging every advance: `{ changedAt, from, to }`. The `/sync type:Blog` reply shows the configured date and the current "Scraping from" date.
 
 ### Blog URL exclusion list
 `blogs/_index.json` also tracks an `excluded` array of full post URLs. Managed by `/blog action:Exclude url:<url>` and `/blog action:Include url:<url>`.
@@ -465,7 +229,7 @@ Two background health checks that run automatically as part of sync commands. Bo
 
 **What Haiku captures (updated 2026-06-03):** Exchange/DEX listings, token changes, product launches, protocol parameter changes, safety notices, integrations, ecosystem stats and milestones (TVL, staking amounts, user counts, season progress), partnership/community milestones, and context that adds to or updates existing blog/docs content. Pure hype, generic community messages, and event reminders with no new data are skipped. Previously the prompt was too narrow (operational facts only) and missed milestone stats like staking totals.
 
-**Discord output (from `/sync type:Knowledge`):** `📌 Auto-extracted N fact(s): <category>: <summary>` lines, or a single line if nothing was found.
+**Discord output (from `/sync type:Knowledge`):** `📋 Announcements: N checked, M new fact(s) extracted → Appended to: <files>`, or `N checked, nothing new`.
 
 **Format appended to curated files:**
 ```
@@ -527,49 +291,6 @@ pm2 start bot.js --name river-bot
 pm2 save
 pm2 startup
 ```
-
----
-
-## Key Technical Decisions (Why, Not Just What)
-
-- **`clientReady` not `ready`** — discord.js v14 uses `clientReady`. We deliberately changed this; do NOT revert to `ready`.
-- **`node-fetch` dynamic import** — v3 is ESM-only in a CJS project. Always use `const fetch = (await import('node-fetch')).default`.
-- **SSL bypass** — `https.Agent({ rejectUnauthorized: false })` used in scraper and docs/blog sync because riverai.inc certs are locally-issued.
-- **linkedom → jsdom** — linkedom caused OOM (exit code 9) on large pages. jsdom is stable.
-- **RAG replaced full-KB loading** — old approach sent entire KB (~100K+ tokens) to Claude per call. RAG sends top-8 chunks (~2,000–4,000 tokens). Voyage AI voyage-3-lite handles embeddings.
-- **BLOG_SINCE_DATE = 2025-05-15** — user only wants posts from this date onward; 92 older posts excluded.
-- **URLs must be plain text** — Claude was rendering URLs as `[url](url)`. System prompt explicitly forbids markdown link syntax.
-- **Telegram channel mention → deep link** — `sanitizeForTelegram()` in `telegram/telegram-adapter.js` converts any `<#channelId>` Discord mention into `https://discord.com/channels/GUILD_ID/channelId`. `GUILD_ID` is hardcoded as `1212686319596216350` — update it there if the server changes.
-- **satoshi-protocol-v1 docs excluded** — user only wants the main River docs sitemap, not the legacy v1 subdomain sitemap.
-
----
-
-## RAG Design Decisions
-
-### Why Voyage AI (not OpenAI / Ollama / Cohere / DeepSeek / Llama)
-- **OpenAI** (`text-embedding-3-small`) — excellent quality, no free tier, pay-as-you-go from day one
-- **Ollama (local Llama)** — fully free, no API key, but weakest semantic quality (small model ~22M params)
-- **Cohere** — good quality, only 1000 calls/month free (too limited)
-- **DeepSeek** — chat/reasoning model, no dedicated embedding API
-- **Voyage AI** — chosen because: Anthropic specifically recommends it for use with Claude, **200M free tokens/month** on the voyage-3 series (effectively free for a Discord bot), and highest retrieval quality when paired with Claude
-
-### Why `voyage-3-lite` specifically
-Cheapest model in the voyage-3 series. Still high quality for retrieval. The 200M free token allowance applies to it. `voyage-3` or `voyage-large-2` would be marginally better but overkill for support Q&A.
-
-### Why Voyage AI requires a payment method
-Free accounts without a payment method are capped at **3 RPM and 10K TPM** (rate limits, not billing). Adding a card unlocks standard rate limits (~2000 RPM). **The 200M free tokens still fully apply** — you are not charged unless you exceed them. The card is purely for identity verification / abuse prevention.
-
-### Why `embedder.js` is a separate file from `rag.js`
-Separation of concerns: `rag.js` handles chunking, caching, and search logic. `embedder.js` is the provider adapter. Switching from Voyage to OpenAI means adding one function in `embedder.js` and changing `EMBEDDING_PROVIDER` in `.env` — `rag.js` is untouched.
-
-### Why chunk overlap (150 chars)
-Without overlap, a sentence or key fact that falls at a chunk boundary gets split across two chunks, and neither chunk contains the full context. 150-char overlap ensures the tail of one chunk and the head of the next share context.
-
-### Why TOP_K=8
-Started at 5, raised to 8 by user after testing. More chunks = more context for Claude to draw from. At ~1500 chars/chunk × 8 = ~12K chars of context, still far cheaper than the old full-KB approach (~100K+ chars).
-
-### Why `getSystemPrompt()` is a function, not a `const`
-`coreFacts` is loaded from disk at startup and can be reloaded at runtime via `/sync type:Knowledge`. A `const` would capture the empty string at module load time and never update. The function reads `coreFacts` at call time, so reloading the file takes effect immediately on the next Claude call.
 
 ---
 
@@ -667,7 +388,7 @@ const REFERRAL_CODES = ['JosephineOral', 'MrPishh'];
 const referralCode = { idx: 0 };  // wrapped in object so mutations propagate across modules
 ```
 
-`referralCode.idx` increments on every `askClaude()` call (inside `claude.js`). The current code is injected into the system prompt:
+`referralCode.idx` increments on every new conversation (`buildInitialHistory()` in `claude.js`). The current code is added to the first user message:
 
 ```
 ASSIGNED REFERRAL CODE: If this conversation requires giving a user a registration referral code, use exactly: <current code>
@@ -688,16 +409,18 @@ Key rules injected into every Claude call:
 - **TONE** — Acknowledge frustration briefly before answering; highlight genuine positives (longer staking = more tokens + voting power); never dismissive.
 - **URL formatting** — Always wrap in angle brackets `<https://...>`. Never markdown `[text](url)`.
 - **No `---` dividers** — Bold headers are fine; horizontal rules are not.
-- **ASSIGNED REFERRAL CODE** — Dynamic block, injected per-call outside the cached portion (see Prompt Caching below).
+- **ASSIGNED REFERRAL CODE** — not in the system prompt: added to the first user message of each conversation, so the cached system block stays identical (see Prompt Caching below).
 - **SOURCE PRIORITY** — corrections > blogs/announcements > docs.
 - **SCAM SAFETY** — Dynamic injection (2026-05-15): injected only when `isScamConcern(question)` returns true. See Scam Concern Detection below.
 - **CONVERSATIONAL BREVITY** — Dynamic injection (added 2026-07-10): `getSystemPrompt(includeScamBlock, isFollowUp)` takes a second param; `askClaude()` sets `isFollowUp = history.length > 1` (true for Scenario 0/0.5/CLARIFY-continuation calls, false on a fresh first question). When true, injects a rule capping replies to 2-4 sentences, forbidding re-explanation of a mechanism already covered earlier in the thread (point back to it instead), and calling for a short acknowledgement rather than a full mechanic restatement when the user is just agreeing/venting. Added because conversational replies (e.g. a user agreeing with someone, then venting about price) were getting full multi-paragraph re-explanations of conversion mechanics on every turn.
 
 ### Prompt Caching (added 2026-05-15)
 
-`askClaude()` passes `system` as a two-element array:
-1. **Static block** — `getSystemPrompt(includeScamBlock)` output, marked `cache_control: { type: 'ephemeral' }`. Cached by Anthropic for 5 minutes. Stable across most calls.
-2. **Dynamic block** — referral code (rotates each call) + SOURCES instruction. Never cached.
+`askClaude()` sets two cache breakpoints:
+1. **System block** — `getSystemPrompt(includeScamBlock, isFollowUp)` output, marked `cache_control: { type: 'ephemeral' }`. Cached by Anthropic for 5 minutes; identical for every call with the same two flags, so it is shared across users' first questions.
+2. **Last message** — `withCacheOnLastMessage()` marks the newest message, caching the growing per-conversation prefix (system + KB context + history) for follow-ups.
+
+The rotating referral code and the KB context live in the first user message, not the system block.
 
 Cache hits are logged: `[Cache] Hit — N tokens served from cache`. Minimum threshold for caching is 1024 tokens (Sonnet); the static block exceeds this when `core-facts.md` is loaded.
 
@@ -705,9 +428,9 @@ Cache hits are logged: `[Cache] Hit — N tokens served from cache`. Minimum thr
 
 Scam detection runs across five independent layers. The first three classify the **scammer's own message**; the last two guard the **victim's message** to inject a safety block into the bot's answer.
 
-**Active blocking (Layers 1–3):** When the scam-blocker toggle is ON, a detected scam message triggers: (1) message deletion, (2) 1-hour timeout on the member, (3) infraction recorded in `data/scammer-list.json` via `scam-tracker.js`, (4) alert embed to `SCAM_LOG_CHANNEL_ID`. All actions fail gracefully — if the bot lacks permissions, the others still run and the alert is still posted. Toggle is OFF by default; enable with `/toggle platform:scam-blocker`. **Required bot permissions: `Manage Messages` + `Moderate Members`; bot role must sit above regular member roles.**
+**Active blocking (Layers 1–3):** When the scam-blocker toggle is ON, a detected scam message triggers: (1) message deletion, (2) an escalating timeout — 1 hour × the user's infraction count, capped at 28 days (escalation added 2026-08-18; it was a flat 1 hour before), (3) infraction recorded in `data/scammer-list.json` via `scam-tracker.js`, (4) alert embed to `SCAM_LOG_CHANNEL_ID`. All actions fail gracefully — if the bot lacks permissions, the others still run and the alert is still posted. Toggle is OFF by default; enable with `/toggle platform:scam-blocker`. **Required bot permissions: `Manage Messages` + `Moderate Members`; bot role must sit above regular member roles.**
 
-**Infraction tracking:** Every action writes a record keyed by Discord user ID (survives username/display name changes). The alert embed shows the total infraction count and flags repeat offenders in red. Use `/scam-record view <user>` to see full history, `/scam-record clear <user>` for false positives, `/scam-record remove-infraction` to remove a single record.
+**Infraction tracking:** Every action writes a record keyed by Discord user ID (survives username/display name changes). The alert embed shows the total infraction count and flags repeat offenders in red. Use `/scam-record action:View` to see full history, `action:Clear` for false positives, and `action:Clear count:-N` to remove only the N most recent records.
 
 Scope: targets what Discord's built-in automod misses — bio/profile redirect text, t.me/wa.me links, name impersonation + DM offers, and semantic social-engineering patterns Haiku catches. Direct link blocking is left to Discord automod.
 
@@ -720,7 +443,7 @@ Patterns (6):
 - `in my bio/profile`
 - `t.me/<handle>` — Telegram invite links (full link format; `@username` mentions are normal)
 - `wa.me/<number>` — WhatsApp invite links
-- `(report/contact/reach) the (team/support/us)` + external URL
+- `report/contact/reach/share/send … the team/support/us` (up to 40 characters in between) + an external URL — widened 2026-09-01 after "Share Your Questions/Issues to the team: <link>" slipped through
 
 **Content normalization (added 2026-06-10):** Before patterns are tested, `normalizeScamContent()` is applied to the raw message text: (1) collapses spaced-out letters (`t e a m` → `team`, `d m` → `dm`), then (2) applies leet substitution (`1→i`, `3→e`, `4→a`, `5→s`, `6→g`, `7→t`, `@→a`). This catches obfuscation like `gu1de` and `t e a m` that plain regex would miss. The normalized string is used only for matching — never logged or displayed.
 
@@ -729,24 +452,27 @@ Handles patterns that are suspicious but context-dependent — the same words ap
 
 **Why regex alone fails here:** "check my dashboard" is a scammer redirecting a victim to an external site, but also a user asking for help with their own River account. "dm me" is a scam offer to a stranger, but also two people naturally moving a conversation to private. The word is identical in both cases — only context resolves the direction.
 
-Soft patterns (3):
+Soft patterns:
 - `dm/pm me/you/us` — innocent between friends mid-conversation; scam when offered unsolicited to a help-seeker
 - `inbox me/you/us` — same
 - `check/see/look at my bio/profile/page/dashboard/link/feed/channel/group/site` — ambiguous: help-seeker asking for help with own account vs scammer directing victim to external resource
+- `accept my/the (friend) request`, `sent you a friend request` — friend-request redirect to gain DM access
+- `how can/may I/we help you` — unsolicited opener (about 80% scam in real samples)
+- a message that is nothing but `@SomethingBot` — a Telegram-only spam pattern, matched on the raw text
 
 **`detectScamContentLLM` flow:** Receives the message content + reply context + recent thread (same context built for normal classification). Asks Haiku: *"Is this sender redirecting another user toward an external resource they own, or inviting them into a private conversation as a way of offering unsolicited help?"* YES → `'scam-content'`; NO → falls through to normal classification. Fails safe: returns `false` on API error (never false-positives due to a network issue). Haiku max_tokens: 5.
 
 **Real example caught by this layer (2026-06-11):** "Check my dashboard and relay this" — Layer 1 missed it (`check` is an ambiguous verb), Haiku correctly identified it as a non-staff sender directing a help-seeker to an external resource. Previously misclassified as `troubleshooting` by normal intent classification.
 
 #### Layer 3 — Display name spoof detector (in `src/commands.js`)
-Checks non-staff messages for the impersonation pattern: scammer copies a staff display name with slight variation, then offers unsolicited help + DM redirect. Logs `scam-content` to intent log and calls `takeScamAction` (delete + timeout + alert when scam-blocker is ON). Early-returns after a hit — spoof messages never reach intent classification or auto-answer. Active blocking/deletion is deferred to the scam-blocker feature.
+Checks non-staff messages for the impersonation pattern: scammer copies a staff display name with slight variation, then offers unsolicited help + DM redirect. Logs `scam-content` to intent log and calls `takeScamAction` (delete + timeout + alert when scam-blocker is ON). Early-returns after a hit — spoof messages never reach intent classification or auto-answer. Runs in the Chinese channel too.
 
 Flow:
 1. Skip if sender has a staff role
 2. Skip if `staffNameCache` is empty (startup race)
 3. Normalise sender display name: lowercase → leet substitution (`0→o 1→i 3→e 4→a 5→s 6→g 7→t @→a`) → strip padding words (`official real support admin mod helper team river`) → strip non-alpha
 4. Compare against every entry in `staffNameCache`: exact match, sender contains staff name as substring, or Levenshtein distance ≤ 1
-5. If name matches AND message contains a DM/helper-offer phrase → log `scam-content`
+5. If name matches AND message contains a DM/helper-offer phrase → log `scam-content` and call `takeScamAction`. If only the name matches, the match is passed to the classifier as a warning for Layer 2.
 
 **Staff name cache** (`state.staffNameCache`) — `Map<normalizedName → originalDisplayName>`. Built at startup in `buildStaffNameCache()` in `bot.js`, refreshed every 24 hrs via cron. Only stores names ≥ 4 chars after normalisation to avoid short-name false positives.
 
@@ -768,15 +494,21 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 
 ---
 
-## Known Issues / Gotchas
+## Known Issues and Fixed Bugs
 
-- **`saveQAPair` missing `ensureDir`** — ~~Fixed~~. `ensureDir(path.dirname(filepath))` is called inside `saveQAPair()` in `utils.js`. `channel-learning/` subdirs are now auto-created on first write.
+### Gotchas
 
 - **`identifyRelevantSources()` is the old keyword matcher** — lives in `claude.js`, still called by `sendExplanationEmbed()` in `commands.js` for the staff explanation embed. Reads all source files via `getSourceFiles()` and does word-frequency matching. Not used for actual Q&A (RAG handles that). Fine as-is.
 
 - **`_dev-notes/` folder in root** — user's private reference folder. Contains: `Bot commands.txt` (staff command quick-reference, kept up to date), `readme.txt` (original build prompt), `prompt.txt`, `Work flow structure.txt`, `Notes.txt` (theory notes). Not used by the bot. Safe to ignore.
 
 - **PM2 is set up** — bot runs as `river-bot` under PM2. Use `pm2 restart river-bot`, `pm2 logs river-bot`, `pm2 status`. A Windows Task Scheduler task (`PM2 Resurrect on Login`) auto-runs `pm2 resurrect` on login after a reboot. Note: `pm2 startup` does not work on Windows (no init system support).
+
+- **Scraping needs Cloudflare WARP** — `docs.riverai.inc` and `blog.riverai.inc` are blocked by the ISP (Cisco SSE filter). With WARP off every scrape command fails with HTTP 403. See `docs/DECISIONS.md`.
+
+### Fixed bugs (history)
+
+- **`saveQAPair` missing `ensureDir`** — ~~Fixed~~. `ensureDir(path.dirname(filepath))` is called inside `saveQAPair()` in `utils.js`. `channel-learning/` subdirs are now auto-created on first write.
 
 - **Telegram's "General" topic never sets `message_thread_id`** — ~~Fixed 2026-07-06~~. Telegram omits `message_thread_id` on messages sent in a forum's General topic (its real ID is always `1`, but the field is absent on the wire). `telegram-adapter.js` now normalizes a missing `message_thread_id` to `1` for topic-matching/logging/`channelId`, but keeps the raw (possibly `null`) value when replying — sending without `message_thread_id` already routes to General correctly, so forcing `1` on outgoing replies was avoided. If General-topic messages ever stop being detected again, check this normalization first before assuming `TELEGRAM_TOPIC_IDS` is misconfigured.
 
@@ -827,6 +559,8 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 - **~~Chinese channel logging (Discord)~~** — implemented 2026-06-06. Messages from `CHINESE_DISCORD_CHANNEL_ID` are logged to `dc-intent-log.jsonl` then the handler returns early — no live classification, no bot response. Historical backfill from 2026-06-01 (129 messages) completed via `intent/backfill-chinese.js`. Batch intent classification deferred.
 - **~~Telegram DM persistent menu button~~** — implemented 2026-06-06. `setChatMenuButton` + `setMyCommands` called at bot startup in `telegram/telegram-adapter.js`. `/start` in a private DM opens the staff panel inline keyboard (Report / Stats). The "≡ Menu" button is persistent across sessions — user does not need to type `/start` each time.
 
+- **Stale command names in bot replies (found 2026-10-28, not fixed — code change):** the `/sync type:Blog` reply tells staff to use `/include-blog` (now `/blog action:Include`); the empty-index message in `rag.js` says `/sync-knowledge` (now `/sync type:Knowledge`); the scam-blocker toggle reply says "1h timeouts" (now escalating); `stripIndexedBlogUrls` in `kb-monitor.js` still matches only `blog.river.inc` links, so reposts of the new domain are no longer stripped.
+
 ### ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
 
 - **Batch intent log analysis** — **started 2026-08-18** (`msgbatch_01PzBGupfcCBv6nBYyawno9f`, 2,050 joined classified messages from `intent/dc-intent-log.jsonl` + `intent/tg-intent-log.jsonl`). Goal: identify misclassification patterns at scale. Use `intent/theory-notes.md` to pick the right framework for each failure type before changing the taxonomy.
@@ -841,60 +575,9 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 
 - **Supabase / pgvector** — if `knowledge-base/.embeddings-cache.json` grows large (slow startup, memory pressure), migrate the embedding cache to Supabase with pgvector. Current flat-file cache is fine up to ~5,000 chunks. Flag: check file size periodically with `/sync type:Knowledge` output (total chunks).
 
-- **~~Scam moderation~~** — implemented 2026-06-09. All three detection signals (tier-1 regex, spoof detector, Haiku `scam-content`) now call `takeScamAction`: delete message + 1h timeout + alert embed to `SCAM_LOG_CHANNEL_ID`. Toggle: `/toggle platform:scam-blocker` (default OFF). Required Discord permissions: `Manage Messages` + `Moderate Members`. Bot role must be above member roles in server hierarchy.
+- **~~Scam moderation~~** — implemented 2026-06-09. All three detection signals (tier-1 regex, spoof detector, Haiku `scam-content`) now call `takeScamAction`: delete message + timeout (1h at the time; escalating since 2026-08-18) + alert embed to `SCAM_LOG_CHANNEL_ID`. Toggle: `/toggle platform:scam-blocker` (default OFF). Required Discord permissions: `Manage Messages` + `Moderate Members`. Bot role must be above member roles in server hierarchy.
 
 - **~~Discord vs Telegram parity gaps~~** — resolved 2026-06-01 (core features) and 2026-06-09 (two additional gaps). Self-resolution detection, community step-in cancellation (with scam-content timer protection), community-discussion follow-up detection, and `staff-ping` redirect are now implemented in both platforms. Additional fixes (2026-06-09): removed extra `RESPOND_INTENTS` gate from Telegram Scenario 1 (direct @mentions now always answered, same as Discord); added word-count guard (`> 1 word`) to Telegram Scenario 0.5 (single emoji/word replies no longer trigger full KB search).
 
-- **~~Scenario 0.5 unguarded reply bug~~** — resolved 2026-07-10, both platforms. Scenario 0.5 now gates on `classifyMessageIntent()`/`RESPOND_INTENTS` before answering a reply (fixes bot responding to replies that were agreement/venting/addressed-to-someone-else rather than an actual question — reply *structure* alone used to be treated as intent). Telegram fixed first (`telegram-adapter.js`), then Discord (`commands.js` ~line 545) patched to match for parity.
+- **~~Scenario 0.5 unguarded reply bug~~** — resolved 2026-07-10, both platforms. Scenario 0.5 now gates on `classifyMessageIntent()`/`RESPOND_INTENTS` before answering a reply (fixes bot responding to replies that were agreement/venting/addressed-to-someone-else rather than an actual question — reply *structure* alone used to be treated as intent). Telegram fixed first (`telegram-adapter.js`), then Discord (`commands.js`, Scenario 0.5 block) patched to match for parity.
 
----
-
-## Timer Reference
-
-All timers are defined in `src/state.js`. To change any value, edit `src/state.js` (and `.env` for `STAFF_WAIT_MINUTES`).
-
-| Constant | Value | Where used | Purpose |
-|---|---|---|---|
-| `STAFF_WAIT_MS` | 5 min (from `.env` `STAFF_WAIT_MINUTES`) | `commands.js`, `telegram-adapter.js` | How long bot waits before auto-answering any user when no staff has replied |
-| `STAFF_ENGAGED_WINDOW_MS` | 3 min | `commands.js`, `telegram-adapter.js` | Hard block — bot backs off completely for 3 min after staff engages a specific user, whether by replying directly to them or by posting any plain message while their Scenario 3 timer is pending |
-| `POST_STAFF_WAIT_MS` | 3 min | `commands.js`, `telegram-adapter.js` | Shorter wait for same user after staffEngaged expires — applies for 20 min after staff engagement |
-| `POST_STAFF_CONTEXT_MS` | 20 min | `commands.js`, `telegram-adapter.js` | How long POST_STAFF_WAIT applies — after 20 min, user's wait resets to normal 5 min |
-| `CONV_EXPIRY_MS` | 30 min | `claude.js` pruner | How long a multi-turn conversation is kept alive before being discarded |
-| `REPHRASE_WINDOW_MS` | 2 hours | `claude.js` | Window in which bot counts answer exchanges before escalating to support ticket |
-| `COMMUNITY_DISC_WINDOW_MS` | 30 min | `commands.js` | How long a community-discussion message is stored for follow-up context detection |
-
-**How the timers stack for the same user after staff engagement:**
-1. Staff replies at 12:05 → `staffEngaged` set
-2. User posts at 12:07 → hard blocked (within 3 min STAFF_ENGAGED_WINDOW_MS) → no timer started
-3. User posts at 12:09 → window expired → 3 min wait starts (POST_STAFF_WAIT_MS) → staffEngaged entry cleared
-4. User posts at 12:20 (next question) → no staffEngaged entry → normal 5 min wait resumes
-
-**Different user in same channel is never affected** — all timers are keyed by `userId::channelId`.
-
----
-
-## .env Variables
-
-```
-DISCORD_TOKEN
-ANTHROPIC_API_KEY
-VOYAGE_API_KEY                  ← Voyage AI for embeddings
-EMBEDDING_PROVIDER=voyage
-ANNOUNCEMENTS_CHANNEL_ID=1213030463040655410
-TWEETS_CHANNEL_ID=1212717389104414750
-GENERAL_CHANNEL_ID=1212717429319540790
-SUPPORT_CHANNEL_ID=1212717485862944818
-BOT_ANSWER_CHANNEL_IDS=1212717429319540790,1212717485862944818,1502041137119105054
-STAFF_EXPLANATION_CHANNEL_ID=1502041137119105054
-REPORTS_CHANNEL_ID=1502056590004715530   ← dedicated weekly-report channel
-STAFF_ROLE_IDS=1212718739808845835
-STAFF_WAIT_MINUTES=5
-SUPPORT_TICKET_CATEGORY_IDS=1212753951578005644,1419608088297865286  ← support ticket category IDs; channels are dynamic (created per ticket). Bot logs only, never responds
-COLLAB_CATEGORY_IDS=                                          ← collab/business inquiry category IDs (optional). Logs to collab-log.jsonl. Not included in reports yet.
-TELEGRAM_BOT_TOKEN                       ← from BotFather
-TELEGRAM_CHAT_ID=-1002060657220          ← Telegram group ID
-TELEGRAM_TOPIC_IDS=1,62,229775           ← comma-separated topic thread IDs bot responds in (1=General, 62=Support, 229775=River)
-CHINESE_DISCORD_CHANNEL_ID=              ← Chinese Discord channel — logged for reports, no auto-responses
-CHINESE_TELEGRAM_TOPIC_ID=               ← Chinese Telegram topic ID — logged for reports, no auto-responses
-SCAM_LOG_CHANNEL_ID=1212717191955480667  ← auto-mod channel — scam-blocker alert embeds posted here
-```

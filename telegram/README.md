@@ -1,101 +1,56 @@
-# Telegram
+# telegram/
 
-Telegram bot adapter for the River Protocol support bot. Mirrors the Discord bot's behaviour — same intent classification, same answer flow, same staff suppression logic.
-
-> **Navigation:** `telegram-adapter.js` has a QUICK REFERENCE block at the top with all function names and exact line numbers — read lines 1–45 to navigate without loading the full file.
+The Telegram bot for River Protocol support. It mirrors the Discord bot — same intent classification, same answer flow, same staff-wait logic — and adds a staff DM panel and a moderation system.
 
 ## Files
 
-| File | Purpose |
+| File | What it owns |
 |---|---|
-| `telegram-adapter.js` | Full Telegram bot adapter built on Telegraf. Handles all message scenarios, staff detection, join/leave tracking, moderation, and the staff-wait timer. |
+| `telegram-adapter.js` | The whole Telegram bot (Telegraf): message routing, staff detection, staff-wait timers, the DM panel, moderation, join/leave tracking. |
 
-## Key behaviours
+## How it works
 
-- **Same answer scenarios as Discord** — Scenario 0 (CLARIFY reply), 0.5 (reply to bot answer), 1 (@mention), 3 (unprompted, intent-gated with 5 min wait)
-- **Admin detection** — fetches group admin list via Telegram API, cached for 10 min to avoid rate limits
-- **Staff suppression** — same `staffEngaged` logic as Discord (3 min hard block, then 3 min shortened wait for 20 min window)
-- **Join/leave tracking** — listens for `chat_member` updates (requires bot to be admin in the group). Logs to `weekly-report/member-stats/telegram/tg-member-log.jsonl`
-- **Reply toggle** — respects `/toggle platform:telegram` ON/OFF state
-- **Log-only topics** — topics listed in `logOnlyTopicIds` (set via `CHINESE_TELEGRAM_TOPIC_ID` in `.env`) are logged to `tg-intent-log.jsonl` for community reports but the bot never responds in them
+### Answering
 
-## Required .env variables
+- **Scenarios** as on Discord: 0 (reply to a CLARIFY question), 0.5 (reply to a bot answer, intent-gated), 1 (@mention), 3 (unprompted, intent-gated, after the staff wait). There is no Scenario 2.
+- **Staff = group admins.** The admin list is fetched from Telegram and cached for 10 minutes.
+- **Staff suppression** works as on Discord: a 3-minute hard block after staff engage a user, then a 3-minute wait instead of 5 for 20 minutes.
+- **Topics:** the bot answers only in `TELEGRAM_TOPIC_IDS`. The forum's "General" topic arrives without a topic ID; it is treated as topic 1. The topic in `CHINESE_TELEGRAM_TOPIC_ID` is logged for reports but never answered.
+- **Toggle:** `/toggle platform:Telegram` turns replies on or off.
 
-```
-TELEGRAM_BOT_TOKEN         ← from BotFather
-TELEGRAM_CHAT_ID           ← group chat ID (negative number for groups)
-TELEGRAM_TOPIC_IDS         ← comma-separated topic thread IDs the bot responds in
-CHINESE_TELEGRAM_TOPIC_ID  ← (optional) topic thread ID to log but never respond in
-```
+### Message sanitising (`sanitizeForTelegram`)
 
-## Message sanitisation (`sanitizeForTelegram`)
+Claude writes Discord-style text, even for Telegram (and a cached report may have been generated for Discord). `sanitizeForTelegram()` converts it for Telegram's HTML parse mode — every send that uses it must pass `{ parse_mode: 'HTML' }`:
 
-Claude-generated text (bot answers via `makeTgTarget`, and community reports) always comes out in Discord-flavored markdown regardless of which platform is asking — including a report cached from Discord and served on Telegram. `sanitizeForTelegram()` converts that to Telegram's HTML `parse_mode` before sending (every call site using it must pass `{ parse_mode: 'HTML' }` on the send call). It:
+- `**bold**` becomes real Telegram bold (`<b>…</b>`). `*italic*` is left as plain text (a much noisier pattern to match safely).
+- `&`, `<` and `>` are escaped so they can't break the `<b>` tags.
+- `<https://url>` becomes a plain URL.
+- `<#channelId>` becomes a Discord link, `https://discord.com/channels/GUILD_ID/channelId` — members go straight to the channel; others see the server's join prompt.
+- Three or more newlines collapse to two.
 
-- Converts `**bold**` to real Telegram bold (`<b>...</b>`) — fixed 2026-08-18; previously stripped bold entirely (Telegram's send calls had no `parse_mode` set, so raw `*` markers would've shown as literal asterisks). `*italic*` is left as plain text, not converted — a much noisier pattern to match safely and not the reported problem.
-- Escapes `&`/`<`/`>` in the surrounding text so it can't collide with or break the `<b>` tags
-- Unwraps `<https://url>` angle-bracket links → plain URLs
-- Converts `<#channelId>` Discord channel mentions → Discord deep links in the format `https://discord.com/channels/GUILD_ID/channelId`
-- Collapses triple+ newlines to double
+Fixed, hand-written replies (moderation confirmations, alert DMs) don't go through it — they contain no markdown. `GUILD_ID` is hard-coded at the top of `telegram-adapter.js`; update it if the Discord server changes.
 
-Static, hardcoded staff-panel replies (`/tgban`, `/tgmute`, alert DMs, etc.) don't go through this — they're plain developer-written strings with no markdown, so there's nothing to sanitize.
+### Staff DM panel
 
-**The deep link behaviour means:** any message — whether hardcoded in the bot or generated by Claude — that contains a `<#channelId>` mention will automatically become a clickable link on Telegram. Members already in the Discord server are taken directly to the channel. Non-members see the server join prompt.
+An admin DMs the bot `/start` (or taps the persistent ≡ Menu button) to get two buttons:
 
-**`GUILD_ID` is hardcoded** as `1212686319596216350` at the top of `telegram-adapter.js`. If the Discord server ever changes, update this constant.
+- **Community Report** — period → platform → model (with "force" buttons that bypass the cache). The report is sent in the DM, not to Discord. It shares its cache with Discord's `/report` (see `weekly-report/README.md`).
+- **Member Stats** — period → platform; join/leave counts and member totals.
 
-## Staff DM panel
+### Moderation
 
-Staff can DM the bot directly on Telegram. Sending `/start` opens an inline keyboard with two buttons:
-
-- **Report** — generate a community report (prompts for period → platform → AI model, with a "force" variant to bypass the cache — see `weekly-report/README.md`); the report is sent as a reply in the DM, not posted to Discord's `REPORTS_CHANNEL_ID`. Shares its cache with Discord's `/report` command, so the same period/platform/model combination is reused instantly regardless of which platform generated it first
-- **Stats** — show member join/leave stats for the current week
-
-A persistent **≡ Menu** button is set via `setChatMenuButton` + `setMyCommands` at bot startup so staff don't need to type `/start` each time — the button is always visible in DMs.
-
-## Moderation system
-
-Watched/banned users are stored in `data/tg-perma-ban.json`, keyed by userId string. The store survives restarts.
-
-### Modes
+Moderated users are stored in `data/tg-perma-ban.json` (local only), keyed by user ID, and survive restarts. Each entry holds `userId`, `username`, `reason`, `mode`, `bannedAt`, `rejoinCount` and `lastRejoin`. Commands are DM-only and listed in `docs/REFERENCE.md` § Commands.
 
 | Mode | Behaviour |
 |---|---|
-| `watch` | User stays in group. Every message is classified. Harmful messages (scam, conduct, FUD) are silently deleted. Alert DM sent to subscribed admins. |
-| `mute` | User stays in group but cannot send messages. Mute is re-applied on every rejoin AND whenever a captcha/verification bot restores their permissions (`restricted → member` transition). |
-| `kick` | User is removed from the group on every rejoin attempt (ban + immediate unban). Can keep trying to rejoin but will always be kicked. |
-| `ban` | User is banned on every rejoin attempt. Messages revoked. |
+| `watch` | The user stays. Every message is classified; harmful ones (scam, abuse, or clear FUD) are deleted and admins get an alert DM. |
+| `mute` | The user cannot send messages. Re-applied on every rejoin and whenever a captcha bot restores their permissions. |
+| `kick` | Kicked once — now, or on their next join — then dropped to watch mode. |
+| `ban` | Banned now and on every rejoin attempt; messages revoked. |
 
-### Escalation ladder
+Escalation: `/tgwatch` → `/tgmute` → `/tgkick` → `/tgban`. De-escalation: `/tgunwatch` (remove), `/tgunmute` and `/tgunkick` (→ watch), `/tgunban` (remove and unban).
 
-```
-/tgwatch  → /tgmute  → /tgkick  → /tgban
-```
-
-### De-escalation
-
-```
-/tgunwatch  /tgunmute (→ watch)  /tgunkick (→ watch)  /tgunban
-```
-
-### Command reference *(admin DM to bot only)*
-
-| Command | What It Does |
-|---|---|
-| `/tgwatch <userId> [reason]` | Add to watchlist — delete harmful msgs, alert admins |
-| `/tgmute <userId> [reason]` | Permanent mute — re-applied on rejoin and captcha bypass |
-| `/tgkick <userId> [reason]` | Auto-kick on every rejoin |
-| `/tgban <userId> [reason]` | Auto-ban on every rejoin |
-| `/tgunwatch <userId>` | Remove from watchlist entirely (clean slate) |
-| `/tgunmute <userId>` | Lift permanent mute → drops to watch mode |
-| `/tgunkick <userId>` | Drop from kick → watch mode |
-| `/tgunban <userId>` | Remove from all lists and unban from group |
-| `/tglist` | Show all users with mode, reason, and rejoin count |
-| `/tgalerts on\|off` | Subscribe/unsubscribe from moderation alert DMs |
-
-### Alert DM format
-
-When a watched user's message is deleted, every subscribed admin receives:
+**Alert DM** sent to subscribed admins (`/tgalerts on`; if nobody has subscribed, every admin) when a watched user's message is deleted:
 
 ```
 🚨 Watched user alert
@@ -103,7 +58,7 @@ User: @username (or ID 12345678)
 Detected as: scam-content  ← or "fud/negative sentiment"
 
 Deleted message:
-"<first 400 chars of the message>"
+"<first 400 characters of the message>"
 
 Action taken: message deleted.
 
@@ -111,12 +66,16 @@ To report to Telegram: tg://user?id=12345678
 (Open that link → tap ⋮ → Report)
 ```
 
-### FUD detection (`checkWatchedFUD`)
+Each deletion is also logged to `data/tg-watch-log.jsonl` as evidence.
 
-A secondary Haiku check that runs when a watched user's message didn't already trigger `scam-content` or `community-conduct`. Lenient by design — only flags messages that **clearly and explicitly** call the project a rug pull/scam, urge others to sell/exit, or declare the project definitively dead. Frustrated questions, price comments, and ambiguous negativity all return NO. Fails safe (returns `false`) on any API error.
+**FUD check (`checkWatchedFUD` in `src/intent.js`):** a second Haiku check for watched users' messages that weren't already scam or abuse. Deliberately lenient — it flags only messages that clearly call the project a rug pull or scam, urge others to sell, or declare it dead. Frustration, skeptical questions and price comments pass. Returns "not harmful" on any API error.
+
+**Known gap:** Telegram has no proactive scam blocking for first-time offenders — only watched users are moderated (see `docs/DECISIONS.md`).
 
 ## Notes
 
-- The bot must be an **admin** in the Telegram group for join/leave tracking, admin detection, and moderation actions (restrict/ban) to work
-- `allowedUpdates: ['message', 'chat_member', 'callback_query']` is set on launch — without `chat_member`, Telegram won't send join/leave or permission-change events
-- Markdown formatting from Claude is stripped before sending — see sanitisation section above
+- The bot must be a group **admin** for join/leave tracking, admin detection and moderation.
+- It launches with `allowedUpdates: ['message', 'chat_member', 'callback_query']` — without `chat_member`, Telegram sends no join/leave or permission-change events.
+- Join/leave events are logged to `weekly-report/member-stats/telegram/tg-member-log.jsonl`.
+
+Required settings (details in `docs/REFERENCE.md` § Settings): `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_TOPIC_IDS`, and optionally `CHINESE_TELEGRAM_TOPIC_ID`.

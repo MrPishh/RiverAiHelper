@@ -1,5 +1,13 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Entry point — pm2 runs `node bot.js` directly. Reads settings from .env, creates
+ * the Discord and Anthropic clients and wires every src/ module together. On
+ * clientReady it builds the RAG index, starts the Telegram adapter, registers the
+ * slash commands and schedules the cron jobs. Holds no command logic itself — that
+ * lives in src/commands.js and src/slash-commands.js.
+ * ────────────────────────────────────────────────────────────────────────── */
+
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const { Client, GatewayIntentBits, Partials, EmbedBuilder, ActivityType } = require('discord.js');
@@ -43,12 +51,15 @@ const {
     SCAM_LOG_CHANNEL_ID,
 } = process.env;
 
+// Channels where the bot may auto-answer unprompted (Scenario 3). @mentions work in any channel.
 const BOT_ANSWER_CHANNEL_IDS = (process.env.BOT_ANSWER_CHANNEL_IDS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
 
+// Role IDs that count as staff: staff can run staff commands and are never auto-answered.
 const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
 
+// Support-ticket category IDs — messages there are logged to intent/ticket-log.jsonl, never answered.
 const SUPPORT_TICKET_CATEGORY_IDS = new Set(
     // Support ticket category IDs
     (process.env.SUPPORT_TICKET_CATEGORY_IDS || '').split(',').map(s => s.trim()).filter(Boolean)
@@ -61,8 +72,11 @@ const COLLAB_CATEGORY_IDS = new Set(
 
 // ─── Clients ──────────────────────────────────────────────────────────────────
 
+// One Anthropic client, shared by every module that calls Claude.
 const anthropic = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
+// Discord gateway client. MessageContent and GuildMembers are privileged intents —
+// both must stay enabled for the bot in the Discord Developer Portal.
 const discordClient = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -75,6 +89,7 @@ const discordClient = new Client({
 
 // ─── Module wiring ────────────────────────────────────────────────────────────
 
+// Factory modules: each binds the shared clients and config once and returns its functions.
 const claudeModule  = createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackUsage });
 const intentModule  = createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage });
 const monitorModule = createMonitorModule(anthropic, { trackUsage });
@@ -121,6 +136,9 @@ registerMessageHandler(discordClient, state, {
 
 // ─── Staff name cache ─────────────────────────────────────────────────────────
 
+// Rebuilds state.staffNameCache (normalized staff display names) for the name-spoof
+// detector. Runs on clientReady and again daily from cron. Names shorter than 4
+// letters after normalizing are skipped — too short to match safely.
 async function buildStaffNameCache(guild, staffRoleIds) {
     if (!guild || staffRoleIds.length === 0) return;
     try {
@@ -157,6 +175,7 @@ discordClient.on('shardDisconnect', (event, id) => console.warn(`[Bot] Shard ${i
 discordClient.on('shardReconnecting', id => console.warn(`[Bot] Shard ${id} reconnecting...`));
 discordClient.on('shardResume', (id, replayed) => console.log(`[Bot] Shard ${id} resumed (${replayed} events replayed)`));
 
+// Time of the last Discord gateway event of any kind — the watchdog below compares against it.
 let lastGatewayActivity = Date.now();
 discordClient.on('raw', () => { lastGatewayActivity = Date.now(); });
 
@@ -280,11 +299,13 @@ discordClient.once('clientReady', async () => {
         console.warn('[Slash] No guild found — slash commands not registered');
     }
 
+    // Hourly: drop expired conversation, timer and tracker entries so the state Maps stay small.
     cron.schedule('0 * * * *', () => {
         claudeModule.pruneStaleEntries();
         console.log('[Bot] Pruned stale tracker entries');
     });
 
+    // Daily at midnight: refresh the staff name cache (staff roles or display names may have changed).
     cron.schedule('0 0 */1 * *', async () => {
         const g = discordClient.guilds.cache.first();
         await buildStaffNameCache(g, STAFF_ROLE_IDS).catch(err =>

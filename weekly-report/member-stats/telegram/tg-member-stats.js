@@ -1,10 +1,19 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Telegram join/leave tracking: telegram-adapter.js reports each join and leave
+ * here; they are logged to tg-member-log.jsonl (local only) and counted for any
+ * date range.
+ * Exports: logTgMemberEvent, getTgMemberStats
+ * ────────────────────────────────────────────────────────────────────────── */
+
 const fs   = require('fs');
 const path = require('path');
 
+// Join/leave log, one JSON record per line.
 const LOG_PATH = path.join(__dirname, 'tg-member-log.jsonl');
 
+// Appends one 'join' or 'leave' record.
 function logTgMemberEvent(type, user, chatId) {
     const record = {
         ts:       new Date().toISOString(),
@@ -18,6 +27,7 @@ function logTgMemberEvent(type, user, chatId) {
     } catch {}
 }
 
+// { joins, leaves } between two dates.
 function getTgMemberStats(from, to) {
     let joins = 0, leaves = 0;
     try {

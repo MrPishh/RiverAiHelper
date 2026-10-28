@@ -1,12 +1,22 @@
 'use strict';
 
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * Live RIVERPTS and $RIVER prices from Dexscreener (BNB Chain), cached for 5
+ * minutes. isPricingQuestion() decides when claude.js adds a LIVE PRICES block
+ * to the prompt.
+ * Exports: getLivePrices, isPricingQuestion
+ * ────────────────────────────────────────────────────────────────────────── */
+
 // Contract addresses on BNB Chain (BSC)
 const RIVERPTS_ADDRESS = '0xfc6be825925b7a83d131e33b46efef9084f0e014';
 const RIVER_ADDRESS    = '0xda7ad9dea9397cffddae2f8a052b82f1484252b3';
 const CACHE_TTL_MS     = 5 * 60 * 1000; // 5 minutes
 
+// Last fetched prices and when they were fetched.
 let cache = { riverPts: null, river: null, fetchedAt: 0 };
 
+// USD price of one token from its most liquid BSC pair. Gives Dexscreener 6 seconds, then gives up
+// so a slow API never delays an answer.
 async function fetchDexPrice(address) {
     const fetch = (await import('node-fetch')).default;
     const controller = new AbortController();
@@ -30,6 +40,7 @@ async function fetchDexPrice(address) {
     }
 }
 
+// Both prices, from cache when fresh; a failed token keeps its last known price.
 async function getLivePrices() {
     if (Date.now() - cache.fetchedAt < CACHE_TTL_MS && cache.riverPts !== null) {
         return cache;

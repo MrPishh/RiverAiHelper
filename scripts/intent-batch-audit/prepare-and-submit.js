@@ -1,19 +1,26 @@
 'use strict';
-// One-time batch audit: re-review every classified intent-log message with Sonnet
-// against the full taxonomy, to find systematic misclassification patterns.
-// Not part of the live bot — run manually, results analyzed separately.
+/* ─── About this file ─────────────────────────────────────────────────────────
+ * One-time batch audit, step 1 of 2: re-reviews every classified intent-log message
+ * with Sonnet against the full taxonomy, to find systematic misclassification
+ * patterns. Joins the Discord and Telegram logs, writes messages.json and submits
+ * one Batch API job (id saved to batch-id.txt). Run manually; not part of the bot.
+ * ────────────────────────────────────────────────────────────────────────── */
 
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env'), quiet: true });
 const Anthropic = require('@anthropic-ai/sdk');
 
+// ─── Inputs ──────────────────────────────────────────────────────────────────
+
+// Project root, the two intent logs, the taxonomy sent to the reviewer, and where outputs go.
 const ROOT = path.join(__dirname, '..', '..');
 const DC_LOG = path.join(ROOT, 'intent', 'dc-intent-log.jsonl');
 const TG_LOG = path.join(ROOT, 'intent', 'tg-intent-log.jsonl');
 const TAXONOMY = fs.readFileSync(path.join(ROOT, 'intent', 'intent-taxonomy.md'), 'utf8');
 const OUT_DIR = __dirname;
 
+// Joins each "classified" record with its raw message record (same id) — returns one row per classified message.
 function loadLog(filePath, platform) {
     const lines = fs.readFileSync(filePath, 'utf8').trim().split('\n').filter(Boolean);
     const raw = new Map();
@@ -42,11 +49,15 @@ function loadLog(filePath, platform) {
     return joined;
 }
 
+// Every classified message from both platforms.
 const messages = [...loadLog(DC_LOG, 'discord'), ...loadLog(TG_LOG, 'telegram')];
 console.log(`Prepared ${messages.length} messages for review`);
 
 fs.writeFileSync(path.join(OUT_DIR, 'messages.json'), JSON.stringify(messages, null, 2));
 
+// ─── Batch request ───────────────────────────────────────────────────────────
+
+// Prompt asking the reviewer to judge one already-classified message against the taxonomy.
 function buildReviewPrompt(m) {
     return `You are auditing a message-intent classifier for a Discord/Telegram crypto community support bot. Below is the full taxonomy the classifier uses, then one message it already classified. Judge independently whether the assigned category is correct.
 
@@ -73,6 +84,7 @@ or
 VERDICT: AMBIGUOUS | REASON: <one concise sentence on why context is needed>`;
 }
 
+// One Batch API request per message; custom_id lets analyze-results.js match results back.
 const requests = messages.map(m => ({
     custom_id: `${m.platform}_${m.id}`,
     params: {
@@ -82,6 +94,7 @@ const requests = messages.map(m => ({
     },
 }));
 
+// Anthropic client (key from .env).
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 (async () => {
