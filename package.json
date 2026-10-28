@@ -5,7 +5,10 @@
   "main": "bot.js",
   "scripts": {
     "start": "node bot.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "index": "node scripts/build-index.js",
+    "index:check": "node scripts/build-index.js --check",
+    "index:watch": "node scripts/build-index.js --watch"
   },
   "keywords": [],
   "author": "",

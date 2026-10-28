@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/index-hook.js\"",
+            "timeout": 30,
+            "statusMessage": "Updating code index"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/stop-hook.js\"",
+            "timeout": 60,
+            "statusMessage": "Checking docs against the code"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -56,6 +56,11 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | `scripts/check-perms.js` | Diagnostic: the bot's Discord permissions per channel. |
 | `scripts/intent-batch-audit/prepare-and-submit.js` | One-time audit step 1: submit classified messages to the Batch API. |
 | `scripts/intent-batch-audit/analyze-results.js` | One-time audit step 2: tally the reviewer's verdicts. |
+| `scripts/build-index.js` | Index builder and drift checks (`npm run index`). |
+| `scripts/index-hook.js` | Claude Code edit hook: rebuilds the generated parts after each edit. |
+| `scripts/stop-hook.js` | Claude Code stop hook: runs the drift check before a turn ends. |
+| `CODE_INDEX.md` | Generated: every definition, setting, command, event and job with its line. |
+| `.claude/settings.json` | The two hooks above (shared). `.claude/settings.local.json` is personal — never edit or commit it. |
 | `docs/` | `ARCHITECTURE.md`, `DECISIONS.md`, `REFERENCE.md`. |
 | `CONTEXT.md` | Current state, feature design notes, known issues, pending work. |
 | `README.md` | Human overview: running the bot, folders, knowledge base layout. |
@@ -92,9 +97,31 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | Telegram routing, staff panel, moderation | `telegram/telegram-adapter.js` | `createTelegramAdapter`, `handlePrivateDM`, `handleWatchedMessage`, `sanitizeForTelegram` |
 | Community reports | `weekly-report/community-report/community-report.js` | `buildCommunityReport`, `generateCommunityReport`, `buildPrompt` |
 | Member stats | `weekly-report/member-stats/discord/discord-member-stats.js`, `weekly-report/member-stats/telegram/tg-member-stats.js` | `getMemberStats`, `getTgMemberStats` |
+| Index builder, drift checks | `scripts/build-index.js` | `build`, `runChecks`, `analyzeCode`, `KNOWN_FINDINGS` |
 
 ## Key flows (details in docs/ARCHITECTURE.md)
 
 - **A message:** `messageCreate` → logging → spoof check → routing (Scenario 0 / 0.5 / 1 / 2 / 3) → `classifyMessageIntent` → `answerQuestion` → `searchKB` + `rerankChunks` → `askClaude`.
 - **Scam:** layers 1–3 → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
 - **Knowledge:** `/sync` → `syncBlog` / `syncDocs` → `checkCorrectionStaleness` → `buildIndex`.
+
+## Generated parts and checks
+
+`npm run index` (`scripts/build-index.js`) generates — never hand-edit these:
+
+- the **Contents block** at the top of every code file (between the `----- Contents` markers),
+- **`CODE_INDEX.md`**,
+- the **section list** at the top of every doc over 150 lines (an HTML comment, invisible when rendered).
+
+It then checks the docs against the code: file map and task table above, code names in this file and README.md, settings (code ↔ `.env.example` ↔ `.env` ↔ `docs/REFERENCE.md`), commands and events (↔ `docs/REFERENCE.md`), npm scripts, hand-written line numbers, links, and dead code. Known findings awaiting the owner's decision are listed in `KNOWN_FINDINGS` and reported as warnings.
+
+| Command | What it does |
+|---|---|
+| `npm run index` | Rewrites stale generated parts and prints the drift report. |
+| `npm run index:check` | Changes nothing; exits 1 if anything is stale or drifted. |
+| `npm run index:watch` | Rebuilds on every save. |
+
+Hooks in `.claude/settings.json` run it for you: after every edit (regenerate only) and when a turn ends (check; drift sends Claude back once to fix it).
+
+- **A change is finished only when `npm run index:check` passes.** Never write a line number into a doc — point to a heading or a name.
+- **After any change that alters behaviour**, run a description review (the "Description audit" prompt) — the scripts check that docs *point* to real things, not that what they *say* is still true — and record it in `.claude/last-description-review`.

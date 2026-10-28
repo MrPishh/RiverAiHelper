@@ -93,6 +93,8 @@ Event listeners the bot registers. `receiver.event` matches the code (`discordCl
 | `bot.chat_member` | `telegram/telegram-adapter.js` | Joins, leaves, and re-applying ban/kick/mute on rejoin. |
 | `process.SIGTERM` | `bot.js` | Stops the Telegram bot cleanly. |
 | `process.SIGINT` | `bot.js` | Stops the Telegram bot cleanly. |
+| `stdin.data` | `scripts/index-hook.js` | Reads the Claude Code hook payload (tooling, not the bot). |
+| `stdin.end` | `scripts/index-hook.js` | Rebuilds the index once the payload is read (tooling, not the bot). |
 
 ## Scheduled jobs
 
@@ -131,5 +133,8 @@ How the timers stack for one user after staff engagement:
 |---|---|
 | `npm start` | Runs the bot (`node bot.js`). In production pm2 runs `node bot.js` directly as `river-bot`. |
 | `npm test` | Placeholder — there are no tests; it prints an error and exits. |
+| `npm run index` | Rebuilds the generated Contents blocks, `CODE_INDEX.md` and doc section lists, then prints the drift report. |
+| `npm run index:check` | Changes nothing; exits 1 if a generated part is stale or the docs have drifted from the code. |
+| `npm run index:watch` | Rebuilds after every save. |
 
 pm2 commands: `pm2 restart river-bot`, `pm2 logs river-bot`, `pm2 status`. After a reboot, a Windows Task Scheduler task (`PM2 Resurrect on Login`) runs `pm2 resurrect`; `pm2 startup` does not work on Windows.

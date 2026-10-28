@@ -31,5 +31,9 @@ logs/
 _dev-notes/
 
 # ── Local tooling ─────────────────────────────────────────────────────────────
-.claude/
+# .claude/settings.json (project hooks) and the description-review record are shared;
+# settings.local.json and everything else in .claude/ stay personal.
+.claude/*
+!.claude/settings.json
+!.claude/last-description-review
 bot.js.bak
