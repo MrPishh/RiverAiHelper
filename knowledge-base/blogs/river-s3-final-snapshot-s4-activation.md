@@ -1,6 +1,6 @@
 # Blog: river-s3-final-snapshot-s4-activation
-Source: https://blog.river.inc/river-s3-final-snapshot-s4-activation/
-Scraped: 2026-05-08T07:53:45.072Z
+Source: https://blog.riverai.inc/river-s3-final-snapshot-s4-activation/
+Scraped: 2026-09-04T10:50:17.756Z
 
 ---
 
@@ -26,7 +26,7 @@ Season 3 stress-tested the River model. The data validates the thesis:
 ### **Timeline**
 
 -   Season 3 ends on December 19 with the final snapshot covering all activity up to this date.
--   S3 Rewards become claimable on [Airdrop page](https://app.river.inc/airdrop?ref=blog.river.inc) next week for all River4FUN and Leaderboard participants. 
+-   S3 Rewards become claimable on [Airdrop page](https://app.riverai.inc/airdrop?ref=blog.riverai.inc) next week for all River4FUN and Leaderboard participants. 
 -   S4 begins on December 22, following the conclusion of Season 3.
 -   S4 will run for approximately 90 - 120 days.
 
@@ -48,9 +48,9 @@ Users can participate through multiple on-chain actions, including:
 
 Reward multipliers range from **2× to 25×**, depending on strategy and pool configuration. Periodic campaigns, such as trading competitions, may be introduced.
 
-All activity is tracked via **weekly snapshots** and reflected on the [**Leaderboard**](https://app.river.inc/leaderboard?ref=blog.river.inc).
+All activity is tracked via **weekly snapshots** and reflected on the [**Leaderboard**](https://app.riverai.inc/leaderboard?ref=blog.riverai.inc).
 
--   satUSD Earn – [https://app.river.inc/staking](https://app.river.inc/staking?ref=blog.river.inc)
+-   satUSD Earn – [https://app.riverai.inc/staking](https://app.riverai.inc/staking?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/12/data-src-image-7af73364-3b1c-4691-902d-ed301d3f7209.png)
 
@@ -70,7 +70,7 @@ Staking rewards must be **claimed within 3 months**. Any rewards that remain unc
 
 This mechanism ensures staking incentives are directed toward users who remain active and aligned with the protocol over time.
 
--   $RIVER Staking – [https://app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+-   $RIVER Staking – [https://app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/12/data-src-image-836315c2-a586-4e4c-b4c7-dc22e40ff66f.png)
 
@@ -92,7 +92,7 @@ Note: Rewards are linked to your connected X account. During Season 4, changing 
 
 River4FUN
 
--   River4FUN – [https://app.river.inc/fun](https://app.river.inc/fun?ref=blog.river.inc)
+-   River4FUN – [https://app.riverai.inc/fun](https://app.riverai.inc/fun?ref=blog.riverai.inc)
 
 _Disclaimer: The timelines, mechanics, and parameters outlined in this article represent the current strategic direction for Season 4. These details are subject to adjustment based on participations and market conditions._ 
 
@@ -118,4 +118,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

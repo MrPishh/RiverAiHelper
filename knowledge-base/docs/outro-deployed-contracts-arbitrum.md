@@ -1,13 +1,13 @@
 # Doc: outro-deployed-contracts-arbitrum
-Source: https://docs.river.inc/outro/deployed-contracts/arbitrum
+Source: https://docs.riverai.inc/outro/deployed-contracts/arbitrum
 Scraped: 2026-05-09T13:50:02.688Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)chevron-right
-2.  [sim-cardsDeployed Contracts](https://docs.river.inc/outro/deployed-contracts)
+1.  [OUTRO](https://docs.riverai.inc/outro)chevron-right
+2.  [sim-cardsDeployed Contracts](https://docs.riverai.inc/outro/deployed-contracts)
 
 ## Arbitrum
 

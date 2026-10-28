@@ -1,6 +1,6 @@
 # Blog: chainlink-integraions
-Source: https://blog.river.inc/chainlink-integraions/
-Scraped: 2026-05-08T07:53:56.135Z
+Source: https://blog.riverai.inc/chainlink-integraions/
+Scraped: 2026-09-04T10:50:10.139Z
 
 ---
 
@@ -10,7 +10,7 @@ To make sure every collateral value is accurate, tamper-resistant, and available
 
 ### Why Chainlink?
 
-Chainlink leads the market in oracle security and reliability, securing [over $94B in Total Value Secured.](https://defillama.com/oracles/Chainlink?staking=true&liquidstaking=true&borrowed=true&ref=blog.river.inc)
+Chainlink leads the market in oracle security and reliability, securing [over $94B in Total Value Secured.](https://defillama.com/oracles/Chainlink?staking=true&liquidstaking=true&borrowed=true&ref=blog.riverai.inc)
 
 It now accounts for about 68% of all oracle-secured value in DeFi. Its decentralized network delivers market-wide prices that DeFi depends on, with a track record proven in all market conditions.
 
@@ -39,4 +39,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 River features the first omni-CDP module that allows users to collateralize assets on Chain A and mint stablecoin satUSD on Chain B — without bridging the assets.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

@@ -1,5 +1,5 @@
 # Governance: River’s Actions and Follow-Up on the Recent Market Event
-Source: https://gov.river.inc/t/river-s-actions-and-follow-up-on-the-recent-market-event/9
+Source: https://gov.riverai.inc/t/river-s-actions-and-follow-up-on-the-recent-market-event/9
 Scraped: 2026-05-10T01:04:33.412Z
 
 ---

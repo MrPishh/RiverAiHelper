@@ -115,18 +115,18 @@ After 2.0 launched, participation data showed the majority chose the 3-month opt
 
 ---
 
-## S5 Current Parameters (Conversion 3.0)
+## S6 Current Parameters (Conversion 3.0)
 
-- **Season:** S5, April 22 – ~June 30, 2026; Conversion 3.0 activated May 8, 2026
-- **Ideal rate:** 0.01 (constant for S5). 10,000 pts → 100 Staked RIVER at ideal rate
+- **Season:** S6, July 1 – Sep 30, 2026 (conversion window and claim window both close Sep 30, 2026)
+- **Ideal rate:** 0.01 (constant for S6). 10,000 pts → 100 Staked RIVER at ideal rate
 - **Actual rate:** floats around 0.01 based on conversion density. Denser activity compresses it below 0.01; quieter periods recover it toward 0.01.
 - **Daily cap:** 5,000,000 River Pts/day
 - **Per-conversion limit:** 1,000,000 River Pts
 - **Staking epochs:** 3/6/9/12/15/18/21/24 months
 - **Reshare at ideal rate (100 Staked RIVER base):** 3M→30, 6M→40, 9M→50, 12M→60, 15M→70, 18M→80, 21M→90, 24M→100
 - **Voting power multipliers:** 3M=1x, 6M=2x, 9M=4x, 12M=8x, 15M=12x, 18M=16x, 21M=20x, 24M=24x
-- **Unlock anchors:** Season boundary + epoch. All S5 converters on 3-month epoch unlock October 1, 2026; 24-month unlock July 1, 2028.
-- **Remaining supply:** 350M River Pts entering 3.0 against the same 30M $RIVER ceiling.
+- **Unlock anchors:** Season boundary + epoch. All S6 converters on 3-month epoch unlock January 1, 2027; 24-month unlock October 1, 2028 (steps forward one quarter per epoch in between).
+- **Remaining supply:** not yet published for S6 as of this writing — do not quote a figure until the team confirms one; S5 entered 3.0 with 350M River Pts remaining against the 30M $RIVER ceiling.
 
 ---
 
@@ -137,7 +137,7 @@ Users often ask "why is the rate capped at 0.01?" or compare it to the old 0.03 
 **How to answer:**
 - 0.01 is the S5 **ideal rate** — a target constant, not a hard cap. The actual rate can be compressed below it during dense activity and recovers back toward it during quieter periods.
 - The old 0.03 was the maximum of the Conversion 1.0/2.0 time-based curve at Day 180. That entire window closed April 22, 2026. Conversion 3.0 uses a different model — time within a Season no longer raises the rate.
-- Each Season sets its own ideal rate based on network scale. S5 = 0.01.
+- Each Season sets its own ideal rate based on network scale. S5 and S6 have both been set at 0.01.
 - Longer staking epochs significantly offset the lower rate: 24-month receives 100% of base output vs 30% for 3-month, plus a 24x vs 1x voting power multiplier.
 
 ---

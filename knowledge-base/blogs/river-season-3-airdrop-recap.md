@@ -1,6 +1,6 @@
 # Blog: river-season-3-airdrop-recap
-Source: https://blog.river.inc/river-season-3-airdrop-recap/
-Scraped: 2026-05-08T07:53:44.338Z
+Source: https://blog.riverai.inc/river-season-3-airdrop-recap/
+Scraped: 2026-09-04T10:50:17.228Z
 
 ---
 
@@ -85,7 +85,7 @@ Engagement was distributed across regions and channels, reflecting broad ecosyst
 
 ### **Claim Your S3 Airdrop**
 
-1.  Go to Airdrop page : [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+1.  Go to Airdrop page : [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 2.  Connect you wallet
 3.  Connect your X account
 4.  Claim River Pts
@@ -93,7 +93,7 @@ Engagement was distributed across regions and channels, reflecting broad ecosyst
 6.  Convert Your River Pts to Staked RIVER ( Pls check actual rate before you convert ) anytime
 
 -   Eligible users should claim your S3 rewards within the 90 days window.
--   Claim here: [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+-   Claim here: [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/12/image-11.png)
 
@@ -115,4 +115,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

@@ -1,10 +1,10 @@
 # Blog: river-pts-public-sale
-Source: https://blog.river.inc/river-pts-public-sale/
-Scraped: 2026-05-08T07:53:49.799Z
+Source: https://blog.riverai.inc/river-pts-public-sale/
+Scraped: 2026-09-04T10:50:22.222Z
 
 ---
 
-In traditional token launches, value is fixed by design. [**Dynamic Airdrop Conversion**](https://blog.river.inc/dynamic-airdrop-conversion-3/) changed that. Distribution no longer ends when tokens are claimed — **time becomes the variable**.
+In traditional token launches, value is fixed by design. [**Dynamic Airdrop Conversion**](https://blog.riverai.inc/dynamic-airdrop-conversion-3/) changed that. Distribution no longer ends when tokens are claimed — **time becomes the variable**.
 
 River Pts holders can convert into $RIVER at any moment, and their decisions — combined with market behavior — continuously shape value along a living curve.
 
@@ -85,7 +85,7 @@ Bonuses are distributed automatically after the sale. Every participant can shar
 
 ### **How to Participate in the River Pts Public Sale ?**
 
-1.  Go to Public Sale : [https://app.river.inc/public-sale](https://app.river.inc/public-sale?ref=blog.river.inc)
+1.  Go to Public Sale : [https://app.riverai.inc/public-sale](https://app.riverai.inc/public-sale?ref=blog.riverai.inc)
 2.  Connect your wallet on BNB Chain
 3.  Check Price & Allocation
 4.  Input River Pts amount, purchased with BNB
@@ -126,7 +126,7 @@ Time-driven value discovery across liquidity, behavior, and belief
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/River-Pts-Conversion-pr.jpg)
 
-](https://blog.river.inc/dynamic-airdrop-conversion-3/)
+](https://blog.riverai.inc/dynamic-airdrop-conversion-3/)
 
 * * *
 
@@ -146,4 +146,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

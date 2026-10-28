@@ -1,6 +1,6 @@
 # Correction: RIVER Token Unlock Schedule
 
-Source: Derived from official tokenomics doc (docs.river.inc/tokenomics/tokenomics)
+Source: Derived from official tokenomics doc (docs.riverai.inc/tokenomics/tokenomics)
 TGE Date: September 22, 2025 (all dates below are calculated from this)
 
 ---
@@ -146,5 +146,5 @@ Comprises Core Contributors (15% = 15,000,000) and Advisors (3% = 3,000,000). Bo
 When users ask about the Community airdrop or when all tokens unlock:
 - The Dynamic Airdrop Conversion (30% = 30,000,000 RIVER) converts from River Pts via the seasonal Conversion mechanism (currently Conversion 3.0).
 - The rate and timing depend on when each user converts their River Pts and which staking epoch they choose — it is NOT a fixed schedule.
-- Refer users to the airdrop page (app.river.inc/airdrop) for their personal conversion details.
+- Refer users to the airdrop page (app.riverai.inc/airdrop) for their personal conversion details.
 - Do NOT combine this with the fixed unlock schedule above or quote fixed unlock dates for it.

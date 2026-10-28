@@ -1,5 +1,5 @@
 # Governance: Conversion 3.0 Activation
-Source: https://gov.river.inc/t/conversion-3-0-activation/185
+Source: https://gov.riverai.inc/t/conversion-3-0-activation/185
 Scraped: 2026-05-10T01:04:01.464Z
 
 ---
@@ -165,7 +165,7 @@ r(t) = r_new + (r_base(t) − r_new) · (1 − e^(−λ · (t − t_last)))
 
 Recovery moves the actual rate smoothly toward the ideal rate. The formula is unchanged from 2.0.
 
-[Ref: Conversion 2.0 Activation - Dynamic Conversion Curve](https://gov.river.inc/t/conversion-2-0-activation/151)
+[Ref: Conversion 2.0 Activation - Dynamic Conversion Curve](https://gov.riverai.inc/t/conversion-2-0-activation/151)
 
 ### [](#p-332-h-25-staking-epochs-output-and-voting-power-13)2.5 Staking Epochs, Output, and Voting Power
 
@@ -490,7 +490,7 @@ Short-term exit reshares to the protocol, long-term commitment compounds across 
 
 #### [](#p-332-reference-18)Reference
 
-*   [Conversion Reshare Adjustment](https://gov.river.inc/t/conversion-reshare-adjustment/167)
-*   [Conversion 2.0 Activation](https://gov.river.inc/t/conversion-2-0-activation/151/1)
-*   [Conversion 2.0 is LIVE](https://blog.river.inc/conversion-2-0/)
-*   [River Staking Parameters for Activation](https://gov.river.inc/t/river-staking-parameters-for-activation/147)
+*   [Conversion Reshare Adjustment](https://gov.riverai.inc/t/conversion-reshare-adjustment/167)
+*   [Conversion 2.0 Activation](https://gov.riverai.inc/t/conversion-2-0-activation/151/1)
+*   [Conversion 2.0 is LIVE](https://blog.riverai.inc/conversion-2-0/)
+*   [River Staking Parameters for Activation](https://gov.riverai.inc/t/river-staking-parameters-for-activation/147)

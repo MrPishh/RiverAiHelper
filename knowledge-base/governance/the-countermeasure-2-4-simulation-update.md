@@ -1,12 +1,12 @@
 # Governance: The Countermeasure 2.4｜Simulation Update
-Source: https://gov.river.inc/t/the-countermeasure-2-4-simulation-update/41
+Source: https://gov.riverai.inc/t/the-countermeasure-2-4-simulation-update/41
 Scraped: 2026-05-10T01:04:15.084Z
 
 ---
 
 <!-- EXCLUDE -->
 
-This update presents the latest simulation results using the upgraded Integral Conversion Model. Compared with the [earlier simulations published in 2.2](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18/6), this set incorporates:
+This update presents the latest simulation results using the upgraded Integral Conversion Model. Compared with the [earlier simulations published in 2.2](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18/6), this set incorporates:
 
 *   Updated and cleaned input data
 *   Improved timestamp normalization
@@ -102,8 +102,8 @@ Further updates will be released once validation is complete
 
 #### [](#p-81-reference-5)Reference
 
-*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.river.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
-*   [The Countermeasure 2.2: Simulation Overview](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18)
-*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.river.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
-*   [River English Community AMA Recap](https://gov.river.inc/t/river-english-community-ama-recap/35)
+*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.riverai.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
+*   [The Countermeasure 2.2: Simulation Overview](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18)
+*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.riverai.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
+*   [River English Community AMA Recap](https://gov.riverai.inc/t/river-english-community-ama-recap/35)
 <!-- /EXCLUDE -->

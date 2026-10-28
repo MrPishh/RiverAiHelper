@@ -1,8 +1,10 @@
 # Blog: season2-airdrop-is-live
-Source: https://blog.river.inc/season2-airdrop-is-live/
-Scraped: 2026-05-08T07:54:00.034Z
+Source: https://blog.riverai.inc/season2-airdrop-is-live/
+Scraped: 2026-09-04T10:50:06.321Z
 
 ---
+
+<!-- EXCLUDE -->
 
 River has evolved into a circulatory system, connecting capital, yield, and user contribution.
 
@@ -67,7 +69,7 @@ The system tracks all eligible actions across minting, staking, and posting. If 
 
 As long as you’re participating through the listed methods, your activity will be reflected in the next update.
 
--   Season 2 Leaderboard : [https://app.river.inc/leaderboard](https://app.river.inc/leaderboard?ref=blog.river.inc)
+-   Season 2 Leaderboard : [https://app.riverai.inc/leaderboard](https://app.riverai.inc/leaderboard?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/05/CleanShot-2025-05-19-at-23.40.31@2x.jpg)
 
@@ -83,5 +85,5 @@ If you mint satUSD, provide liquidity, stake satUSD, or contribute on X, you’r
 
 Season2 is now live. This is your window to participate early, earn River Pts, and secure your place in the network.
 
-Start here: https://app.river.inc  
+Start here: [https://app.riverai.inc](https://app.riverai.inc/mint?ref=blog.riverai.inc)  
 Stay updated: https://x.com/RiverdotInc

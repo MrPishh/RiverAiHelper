@@ -1,12 +1,12 @@
 # Doc: outro-oracle
-Source: https://docs.river.inc/outro/oracle
+Source: https://docs.riverai.inc/outro/oracle
 Scraped: 2026-05-09T13:49:52.684Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)
+1.  [OUTRO](https://docs.riverai.inc/outro)
 
 ## messageOracle
 

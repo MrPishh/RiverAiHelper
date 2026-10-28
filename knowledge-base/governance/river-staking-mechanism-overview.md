@@ -1,5 +1,5 @@
 # Governance: River Staking Mechanism Overview
-Source: https://gov.river.inc/t/river-staking-mechanism-overview/85
+Source: https://gov.riverai.inc/t/river-staking-mechanism-overview/85
 Scraped: 2026-05-10T01:04:08.318Z
 
 ---

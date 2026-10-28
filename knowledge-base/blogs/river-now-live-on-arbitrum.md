@@ -1,6 +1,6 @@
 # Blog: river-now-live-on-arbitrum
-Source: https://blog.river.inc/river-now-live-on-arbitrum/
-Scraped: 2026-05-08T07:54:01.912Z
+Source: https://blog.riverai.inc/river-now-live-on-arbitrum/
+Scraped: 2026-09-04T10:50:06.742Z
 
 ---
 
@@ -40,7 +40,7 @@ River’s deployment brings satUSD into this ecosystem with full support for min
 
 To support the launch, River has partnered with Merkl to incentivize the satUSD-USDT pool on Arbitrum:
 
--   Pool: [satUSD-USDT v4](https://app.merkl.xyz/opportunities/arbitrum/UNISWAP_V4/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?ref=blog.river.inc)
+-   Pool: [satUSD-USDT v4](https://app.merkl.xyz/opportunities/arbitrum/UNISWAP_V4/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?ref=blog.riverai.inc)
 -   APR: 91.11%
 -   Earn 50x River Pts, convertible to $RIVER at TGE
 
@@ -49,7 +49,7 @@ To support the launch, River has partnered with Merkl to incentivize the satUSD-
 Incentive on Merkl
 
 -   Mint satUSD with wETH / wBTC / clBTC
--   Supply satUSD-USDT Liquidity on Uniswap v4 → [https://app.uniswap.org/explore/pools/arbitrum/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?lng=en-US](https://app.uniswap.org/explore/pools/arbitrum/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?lng=en-US&ref=blog.river.inc)
+-   Supply satUSD-USDT Liquidity on Uniswap v4 → [https://app.uniswap.org/explore/pools/arbitrum/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?lng=en-US](https://app.uniswap.org/explore/pools/arbitrum/0x43e87ab961d603eb14ef39867f95e64b433703780b461985cac1a1b0f1de4f6b?lng=en-US&ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/05/CleanShot-2025-05-25-at-22.19.28.jpg)
 
@@ -61,7 +61,7 @@ This pool enables users to earn both swap fees and daily incentives by contribut
 
 **How to Get Started on Arbitrum**
 
-1.  Go to app.river.inc/mint
+1.  Go to [app.riverai.inc/mint](https://app.riverai.inc/mint?ref=blog.riverai.inc)
 2.  Connect to Arbitrum
 3.  Choose collateral: wETH, wBTC, or clBTC (Cygnus)
 4.  Maintain a minimum 110% collateral ratio
@@ -91,4 +91,4 @@ River is building a circulatory system that connects capital, yield, and contrib
 
 It enables users to access stablecoin liquidity, earn protocol rewards, and convert participation into on-chain ownership. At the center of this system is satUSD, an overcollateralized stablecoin that powers value creation and value circulation across ecosystems.
 
-[Website](https://river.inc/?ref=blog.river.inc) | [App](https://app.river.inc/?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc)
+[Website](https://riverai.inc/?ref=blog.riverai.inc) | [App](https://app.riverai.inc/?ref=blog.riverai.inc) | [Docs](https://docs.riverai.inc/?ref=blog.riverai.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.riverai.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.riverai.inc)

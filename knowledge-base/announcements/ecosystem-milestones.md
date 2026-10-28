@@ -53,7 +53,7 @@ December 12, 2025: River published a technical white paper titled **"Integral-Ba
 
 ## River Governance Forum
 
-Launched November 15, 2025 at gov.river.inc — a dedicated space for proposal updates and community input on mechanism changes.
+Launched November 15, 2025 at gov.riverai.inc — a dedicated space for proposal updates and community input on mechanism changes.
 
 ---
 
@@ -149,3 +149,109 @@ River supported the ecosystem at Consensus Miami (May 20–21, 2026), attending 
 ## River Pts Secondary-Market Compensation
 
 March 2026: River processed compensation claims for users who purchased River Pts on secondary markets during the volatility period. 229 submissions reviewed and verified. Compensation distributed March 12, 2026.
+
+
+---
+*Auto-extracted from announcement — 2026-06-12*
+
+France leads the Top 32 voting with 394k votes, followed by Spain (130k) and Brazil (114k). Round 1 results will be announced June 27 with 150k River Points distributed based on results and voting power.
+
+---
+*Auto-extracted from announcement — 2026-06-14*
+
+France won the voting round with 394k votes, Spain received 130k votes, and Brazil received 114k votes in a community voting event. Round 1 results will be released on June 27 with 150k River Points distributed based on results and voting power.
+
+---
+*Auto-extracted from announcement — 2026-07-01*
+
+River is partnering with Unibase Memory Chrome Extension as a launch partner and has created a "River Memory Card" designed to provide context for AI agents researching, building, or creating around River's protocol. This represents a new integration/partnership announcement with tooling for AI-assisted development in the River ecosystem.
+
+---
+*Auto-extracted from announcement — 2026-06-29*
+
+150k River Points were distributed to voters who voted for the top 32 teams, with the reward pool split across the 32 teams based on individual voting power and added to the S5 leaderboard. This represents a specific incentive distribution event and season progression update for the River Protocol community voting system.
+
+---
+*Auto-extracted from announcement — 2026-06-30*
+
+S5 concludes on June 30 with S6 activating next. River Points from S5 will remain convertible and become claimable after settlement completion.
+
+---
+*Auto-extracted from announcement — 2026-07-03*
+
+S5 Checker tool is now live, with 82k users eligible to claim River Points during Season 5. Users can connect their wallet and X account to check their allocation, with claims opening after settlement.
+
+---
+*Auto-extracted from announcement — 2026-07-06*
+
+S5 concludes with satUSD adoption live in 4 countries, 82k+ eligible users, $10M RIVER staked into governance, and 10+ global meetups held. These represent concrete ecosystem expansion metrics and season completion data not previously indexed.
+
+---
+*Auto-extracted from announcement — 2026-07-07*
+
+S5 Airdrop is now live and claimable for 82k eligible users via X/wallet connection at app.riverai.inc/airdrop, with claims remaining open through the end of S6. Users can convert claimed River Points to Staked RIVER at any time during this window.
+
+---
+*Auto-extracted from announcement — 2026-07-09*
+
+Quarter-finals stage has been reached in Season 6 competition, with 150k River Points being distributed to participants based on voting power and added to the S6 leaderboard.
+
+---
+*Auto-extracted from announcement — 2026-07-20*
+
+River Protocol's Season 6 leaderboard reached 150k River Points added through a community voting event with 58k votes in the final round, with Spain selected as the 2026 World Cup champion in the prediction/voting competition.
+
+---
+*Auto-extracted from announcement — 2026-07-29*
+
+satUSD payment integration with Melon Cash's Visa virtual card has been announced, enabling satUSD spending across 10+ countries through everyday merchant networks. This represents a new real-world payment use case and adoption pathway for satUSD beyond trading/holding.
+
+---
+*Auto-extracted from announcement — 2026-08-12*
+
+50% of Season 5 airdrop claims have been completed, indicating significant user engagement with the airdrop distribution. This represents a concrete ecosystem milestone showing progress on the S5 airdrop rollout.
+
+---
+*Auto-extracted from announcement — 2026-08-14*
+
+River Protocol has launched satUSD payment integration with PIX QR codes across Brazil, enabling users to pay directly from their wallets with settlement in BRL through Yodl Pay. This represents a new real-world commerce integration for satUSD in a major emerging market.
+
+---
+*Auto-extracted from announcement — 2026-09-03*
+
+57% of eligible users have claimed the S5 Airdrop, representing a specific ecosystem milestone for Season 5 participation tracking. This claim rate provides quantifiable data on airdrop engagement that updates the community on season progress.
+
+---
+*Auto-extracted from announcement — 2026-10-02*
+
+S6 Checker tool is now live on app.riverai.inc/airdrop, allowing users to connect their wallet and X account to view River Points earned during Season 6. Claims will open after settlement completion.
+
+---
+*Auto-extracted from announcement — 2026-09-22*
+
+60% of eligible users have claimed the S5 airdrop, representing a notable ecosystem engagement metric for Season 5. This claim rate indicates participation progress and user activity levels for the current season.
+
+---
+*Auto-extracted from announcement — 2026-09-30*
+
+S6 concludes on September 30, marking completion of six seasons since River's token generation event one year prior. S7 activation follows with River Points conversion continuing, with S6 points becoming claimable after settlement completion.
+
+---
+*Auto-extracted from announcement — 2026-10-05*
+
+S6 Airdrop is now live and claimable for 7,000 eligible users through the app.riverai.inc/airdrop portal, with the claim window remaining open until S7 ends. Users can connect their X/wallet to claim River Points and convert them to Staked RIVER at any time.
+
+---
+*Auto-extracted from announcement — 2026-10-09*
+
+Season 7 launches October 1 - December 31 and will introduce new product features. S6 Airdrop is now claimable.
+
+---
+*Auto-extracted from announcement — 2026-10-21*
+
+S6 concluded with 1.2M RIVER staked, 40M River Points converted, and 10k users participated. The season achieved key product integrations including Visa card payments, PIX transfers, and cold wallet support, while riverai.inc launched as a new product exploration initiative.
+
+---
+*Auto-extracted from announcement — 2026-10-21*
+
+S6 concluded with 1.2M RIVER staked, 40M River Points converted, and 10k users participated. Key deliverables included Visa card payments, PIX transfers, cold wallet support for satUSD, and the launch of riverai.inc to explore new products.

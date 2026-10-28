@@ -1,5 +1,5 @@
 # Blog: rivers-actions-and-follow-up
-Source: https://blog.river.inc/rivers-actions-and-follow-up/
+Source: https://blog.riverai.inc/rivers-actions-and-follow-up/
 Scraped: 2026-05-08T07:53:48.132Z
 
 ---

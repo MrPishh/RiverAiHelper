@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 1.2 : Buyback List Update
-Source: https://gov.river.inc/t/the-countermeasure-1-2-buyback-list-update/11
+Source: https://gov.riverai.inc/t/the-countermeasure-1-2-buyback-list-update/11
 Scraped: 2026-05-10T01:04:30.155Z
 
 ---

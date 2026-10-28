@@ -1,6 +1,6 @@
 # Blog: river-mart-one-stablecoin-seven-chains-the-final-quest
-Source: https://blog.river.inc/river-mart-one-stablecoin-seven-chains-the-final-quest/
-Scraped: 2026-05-08T07:53:58.442Z
+Source: https://blog.riverai.inc/river-mart-one-stablecoin-seven-chains-the-final-quest/
+Scraped: 2026-09-04T10:50:09.214Z
 
 ---
 
@@ -14,7 +14,7 @@ River Mart is a multi-chain campaign built to show, not tell.
 
 This isn’t just an airdrop. It’s proof you’ve touched the system.
 
-River Mart NFT → [https://app.river.inc/campaign/nft/river-mart](https://app.river.inc/campaign/nft/river-mart?ref=blog.river.inc)
+River Mart NFT → [https://app.riverai.inc/campaign/nft/river-mart](https://app.riverai.inc/campaign/nft/river-mart?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/07/image-5.png)
 
@@ -104,7 +104,7 @@ River Mart Timeline
 
 NFTs are soulbound and represent your on-chain journey through River.
 
-River Mart NFT → [https://app.river.inc/campaign/nft/river-mart](https://app.river.inc/campaign/nft/river-mart?ref=blog.river.inc)
+River Mart NFT → [https://app.riverai.inc/campaign/nft/river-mart](https://app.riverai.inc/campaign/nft/river-mart?ref=blog.riverai.inc)
 
 How to Mint River Mart NFT
 
@@ -142,7 +142,7 @@ This is more than a campaign. It’s your first step into River.
 
 **Connect with value. Flow with River.**
 
-**Start Now** → [https://app.river.inc/campaign/nft/river-mart](https://app.river.inc/campaign/nft/river-mart?ref=blog.river.inc)
+**Start Now** → [https://app.riverai.inc/campaign/nft/river-mart](https://app.riverai.inc/campaign/nft/river-mart?ref=blog.riverai.inc)
 
 * * *
 
@@ -152,4 +152,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 River features the first omni-CDP module that allows users to collateralize assets on Chain A and mint stablecoin satUSD on Chain B — without bridging the assets.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

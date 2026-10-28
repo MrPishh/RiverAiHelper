@@ -1,13 +1,13 @@
 # Doc: outro-satusd-oracle-weighted-asset-rate
-Source: https://docs.river.inc/outro/satusd-oracle/weighted-asset-rate
+Source: https://docs.riverai.inc/outro/satusd-oracle/weighted-asset-rate
 Scraped: 2026-05-09T13:49:54.582Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)chevron-right
-2.  [arrow-progresssatUSD Oracle](https://docs.river.inc/outro/satusd-oracle)
+1.  [OUTRO](https://docs.riverai.inc/outro)chevron-right
+2.  [arrow-progresssatUSD Oracle](https://docs.riverai.inc/outro/satusd-oracle)
 
 ## Weighted Asset Rate
 
@@ -42,7 +42,7 @@ For deployed addresses, please refer to the **Deployed Contract** page and use t
 
 For example, to read the value on Ethereum, use the **Ethereum SatoshiXApp** address shown on that page:
 
-[Ethereumchevron-right](https://docs.river.inc/outro/deployed-contracts/ethereum)
+[Ethereumchevron-right](https://docs.riverai.inc/outro/deployed-contracts/ethereum)
 
 `getWeightedAssetRate()` returns a `uint256` scaled by `1e18`.
 

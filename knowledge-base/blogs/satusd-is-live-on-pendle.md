@@ -1,6 +1,6 @@
 # Blog: satusd-is-live-on-pendle
-Source: https://blog.river.inc/satusd-is-live-on-pendle/
-Scraped: 2026-05-08T07:54:00.479Z
+Source: https://blog.riverai.inc/satusd-is-live-on-pendle/
+Scraped: 2026-09-04T10:50:07.957Z
 
 ---
 
@@ -61,7 +61,7 @@ satUSD+ PT
 
 satUSD+ YT
 
--   Trade satUSD+ PT / YT : [https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=pt&chain=bnbchain](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=pt&chain=bnbchain&ref=blog.river.inc)
+-   Trade satUSD+ PT / YT : [https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=pt&chain=bnbchain](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=pt&chain=bnbchain&ref=blog.riverai.inc)
 
 * * *
 
@@ -101,14 +101,14 @@ River Pts Simulations
 -   YT price and slippage change in real time and affect outcomes.
 -   This is a simplified model for reference, not financial advice.
 
-Ref : [Season2 Airdrop is LIVE](https://blog.river.inc/season2-airdrop-is-live/)
+Ref : [Season2 Airdrop is LIVE](https://blog.riverai.inc/season2-airdrop-is-live/)
 
 * * *
 
 ### How to Participate
 
-1.  Visit [Pendle](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=yt&chain=bnbchain&ref=blog.river.inc)
-2.  Navigate to the [**satUSD+ market**](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=yt&chain=bnbchain&ref=blog.river.inc) on BNB Chain
+1.  Visit [Pendle](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=yt&chain=bnbchain&ref=blog.riverai.inc)
+2.  Navigate to the [**satUSD+ market**](https://app.pendle.finance/trade/markets/0x74c5050a89046c40296a32aeaed31be89d6a6d87/swap?view=yt&chain=bnbchain&ref=blog.riverai.inc) on BNB Chain
 3.  Trade PT or YT depending on your strategy
 4.  Track your River Pts and on leaderboard
 
@@ -122,4 +122,4 @@ Snapshots are taken weekly. Pts are updated every Saturday.
 
 River is building a cross-chain circulatory system that enables users to mint satUSD using BTC, ETH, BNB, and LSTs as collateral—without selling their assets. Connecting capital, yield, and contributions in a full cycle.
 
-[Website](https://river.inc/?ref=blog.river.inc) | [App](https://app.river.inc/?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc)
+[Website](https://riverai.inc/?ref=blog.river.inc) | [App](https://app.riverai.inc/?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc)

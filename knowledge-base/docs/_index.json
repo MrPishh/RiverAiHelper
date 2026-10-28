@@ -1,273 +1,273 @@
 {
-  "sitemapUrl": "https://docs.river.inc/sitemap-pages.xml",
-  "lastChecked": "2026-05-09T13:50:20.841Z",
+  "sitemapUrl": "https://docs.riverai.inc/sitemap-pages.xml",
+  "lastChecked": "2026-09-04T10:50:03.492Z",
   "pages": [
     {
-      "url": "https://docs.river.inc",
+      "url": "https://docs.riverai.inc",
       "slug": "index",
       "file": "index.md",
       "lastScraped": "2026-05-08T02:59:44.295Z"
     },
     {
-      "url": "https://docs.river.inc/intro/quickstart",
+      "url": "https://docs.riverai.inc/intro/quickstart",
       "slug": "intro-quickstart",
       "file": "intro-quickstart.md",
       "lastScraped": "2026-05-09T13:49:32.441Z"
     },
     {
-      "url": "https://docs.river.inc/intro/publish-your-docs",
+      "url": "https://docs.riverai.inc/intro/publish-your-docs",
       "slug": "intro-publish-your-docs",
       "file": "intro-publish-your-docs.md",
       "lastScraped": "2026-05-09T13:49:33.761Z"
     },
     {
-      "url": "https://docs.river.inc/intro/faq",
+      "url": "https://docs.riverai.inc/intro/faq",
       "slug": "intro-faq",
       "file": "intro-faq.md",
       "lastScraped": "2026-05-09T13:49:35.406Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor",
+      "url": "https://docs.riverai.inc/products/editor",
       "slug": "products-editor",
       "file": "products-editor.md",
       "lastScraped": "2026-05-09T13:49:36.526Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/minting",
+      "url": "https://docs.riverai.inc/products/editor/minting",
       "slug": "products-editor-minting",
       "file": "products-editor-minting.md",
       "lastScraped": "2026-05-09T13:49:38.125Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/stability-pool",
+      "url": "https://docs.riverai.inc/products/editor/stability-pool",
       "slug": "products-editor-stability-pool",
       "file": "products-editor-stability-pool.md",
       "lastScraped": "2026-05-09T13:49:39.798Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/redemption",
+      "url": "https://docs.riverai.inc/products/editor/redemption",
       "slug": "products-editor-redemption",
       "file": "products-editor-redemption.md",
       "lastScraped": "2026-05-09T13:49:41.005Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/recovery-mode",
+      "url": "https://docs.riverai.inc/products/editor/recovery-mode",
       "slug": "products-editor-recovery-mode",
       "file": "products-editor-recovery-mode.md",
       "lastScraped": "2026-05-09T13:49:42.195Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/bridge",
+      "url": "https://docs.riverai.inc/products/editor/bridge",
       "slug": "products-editor-bridge",
       "file": "products-editor-bridge.md",
       "lastScraped": "2026-05-09T13:49:43.406Z"
     },
     {
-      "url": "https://docs.river.inc/products/editor/risk-management",
+      "url": "https://docs.riverai.inc/products/editor/risk-management",
       "slug": "products-editor-risk-management",
       "file": "products-editor-risk-management.md",
       "lastScraped": "2026-05-09T13:49:44.578Z"
     },
     {
-      "url": "https://docs.river.inc/products/satusd+",
+      "url": "https://docs.riverai.inc/products/satusd+",
       "slug": "products-satusd+",
       "file": "products-satusd+.md",
       "lastScraped": "2026-05-09T13:49:45.283Z"
     },
     {
-      "url": "https://docs.river.inc/products/river4fun",
+      "url": "https://docs.riverai.inc/products/river4fun",
       "slug": "products-river4fun",
       "file": "products-river4fun.md",
       "lastScraped": "2026-05-08T02:59:56.302Z"
     },
     {
-      "url": "https://docs.river.inc/products/smart-vault",
+      "url": "https://docs.riverai.inc/products/smart-vault",
       "slug": "products-smart-vault",
       "file": "products-smart-vault.md",
       "lastScraped": "2026-05-09T13:49:46.608Z"
     },
     {
-      "url": "https://docs.river.inc/products/prime-vault",
+      "url": "https://docs.riverai.inc/products/prime-vault",
       "slug": "products-prime-vault",
       "file": "products-prime-vault.md",
       "lastScraped": "2026-05-09T13:49:47.451Z"
     },
     {
-      "url": "https://docs.river.inc/products/farm",
+      "url": "https://docs.riverai.inc/products/farm",
       "slug": "products-farm",
       "file": "products-farm.md",
       "lastScraped": "2026-05-09T13:49:48.640Z"
     },
     {
-      "url": "https://docs.river.inc/products/swap",
+      "url": "https://docs.riverai.inc/products/swap",
       "slug": "products-swap",
       "file": "products-swap.md",
       "lastScraped": "2026-05-09T13:49:49.876Z"
     },
     {
-      "url": "https://docs.river.inc/outro/official-links",
+      "url": "https://docs.riverai.inc/outro/official-links",
       "slug": "outro-official-links",
       "file": "outro-official-links.md",
       "lastScraped": "2026-05-09T13:49:51.050Z"
     },
     {
-      "url": "https://docs.river.inc/outro/oracle",
+      "url": "https://docs.riverai.inc/outro/oracle",
       "slug": "outro-oracle",
       "file": "outro-oracle.md",
       "lastScraped": "2026-05-09T13:49:52.684Z"
     },
     {
-      "url": "https://docs.river.inc/outro/satusd-oracle",
+      "url": "https://docs.riverai.inc/outro/satusd-oracle",
       "slug": "outro-satusd-oracle",
       "file": "outro-satusd-oracle.md",
       "lastScraped": "2026-05-09T13:49:53.382Z"
     },
     {
-      "url": "https://docs.river.inc/outro/satusd-oracle/weighted-asset-rate",
+      "url": "https://docs.riverai.inc/outro/satusd-oracle/weighted-asset-rate",
       "slug": "outro-satusd-oracle-weighted-asset-rate",
       "file": "outro-satusd-oracle-weighted-asset-rate.md",
       "lastScraped": "2026-05-09T13:49:54.582Z"
     },
     {
-      "url": "https://docs.river.inc/outro/satusd-oracle/dia-oracle",
+      "url": "https://docs.riverai.inc/outro/satusd-oracle/dia-oracle",
       "slug": "outro-satusd-oracle-dia-oracle",
       "file": "outro-satusd-oracle-dia-oracle.md",
       "lastScraped": "2026-05-09T13:49:55.844Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts",
       "slug": "outro-deployed-contracts",
       "file": "outro-deployed-contracts.md",
       "lastScraped": "2026-05-09T13:49:56.582Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/ethereum",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/ethereum",
       "slug": "outro-deployed-contracts-ethereum",
       "file": "outro-deployed-contracts-ethereum.md",
       "lastScraped": "2026-05-09T13:49:57.947Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/bnb-chain",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/bnb-chain",
       "slug": "outro-deployed-contracts-bnb-chain",
       "file": "outro-deployed-contracts-bnb-chain.md",
       "lastScraped": "2026-05-09T13:49:58.803Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/x-layer",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/x-layer",
       "slug": "outro-deployed-contracts-x-layer",
       "file": "outro-deployed-contracts-x-layer.md",
       "lastScraped": "2026-05-09T13:49:59.952Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/base",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/base",
       "slug": "outro-deployed-contracts-base",
       "file": "outro-deployed-contracts-base.md",
       "lastScraped": "2026-05-09T13:50:01.297Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/arbitrum",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/arbitrum",
       "slug": "outro-deployed-contracts-arbitrum",
       "file": "outro-deployed-contracts-arbitrum.md",
       "lastScraped": "2026-05-09T13:50:02.689Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/sonic",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/sonic",
       "slug": "outro-deployed-contracts-sonic",
       "file": "outro-deployed-contracts-sonic.md",
       "lastScraped": "2026-05-09T13:50:03.917Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/bob",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/bob",
       "slug": "outro-deployed-contracts-bob",
       "file": "outro-deployed-contracts-bob.md",
       "lastScraped": "2026-05-09T13:50:05.201Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/bsquared",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/bsquared",
       "slug": "outro-deployed-contracts-bsquared",
       "file": "outro-deployed-contracts-bsquared.md",
       "lastScraped": "2026-05-09T13:50:06.364Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/hemi",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/hemi",
       "slug": "outro-deployed-contracts-hemi",
       "file": "outro-deployed-contracts-hemi.md",
       "lastScraped": "2026-05-09T13:50:07.643Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/bevm",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/bevm",
       "slug": "outro-deployed-contracts-bevm",
       "file": "outro-deployed-contracts-bevm.md",
       "lastScraped": "2026-05-09T13:50:08.892Z"
     },
     {
-      "url": "https://docs.river.inc/outro/deployed-contracts/bitlayer",
+      "url": "https://docs.riverai.inc/outro/deployed-contracts/bitlayer",
       "slug": "outro-deployed-contracts-bitlayer",
       "file": "outro-deployed-contracts-bitlayer.md",
       "lastScraped": "2026-05-09T13:50:10.146Z"
     },
     {
-      "url": "https://docs.river.inc/outro/audit-reports",
+      "url": "https://docs.riverai.inc/outro/audit-reports",
       "slug": "outro-audit-reports",
       "file": "outro-audit-reports.md",
       "lastScraped": "2026-05-09T13:50:11.310Z"
     },
     {
-      "url": "https://docs.river.inc/tokenomics/tokenomics",
+      "url": "https://docs.riverai.inc/tokenomics/tokenomics",
       "slug": "tokenomics-tokenomics",
       "file": "tokenomics-tokenomics.md",
       "lastScraped": "2026-05-09T13:50:11.898Z"
     },
     {
-      "url": "https://docs.river.inc/tokenomics/airdrop",
+      "url": "https://docs.riverai.inc/tokenomics/airdrop",
       "slug": "tokenomics-airdrop",
       "file": "tokenomics-airdrop.md",
       "lastScraped": "2026-05-09T13:50:13.199Z"
     },
     {
-      "url": "https://docs.river.inc/tokenomics/usdriver",
+      "url": "https://docs.riverai.inc/tokenomics/usdriver",
       "slug": "tokenomics-usdriver",
       "file": "tokenomics-usdriver.md",
       "lastScraped": "2026-05-09T13:50:14.069Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp",
       "slug": "how-to-use-omni-cdp",
       "file": "how-to-use-omni-cdp.md",
       "lastScraped": "2026-05-09T13:50:14.724Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp/mint-satusd",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp/mint-satusd",
       "slug": "how-to-use-omni-cdp-mint-satusd",
       "file": "how-to-use-omni-cdp-mint-satusd.md",
       "lastScraped": "2026-05-09T13:50:15.983Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp/swap-satusd",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp/swap-satusd",
       "slug": "how-to-use-omni-cdp-swap-satusd",
       "file": "how-to-use-omni-cdp-swap-satusd.md",
       "lastScraped": "2026-05-09T13:50:17.176Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp/stake-satusd",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp/stake-satusd",
       "slug": "how-to-use-omni-cdp-stake-satusd",
       "file": "how-to-use-omni-cdp-stake-satusd.md",
       "lastScraped": "2026-05-09T13:50:18.370Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp/bridge-satusd",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp/bridge-satusd",
       "slug": "how-to-use-omni-cdp-bridge-satusd",
       "file": "how-to-use-omni-cdp-bridge-satusd.md",
       "lastScraped": "2026-05-09T13:50:19.558Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/omni-cdp/stability-pool",
+      "url": "https://docs.riverai.inc/how-to-use/omni-cdp/stability-pool",
       "slug": "how-to-use-omni-cdp-stability-pool",
       "file": "how-to-use-omni-cdp-stability-pool.md",
       "lastScraped": "2026-05-09T13:50:20.840Z"
     },
     {
-      "url": "https://docs.river.inc/how-to-use/river4fun",
+      "url": "https://docs.riverai.inc/how-to-use/river4fun",
       "slug": "how-to-use-river4fun",
       "file": "how-to-use-river4fun.md",
       "lastScraped": "2026-05-08T03:00:34.465Z"

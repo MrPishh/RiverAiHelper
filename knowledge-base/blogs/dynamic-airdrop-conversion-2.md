@@ -1,8 +1,10 @@
 # Blog: dynamic-airdrop-conversion-2
-Source: https://blog.river.inc/dynamic-airdrop-conversion-2/
-Scraped: 2026-05-08T07:53:51.233Z
+Source: https://blog.riverai.inc/dynamic-airdrop-conversion-2/
+Scraped: 2026-09-04T10:50:14.247Z
 
 ---
+
+<!-- EXCLUDE -->
 
 Within just 24 days after River officially launched its token **$RIVER on Binance Alpha (TGE on Sept 22)** — and with **RIVER/USDT Perp now live on Binance Futures** — the market saw significant movement.
 
@@ -12,13 +14,12 @@ Within just 24 days after River officially launched its token **$RIVER on Binanc
 
 RIVER/USDT Perp on Binance Futures
 
-As the [dynamic airdrop conversion](https://docs.river.inc/tokenomics/airdrop?ref=blog.river.inc) gained more attention and understanding, River Pts have evolved from simple airdrop points into a liquid, strategy-based asset that reflects **time, behavior, and market value**.
+As the [dynamic airdrop conversion](https://docs.riverai.inc/tokenomics/airdrop?ref=blog.riverai.inc) gained more attention and understanding, River Pts have evolved from simple airdrop points into a liquid, strategy-based asset that reflects **time, behavior, and market value**.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/10/image-7.png)
 
 RIVER - River Pts
 
-<!-- EXCLUDE -->
 ### **Why Dynamic Airdrop Conversion is Different**
 
 Most airdrops end once tokens are claimed.
@@ -39,12 +40,11 @@ The conversion curve captures the interaction between **patience and liquidity**
 
 Holding 1 M River Pts can yield up to a **270× difference in $RIVER output between Day 1 and Day 180** — a tangible expression of how time translates into value.
 
-Dynamic Airdrop Conversion → [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+Dynamic Airdrop Conversion → [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/10/image-5.png)
 
 River Pts - RIVE Conversion Rate
-<!-- /EXCLUDE -->
 
 ### **Market Performance**
 
@@ -66,11 +66,11 @@ RIVER Perp / River Pts
 
 Across the River ecosystem, users are treating this as more than an airdrop — it’s a new form of market behavior.
 
-[**@AirdropAlchemis**](https://x.com/AirdropAlchemis/status/1974676635376107637?ref=blog.river.inc) first analyzed the mechanism, highlighting the unrealized upside implied by its current ratios. [**@Mars\_DeFi**](https://x.com/Mars_DeFi/status/1974744966233510152?ref=blog.river.inc) published a game-theory thread detailing why he allocated $5,000 to River Pts as a mid-term position.
+[**@AirdropAlchemis**](https://x.com/AirdropAlchemis/status/1974676635376107637?ref=blog.riverai.inc) first analyzed the mechanism, highlighting the unrealized upside implied by its current ratios. [**@Mars\_DeFi**](https://x.com/Mars_DeFi/status/1974744966233510152?ref=blog.riverai.inc) published a game-theory thread detailing why he allocated $5,000 to River Pts as a mid-term position.
 
-[**@Alvin**](https://x.com/trader_alvin1/status/1975541323521532144?ref=blog.river.inc) analyzed how conversion rates track $RIVER’s market price and identified profitable buying zones.
+[**@Alvin**](https://x.com/trader_alvin1/status/1975541323521532144?ref=blog.riverai.inc) analyzed how conversion rates track $RIVER’s market price and identified profitable buying zones.
 
-[**@DragonCrip**](https://x.com/DragonCrip/status/1974517153446432976?ref=blog.river.inc), [**@LokidNFT**](https://x.com/LokidNFT/status/1974567647774732731?ref=blog.river.inc), and [**@Pill**](https://x.com/thelearningpill/status/1975123891975819616?ref=blog.river.inc) compared DEX liquidity, price, and conversion rates to build their own strategies.
+[**@DragonCrip**](https://x.com/DragonCrip/status/1974517153446432976?ref=blog.riverai.inc), [**@LokidNFT**](https://x.com/LokidNFT/status/1974567647774732731?ref=blog.riverai.inc), and [**@Pill**](https://x.com/thelearningpill/status/1975123891975819616?ref=blog.riverai.inc) compared DEX liquidity, price, and conversion rates to build their own strategies.
 
 These discussions show that River’s community is not just claiming airdrop — they’re building a shared understanding of how **time, behavior, and price interact** within the mechanism.
 
@@ -84,9 +84,9 @@ Community Perspective
 
 The TGE isn’t an ending; it’s where the current begins. The value of $RIVER moves with time, community motion, and the consensus it creates.
 
-If you joined the S2 Airdrop, visit the [Airdrop Page](https://app.river.inc/airdrop?ref=blog.river.inc) to claim your River Pts.
+If you joined the S2 Airdrop, visit the [Airdrop Page](https://app.riverai.inc/airdrop?ref=blog.riverai.inc) to claim your River Pts.
 
-[The **S3 Airdrop** launched on **September 22**, together with the TGE.](https://blog.river.inc/river-s3-airdrop/)
+[The **S3 Airdrop** launched on **September 22**, together with the TGE.](https://blog.riverai.inc/river-s3-airdrop/)
 
 Users can earn River Pts by minting and using satUSD, posting on X after connecting their account, and staking River Pts on the River App.
 
@@ -102,4 +102,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

@@ -1,7 +1,8 @@
 # Governance Knowledge Base — Curation Context
 
-Source: https://gov.river.inc/c/proposal-lab/5
+Source: https://gov.riverai.inc/c/proposal-lab/5
 Last curated: 2026-05-10
+Domain migrated from gov.river.inc to gov.riverai.inc on 2026-09-04 — old domain retired.
 
 ---
 
@@ -81,7 +82,7 @@ These topic IDs were reviewed and deliberately excluded. Do not add them back on
 ## Future sync instructions
 
 When syncing this governance source:
-1. Fetch topics from https://gov.river.inc/c/proposal-lab/5.json
+1. Fetch topics from https://gov.riverai.inc/c/proposal-lab/5.json
 2. Skip any topic ID already in the curated list above (IDs: 9, 10, 11, 13, 56, 12, 15, 18, 25, 41, 58, 69, 85, 147, 151, 167, 185)
 3. Skip any topic ID in the excluded list (IDs: 8, 14, 16, 19)
 4. For any NEW topic ID not in either list: scrape first post only, review before adding

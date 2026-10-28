@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 2.3 : Conversion Mechanism Formula Specification
-Source: https://gov.river.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25
+Source: https://gov.riverai.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25
 Scraped: 2026-05-10T01:04:16.739Z
 
 ---

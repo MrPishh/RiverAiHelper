@@ -1,6 +1,6 @@
 # Blog: river-x-layer
-Source: https://blog.river.inc/river-x-layer/
-Scraped: 2026-05-08T07:53:43.725Z
+Source: https://blog.riverai.inc/river-x-layer/
+Scraped: 2026-09-04T10:50:18.208Z
 
 ---
 
@@ -45,7 +45,7 @@ satUSD minted on X Layer is compatible with River’s native chain-abstraction a
 
 Using River on X Layer follows a straightforward flow:
 
-1.  Go to [https://app.river.inc/](https://app.river.inc/?ref=blog.river.inc)
+1.  Go to [https://app.riverai.inc/](https://app.riverai.inc/?ref=blog.riverai.inc)
 2.  Switch the network to **X Layer**
 3.  Deposit **wBTC or wETH** 
 4.  Mint **satUSD**
@@ -72,4 +72,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

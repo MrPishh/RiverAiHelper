@@ -1,10 +1,10 @@
 # Governance: The Countermeasure 1.3 : Buyback Execution
-Source: https://gov.river.inc/t/the-countermeasure-1-3-buyback-execution/13
+Source: https://gov.riverai.inc/t/the-countermeasure-1-3-buyback-execution/13
 Scraped: 2026-05-10T01:04:26.943Z
 
 ---
 
-Following [The Countermeasure 1.2 : Buyback List Update](https://gov.river.inc/t/the-countermeasure-1-2-buyback-list-update/11), River has officially entered the Public Sale Buyback Execution Phase.
+Following [The Countermeasure 1.2 : Buyback List Update](https://gov.riverai.inc/t/the-countermeasure-1-2-buyback-list-update/11), River has officially entered the Public Sale Buyback Execution Phase.
 
 This plan applies only to Public Sale participants who still hold their River Pts as of the snapshot, and aims to repurchase eligible tokens in BNB at a fixed rate.
 

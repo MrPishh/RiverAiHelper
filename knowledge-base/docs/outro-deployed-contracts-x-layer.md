@@ -1,13 +1,13 @@
 # Doc: outro-deployed-contracts-x-layer
-Source: https://docs.river.inc/outro/deployed-contracts/x-layer
+Source: https://docs.riverai.inc/outro/deployed-contracts/x-layer
 Scraped: 2026-05-09T13:49:59.951Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)chevron-right
-2.  [sim-cardsDeployed Contracts](https://docs.river.inc/outro/deployed-contracts)
+1.  [OUTRO](https://docs.riverai.inc/outro)chevron-right
+2.  [sim-cardsDeployed Contracts](https://docs.riverai.inc/outro/deployed-contracts)
 
 ## X Layer
 

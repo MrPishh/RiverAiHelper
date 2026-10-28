@@ -1,5 +1,5 @@
 # Governance: Conversion 2.0 Activation
-Source: https://gov.river.inc/t/conversion-2-0-activation/151
+Source: https://gov.riverai.inc/t/conversion-2-0-activation/151
 Scraped: 2026-05-10T01:04:04.728Z
 
 ---
@@ -181,7 +181,7 @@ Receive
 
 ### [](#p-295-h-3-why-the-upgraded-system-works-16)3\. Why the Upgraded System Works
 
-Across all simulations (published in [2.2](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18/6) and [2.4](https://gov.river.inc/t/the-countermeasure-2-4-simulation-update/41/1)):
+Across all simulations (published in [2.2](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18/6) and [2.4](https://gov.riverai.inc/t/the-countermeasure-2-4-simulation-update/41/1)):
 
 *   Dense participation produces proportional compression
 *   Lower activity allows continuous recovery
@@ -201,10 +201,10 @@ Conversion 2.0 is active. Further details regarding staking, participation, and 
 
 #### [](#p-295-reference-18)Reference
 
-*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.river.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
-*   [The Countermeasure 2.2: Simulation Overview](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18)
-*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.river.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
-*   [The Countermeasure 2.4｜Simulation Update](https://gov.river.inc/t/the-countermeasure-2-4-simulation-update/41/1)
-*   [The Countermeasure 2.5｜Conversion 2.0 Upgrade Parameters](https://gov.river.inc/t/the-countermeasure-2-5-conversion-2-0-upgrade-parameters/58)
-*   [River Staking Parameters for Activation](https://gov.river.inc/t/river-staking-parameters-for-activation/147/7)
-*   [River English Community AMA Recap](https://gov.river.inc/t/river-english-community-ama-recap/35)
+*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.riverai.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
+*   [The Countermeasure 2.2: Simulation Overview](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18)
+*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.riverai.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
+*   [The Countermeasure 2.4｜Simulation Update](https://gov.riverai.inc/t/the-countermeasure-2-4-simulation-update/41/1)
+*   [The Countermeasure 2.5｜Conversion 2.0 Upgrade Parameters](https://gov.riverai.inc/t/the-countermeasure-2-5-conversion-2-0-upgrade-parameters/58)
+*   [River Staking Parameters for Activation](https://gov.riverai.inc/t/river-staking-parameters-for-activation/147/7)
+*   [River English Community AMA Recap](https://gov.riverai.inc/t/river-english-community-ama-recap/35)

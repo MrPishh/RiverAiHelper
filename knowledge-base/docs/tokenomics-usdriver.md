@@ -1,12 +1,12 @@
 # Doc: tokenomics-usdriver
-Source: https://docs.river.inc/tokenomics/usdriver
+Source: https://docs.riverai.inc/tokenomics/usdriver
 Scraped: 2026-05-09T13:50:14.068Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Tokenomics](https://docs.river.inc/tokenomics)
+1.  [Tokenomics](https://docs.riverai.inc/tokenomics)
 
 ## building-columns$RIVER
 

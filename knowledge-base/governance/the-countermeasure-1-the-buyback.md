@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 1 : The Buyback
-Source: https://gov.river.inc/t/the-countermeasure-1-the-buyback/10
+Source: https://gov.riverai.inc/t/the-countermeasure-1-the-buyback/10
 Scraped: 2026-05-10T01:04:31.790Z
 
 ---

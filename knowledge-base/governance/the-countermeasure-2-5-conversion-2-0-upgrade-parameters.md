@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 2.5｜Conversion 2.0 Upgrade Parameters
-Source: https://gov.river.inc/t/the-countermeasure-2-5-conversion-2-0-upgrade-parameters/58
+Source: https://gov.riverai.inc/t/the-countermeasure-2-5-conversion-2-0-upgrade-parameters/58
 Scraped: 2026-05-10T01:04:11.828Z
 
 ---
@@ -197,7 +197,7 @@ An Early Unstake option will be available, allowing users to exit before the sel
 
 ### [](#p-112-h-3-why-the-upgraded-system-works-17)3\. Why the Upgraded System Works
 
-Across all simulations (published in [2.2](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18/6) and [2.4](https://gov.river.inc/t/the-countermeasure-2-4-simulation-update/41/1)):
+Across all simulations (published in [2.2](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18/6) and [2.4](https://gov.riverai.inc/t/the-countermeasure-2-4-simulation-update/41/1)):
 
 *   Dense activity produces proportional rate compression
 *   Low activity allows smooth recovery
@@ -227,8 +227,8 @@ Appreciation goes to everyone who has taken the time to share suggestions. The d
 
 #### [](#p-112-reference-19)Reference
 
-*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.river.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
-*   [The Countermeasure 2.2: Simulation Overview](https://gov.river.inc/t/the-countermeasure-2-2-simulation-overview/18)
-*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.river.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
-*   [The Countermeasure 2.4｜Simulation Update](https://gov.river.inc/t/the-countermeasure-2-4-simulation-update/41/1)
-*   [River English Community AMA Recap](https://gov.river.inc/t/river-english-community-ama-recap/35)
+*   [The Countermeasure 2.1 : Conversion Mechanism Upgrade Progress](https://gov.riverai.inc/t/the-countermeasure-2-1-conversion-mechanism-upgrade-progress/15/11)
+*   [The Countermeasure 2.2: Simulation Overview](https://gov.riverai.inc/t/the-countermeasure-2-2-simulation-overview/18)
+*   [The Countermeasure 2.3 : Conversion Mechanism Formula Specification](https://gov.riverai.inc/t/the-countermeasure-2-3-conversion-mechanism-formula-specification/25)
+*   [The Countermeasure 2.4｜Simulation Update](https://gov.riverai.inc/t/the-countermeasure-2-4-simulation-update/41/1)
+*   [River English Community AMA Recap](https://gov.riverai.inc/t/river-english-community-ama-recap/35)

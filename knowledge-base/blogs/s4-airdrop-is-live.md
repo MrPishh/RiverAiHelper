@@ -1,6 +1,6 @@
 # Blog: s4-airdrop-is-live
-Source: https://blog.river.inc/s4-airdrop-is-live/
-Scraped: 2026-05-08T07:53:38.714Z
+Source: https://blog.riverai.inc/s4-airdrop-is-live/
+Scraped: 2026-09-04T10:50:20.209Z
 
 ---
 
@@ -10,7 +10,7 @@ S4 ran from Dec 22, 2025 through Apr 21, 2026. Over 250,000 community members jo
 
 37,000+ contributors are eligible to claim: 8,000+ on-chain addresses and 29,000+ X accounts. These are the community members who staked, governed, and stayed active across S4.
 
-Full season recap is at [S4 Airdrop Conclusion](https://blog.river.inc/s4-airdrop-conclusion/)
+Full season recap is at [S4 Airdrop Conclusion](https://blog.riverai.inc/s4-airdrop-conclusion/)
 
 [
 
@@ -22,9 +22,9 @@ S4 Airdrop Conclusion
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/S4-is-officially-wrapped-1.png)
 
-](https://blog.river.inc/s4-airdrop-conclusion/)
+](https://blog.riverai.inc/s4-airdrop-conclusion/)
 
-To claim, head to [Airdrop page](https://app.river.inc/airdrop?ref=blog.river.inc), connect your wallet, and X account.
+To claim, head to [Airdrop page](https://app.riverai.inc/airdrop?ref=blog.riverai.inc), connect your wallet, and X account.
 
 The page shows the eligible River Pts balance and Conversion 3.0.
 
@@ -46,7 +46,7 @@ It changes how airdrops work, from a single distribution to a structure that run
 
 Conversion 3.0 works differently. Each season, River Pts accrue through ecosystem activity and you can decide when to convert it to $RIVER. Contributors who stay active across seasons keep adding to what they earn, season after season.
 
-[Season 5 is live](https://blog.river.inc/s5-live/) and River Pts are already accruing.
+[Season 5 is live](https://blog.riverai.inc/s5-live/) and River Pts are already accruing.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/04/image-21.png)
 
@@ -54,7 +54,7 @@ Conversion 3.0
 
 ### How to Claim River Pts
 
--   Navigate to Airdrop [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+-   Navigate to Airdrop [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 -   Connect your wallet
 -   Connect your X
 -   The page displays the eligible River Pts balance
@@ -86,4 +86,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

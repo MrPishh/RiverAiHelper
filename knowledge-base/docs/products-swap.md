@@ -1,12 +1,12 @@
 # Doc: products-swap
-Source: https://docs.river.inc/products/swap
+Source: https://docs.riverai.inc/products/swap
 Scraped: 2026-05-09T13:49:49.875Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)
+1.  [Products](https://docs.riverai.inc/products)
 
 ## rotateSwap
 

@@ -1,6 +1,6 @@
 # Blog: river-launch-on-sonic
-Source: https://blog.river.inc/river-launch-on-sonic/
-Scraped: 2026-05-08T07:53:59.591Z
+Source: https://blog.riverai.inc/river-launch-on-sonic/
+Scraped: 2026-09-04T10:50:08.381Z
 
 ---
 
@@ -31,7 +31,7 @@ River’s deployment brings stablecoin-based capital coordination to Sonic’s p
 
 ### **How to Get Started**
 
-1.  Visit [app.river.inc/mint](https://app.river.inc/mint?ref=blog.river.inc)
+1.  Visit [app.riverai.inc/mint](https://app.river.inc/mint?ref=blog.riverai.inc)
 2.  Connect to Sonic
 3.  Swap USDC for satUSD
 4.  Provide satUSD-USDC liquidity on Shadow
@@ -42,11 +42,11 @@ Mint satUSD on Sonic
 
 After minting, satUSD can be staked or used in liquidity pools to earn River Points and protocol rewards.
 
--   Provide satUSD-USDC liquidity on Shadow : [https://www.shadow.so/liquidity/0x063e22cd27a5a923cba7f8184ac9ca8405564283](https://www.shadow.so/liquidity/0x063e22cd27a5a923cba7f8184ac9ca8405564283?ref=blog.river.inc)
+-   Provide satUSD-USDC liquidity on Shadow : [https://www.shadow.so/liquidity/0x063e22cd27a5a923cba7f8184ac9ca8405564283](https://www.shadow.so/liquidity/0x063e22cd27a5a923cba7f8184ac9ca8405564283?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/06/CleanShot-2025-06-20-at-17.12.12@2x.jpg)
 
-[Shadow](https://www.shadow.so/trade?inputCurrency=0xb4818BB69478730EF4e33Cc068dD94278e2766cB&outputCurrency=0x29219dd400f2Bf60E5a23d13Be72B486D4038894&ref=blog.river.inc)
+[Shadow](https://www.shadow.so/trade?inputCurrency=0xb4818BB69478730EF4e33Cc068dD94278e2766cB&outputCurrency=0x29219dd400f2Bf60E5a23d13Be72B486D4038894&ref=blog.riverai.inc)
 
 Mint satUSD, Provide liquidity on Sonic
 
@@ -56,4 +56,4 @@ Mint satUSD, Provide liquidity on Sonic
 
 River is building a cross-chain circulatory system that enables users to mint satUSD using BTC, ETH, BNB, and LSTs as collateral—without selling their assets. Connecting capital, yield, and contributions in a full cycle.
 
-[Website](https://river.inc/?ref=blog.river.inc) | [App](https://app.river.inc/?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc)
+[Website](https://riverai.inc/?ref=blog.river.inc) | [App](https://app.riverai.inc/?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc) | [Twitter](https://x.com/riverdotinc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc)

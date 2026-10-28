@@ -1,6 +1,6 @@
 # Blog: pt-satusd-is-now-collateral-on-listadao
-Source: https://blog.river.inc/pt-satusd-is-now-collateral-on-listadao/
-Scraped: 2026-05-08T07:53:58.878Z
+Source: https://blog.riverai.inc/pt-satusd-is-now-collateral-on-listadao/
+Scraped: 2026-09-04T10:50:08.766Z
 
 ---
 
@@ -24,7 +24,7 @@ Trade satUSD+ PT for fixed yield, or satUSD+ YT to earn yield and 5x River Pts
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/satUSD--on-Pendle.jpg)
 
-](https://blog.river.inc/satusd-is-live-on-pendle/)
+](https://blog.riverai.inc/satusd-is-live-on-pendle/)
 
 ### Market Overview
 
@@ -50,7 +50,7 @@ PT satUSD+ / USDT on Lista Lending
 
 Borrow USDT at low interest
 
-ListaDAO Lending → [https://lista.org/lending/market/0x811bf77b2067da21bfaeb2c89f71c9d1a9893d7b175b776bf363f9df4bb2604b](https://lista.org/lending/market/0x811bf77b2067da21bfaeb2c89f71c9d1a9893d7b175b776bf363f9df4bb2604b?ref=blog.river.inc)
+ListaDAO Lending → [https://lista.org/lending/market/0x811bf77b2067da21bfaeb2c89f71c9d1a9893d7b175b776bf363f9df4bb2604b](https://lista.org/lending/market/0x811bf77b2067da21bfaeb2c89f71c9d1a9893d7b175b776bf363f9df4bb2604b?ref=blog.riverai.inc)
 
 * * *
 
@@ -87,4 +87,4 @@ River is building a cross-chain stablecoin circulatory system that connect asset
 
 Featuring the 1st omni-CDP module that allow user can collateralize assets on Chain A and mint stablecoin satUSD on Chain B without bridging the assets
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.riverai.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.riverai.inc) | [Telegram](https://t.me/river_inc?ref=blog.riverai.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.riverai.inc) | [Docs](https://docs.riverai.inc/?ref=blog.riverai.inc)

@@ -1,13 +1,13 @@
 # Doc: products-editor-stability-pool
-Source: https://docs.river.inc/products/editor/stability-pool
+Source: https://docs.riverai.inc/products/editor/stability-pool
 Scraped: 2026-05-09T13:49:39.797Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)chevron-right
-2.  [dollar-signOmni-CDP](https://docs.river.inc/products/editor)
+1.  [Products](https://docs.riverai.inc/products)chevron-right
+2.  [dollar-signOmni-CDP](https://docs.riverai.inc/products/editor)
 
 ## Stability Pool
 

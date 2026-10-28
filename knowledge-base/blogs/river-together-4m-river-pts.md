@@ -1,6 +1,6 @@
 # Blog: river-together-4m-river-pts
-Source: https://blog.river.inc/river-together-4m-river-pts/
-Scraped: 2026-05-08T07:53:50.743Z
+Source: https://blog.riverai.inc/river-together-4m-river-pts/
+Scraped: 2026-09-04T10:50:14.768Z
 
 ---
 
@@ -63,8 +63,8 @@ Removing the tag **before or during** the snapshot means no reward for that week
 ### How to Join
 
 -   Add `🌊**RIVER**` to your X name
--   Join on Galxe: [https://app.galxe.com/quest/River/GCo6rt8Cn6](https://app.galxe.com/quest/River/GCo6rt8Cn6?ref=blog.river.inc)
--   Follow [@RiverdotInc](https://x.com/RiverdotInc?ref=blog.river.inc) [@River4FUN](https://x.com/River4fun?ref=blog.river.inc)
+-   Join on Galxe: [https://app.galxe.com/quest/River/GCo6rt8Cn6](https://app.galxe.com/quest/River/GCo6rt8Cn6?ref=blog.riverai.inc)
+-   Follow [@RiverdotInc](https://x.com/RiverdotInc?ref=blog.riverai.inc) [@River4FUN](https://x.com/River4fun?ref=blog.riverai.inc)
 -   Keep the tag in your name for the campaign duration.
 -   Wait for the random weekly snapshots.
 -   Rewards will be sent directly to your X account if you qualify.
@@ -103,5 +103,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
-<!-- /EXCLUDE -->
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

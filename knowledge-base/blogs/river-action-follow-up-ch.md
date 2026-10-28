@@ -1,5 +1,5 @@
 # Blog: river-action-follow-up-ch
-Source: https://blog.river.inc/river-action-follow-up-ch/
+Source: https://blog.riverai.inc/river-action-follow-up-ch/
 Scraped: 2026-05-08T07:53:47.697Z
 
 ---
@@ -8,7 +8,7 @@ Scraped: 2026-05-08T07:53:47.697Z
 
 過去數小時，River Pts 的價格出現劇烈波動，我們知道這讓許多支持者感到焦慮、甚至憤怒。首先，我們想先說一句：我們理解大家的感受，也同樣難受。
 
-在這場事件中，我們面對的不只是市場波動，而是一場明確針對 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 的有組織攻擊。
+在這場事件中，我們面對的不只是市場波動，而是一場明確針對 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 的有組織攻擊。
 
 -   發生了有組織的市場操縱行為（ 空單 + Pts 集中兌換 ）
 -   為保護多數持有者利益，團隊暫停 Pts 兌換並啟動回購
@@ -54,17 +54,17 @@ RIVER 資金費率的變化
 
 我們理解批評與質疑，也知道「 信任 」需要時間重建。
 
-但請相信，我們與你們站在同一陣線，沒有任何人比我們更希望 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 回到穩定與成長的軌道。
+但請相信，我們與你們站在同一陣線，沒有任何人比我們更希望 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 回到穩定與成長的軌道。
 
-我們拒絕短期投機合作，也從未利用價格波動牟利。 我們選擇的是一條更難的路，讓 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 的價值建立在真實使用、穩定成長之上。
+我們拒絕短期投機合作，也從未利用價格波動牟利。 我們選擇的是一條更難的路，讓 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 的價值建立在真實使用、穩定成長之上。
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/11/image-5.png)
 
-TGE 以來 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 價格走勢：短期波動與長期展望
+TGE 以來 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 價格走勢：短期波動與長期展望
 
 這場攻擊是一次警醒，但也讓我們更清楚自己該成為什麼樣的項目：透明、堅定，並以長期價值為核心。
 
 感謝每一位仍然選擇相信、願意與我們並肩前行的夥伴。
 
-我們會繼續回購、升級機制、公開溝通，讓 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 更穩的發展，也讓這個社群更有力量。
+我們會繼續回購、升級機制、公開溝通，讓 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 更穩的發展，也讓這個社群更有力量。
 <!-- /EXCLUDE -->

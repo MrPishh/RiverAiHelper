@@ -1,6 +1,6 @@
 # Blog: river-is-now-live-on-ethereum
-Source: https://blog.river.inc/river-is-now-live-on-ethereum/
-Scraped: 2026-05-08T07:53:55.749Z
+Source: https://blog.riverai.inc/river-is-now-live-on-ethereum/
+Scraped: 2026-09-04T10:50:11.227Z
 
 ---
 
@@ -48,7 +48,7 @@ Here’s the flow:
 
 Follow River’s official account for the latest deposit date.
 
-Learn more in the docs: [https://docs.river.inc/products/smart-vaul](https://docs.river.inc/products/smart-vault?utm_source=chatgpt.com)
+Learn more in the docs: [https://docs.riverai.inc/products/smart-vaul](https://docs.riverai.inc/products/smart-vault?utm_source=chatgpt.com)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image.png)
 
@@ -86,5 +86,5 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)[  
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)[  
 ](mailto:?subject=River%20Has%20Integrated%20the%20Chainlink%20Data%20Standard%20for%20Secure%20Asset%20Pricing%20Across%20Chains&body=https://blog.river.inc/chainlink-integraions/%C2%A0River%20Has%20Integrated%20the%20Chainlink%20Data%20Standard%20for%20Secure%20Asset%20Pricing%20Across%20Chains)

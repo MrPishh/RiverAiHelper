@@ -1,6 +1,6 @@
 # Blog: conversion-2-0
-Source: https://blog.river.inc/conversion-2-0/
-Scraped: 2026-05-08T07:53:45.799Z
+Source: https://blog.riverai.inc/conversion-2-0/
+Scraped: 2026-09-04T10:50:16.746Z
 
 ---
 
@@ -55,13 +55,11 @@ Conversion 2.0 Activation
 
 Conversion 2.0 Activation This activation document consolidates all components of Conversion 2.0 into a single reference shaped by earlier community discussions. It describes how Conversion 2.0 operates. Conversion continues along the original 180-day schedule and resumes from Day 48. Earlier days are not repeated and nothing resets. 0. Before You Read Conversion 2.0 uses a dynamic conversion curve. The actual conversion rate updates every block and may differ from the displayed baseline. Be…
 
-![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/icon/_129430568242d1b7f853bb13ebea28b3f6af4e7_2_180x180.png)RiverRiver
+![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/icon/_129430568242d1b7f853bb13ebea28b3f6af4e7_2_32x32-02aae5d3-97d2-4377-880d-38128c15deea.png)RiverRiver
 
-![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/a753f5ec0efcf6954bc19f05f98121a03ae5896f.png)
+![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/a753f5ec0efcf6954bc19f05f98121a03ae5896f-90a00a99-913f-489b-9418-a0ca22d9463f.png)
 
-](https://gov.river.inc/t/conversion-2-0-activation/151?ref=blog.river.inc)
-
-Conversion 2.0 details
+](https://gov.riverai.inc/t/conversion-2-0-activation/151?ref=blog.riverai.inc)
 
 #### Half Life Recovery
 
@@ -85,7 +83,7 @@ Staking aligns long term participation with voting power and weekly emissions.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/RIVER-Staking-3.jpg)
 
-](https://blog.river.inc/river-staking-activation/)
+](https://blog.riverai.inc/river-staking-activation/)
 
 #### Operational calibration
 
@@ -97,7 +95,7 @@ These steps reflect community discussion and preserve long term stability and us
 
 ### How to convert River Pts
 
-1.  Go to Airdrop at [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+1.  Go to Airdrop at [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 2.  Check the live conversion rate and capacity
 
 The actual rate updates every block. Always confirm the actual rate and the remaining daily cap before converting.
@@ -112,7 +110,7 @@ River Pts Conversion
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/12/image-8.png)
 
--   Go to the River staking : [https://app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+-   Go to the River staking : [https://app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 -   Confirm to receive Staked RIVER
 -   View your final Staked RIVER amount, actual conversion result, and full history.
 
@@ -126,7 +124,7 @@ Supremacy audited Conversion 2.0 and the upgraded staking logic across all core 
 
 Supremacy also audits major DeFi and infrastructure protocols such as Binance, Ethena, ListaDAO, and Euler. The review provides a documented security basis for Conversion 2.0 moving forward.
 
-Audit report → [https://github.com/SupremacyTeam/publications/blob/main/River/Supremacy-Audit-Report-River-RiverPointConverter2-v1.0.pdf](https://github.com/SupremacyTeam/publications/blob/main/River/Supremacy-Audit-Report-River-RiverPointConverter2-v1.0.pdf?ref=blog.river.inc)
+Audit report → [https://github.com/SupremacyTeam/publications/blob/main/River/Supremacy-Audit-Report-River-RiverPointConverter2-v1.0.pdf](https://github.com/SupremacyTeam/publications/blob/main/River/Supremacy-Audit-Report-River-RiverPointConverter2-v1.0.pdf?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/12/image-7.png)
 
@@ -146,4 +144,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

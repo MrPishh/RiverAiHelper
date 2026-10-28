@@ -1,5 +1,5 @@
 # Doc: intro-publish-your-docs
-Source: https://docs.river.inc/intro/publish-your-docs
+Source: https://docs.riverai.inc/intro/publish-your-docs
 Scraped: 2026-05-09T13:49:33.760Z
 
 ---
@@ -8,7 +8,7 @@ Scraped: 2026-05-09T13:49:33.760Z
 
 ⌘Ctrlk
 
-1.  [Intro](https://docs.river.inc/intro)
+1.  [Intro](https://docs.riverai.inc/intro)
 
 ## globe-pointerMission
 

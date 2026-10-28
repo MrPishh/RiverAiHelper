@@ -1,6 +1,6 @@
 # Blog: prime-vault
-Source: https://blog.river.inc/prime-vault/
-Scraped: 2026-05-08T07:53:53.669Z
+Source: https://blog.riverai.inc/prime-vault/
+Scraped: 2026-09-04T10:50:12.726Z
 
 ---
 
@@ -37,7 +37,7 @@ Institutions can deposit assets into the system, automatically mint & stake satU
 
 This enables institutions to earn passive returns while their capital stays protected by top-tier custodians and a zero-liquidation mechanism.
 
-Learn more : [https://docs.river.inc/products/prime-vault](https://docs.river.inc/products/prime-vault?ref=blog.river.inc)
+Learn more : [https://docs.riverai.inc/products/prime-vault](https://docs.riverai.inc/products/prime-vault?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-7.png)
 
@@ -65,8 +65,8 @@ Prime Vault is open to institutions only.
 
 Submit the request form, and our team will guide you through the review and onboarding process.
 
--   Submit your requests → [https://docs.google.com/forms/d/e/1FAIpQLSeL72NBxqg-ptlOq\_ryWKeuFHgtwVRvOckowR37KqNITstF7g/viewform](https://docs.google.com/forms/d/e/1FAIpQLSeL72NBxqg-ptlOq_ryWKeuFHgtwVRvOckowR37KqNITstF7g/viewform?ref=blog.river.inc)
--   Prime Vault → [https://app.river.inc/prime-vault](https://app.river.inc/prime-vault?ref=blog.river.inc)
+-   Submit your requests → [https://docs.google.com/forms/d/e/1FAIpQLSeL72NBxqg-ptlOq\_ryWKeuFHgtwVRvOckowR37KqNITstF7g/viewform](https://docs.google.com/forms/d/e/1FAIpQLSeL72NBxqg-ptlOq_ryWKeuFHgtwVRvOckowR37KqNITstF7g/viewform?ref=blog.riverai.inc)
+-   Prime Vault → [https://app.riverai.inc/prime-vault](https://app.riverai.inc/prime-vault?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-6.png)
 
@@ -88,4 +88,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

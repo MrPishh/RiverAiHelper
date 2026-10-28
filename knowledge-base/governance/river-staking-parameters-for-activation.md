@@ -1,5 +1,5 @@
 # Governance: River Staking Parameters for Activation
-Source: https://gov.river.inc/t/river-staking-parameters-for-activation/147
+Source: https://gov.riverai.inc/t/river-staking-parameters-for-activation/147
 Scraped: 2026-05-10T01:04:06.682Z
 
 ---

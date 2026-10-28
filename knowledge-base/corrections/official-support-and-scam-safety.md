@@ -21,7 +21,7 @@ If you're receiving help or support from someone outside this server, please be 
 A few important things to keep in mind:
 • River admins and support staff will never DM you first or ask for your private keys, seed phrase, or login credentials
 • You will never be asked to enter your seed phrase on any third-party website
-• You will never be asked to connect your wallet to any site other than the official website: https://river.inc
+• You will never be asked to connect your wallet to any site other than the official website: https://riverai.inc (the old domain river.inc is retired — do not use it)
 • Anyone offering help in the general channel or community chat could be a scammer — public channels are not a safe place to receive support
 • Always verify who you're speaking to and only use official links
 

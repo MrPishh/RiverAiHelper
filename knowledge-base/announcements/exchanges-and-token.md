@@ -7,6 +7,12 @@
 This is the only official $RIVER token address. Any other address claiming to be $RIVER is not official.
 $RIVER is available on Ethereum, Base, and BNB Chain. Cross-chain transfers are supported via Stargate Finance (live March 24, 2026).
 
+## Official River Pts (RIVERPTS) Token Address
+
+`0xfc6be825925b7a83d131e33b46efef9084f0e014`
+
+This is the only official River Pts contract address on BNB Chain. Any other address claiming to be RIVERPTS is not official.
+
 River Pts is separately listed on:
 - CoinGecko: listed October 26, 2025
 - CoinMarketCap: listed October 29, 2025
@@ -55,6 +61,22 @@ River Pts is separately listed on:
 - **Aerodrome (Base)**: RIVER/USDC pool live October 13, 2025
 - **PancakeSwap (BNB Chain)**: RIVER/USDT pool; incentivised by CAKE rewards
 - **PancakeSwap (Base)**: RIVER/USDC pool, live April 6, 2026; 34% APR for LPs
-- **OKX DEX**: integrated directly into River app (app.river.inc), live January 25, 2026
+- **OKX DEX**: integrated directly into River app (app.riverai.inc), live January 25, 2026
 - **Uniswap (Base)**: RIVER/ETH available at listing
 - **Stargate Finance**: $RIVER cross-chain transfer (Ethereum, Base, BNB Chain), live March 24, 2026
+
+
+---
+*Auto-extracted from announcement — 2026-06-20*
+
+satUSD is now available on Melon Cash, enabling transfers and spending of satUSD wherever Melon Cash is accepted. This integration represents a new payment/spending channel for satUSD with additional payment options planned for the future.
+
+---
+*Auto-extracted from announcement — 2026-08-10*
+
+satUSD is now integrated on Tangem hardware wallets, enabling trading and swapping functionality across 6M+ devices in 230 countries. This represents a new platform integration for satUSD beyond previously documented channels.
+
+---
+*Auto-extracted from announcement — 2026-08-27*
+
+satUSD is now integrated with Tangem card wallet, allowing users to store and transfer satUSD across supported chains directly from their Tangem card via a simple tap-to-phone process. This represents a new wallet integration for satUSD beyond previously documented platforms.

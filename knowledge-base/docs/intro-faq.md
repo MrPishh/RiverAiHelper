@@ -1,12 +1,12 @@
 # Doc: intro-faq
-Source: https://docs.river.inc/intro/faq
+Source: https://docs.riverai.inc/intro/faq
 Scraped: 2026-05-09T13:49:35.405Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Intro](https://docs.river.inc/intro)
+1.  [Intro](https://docs.riverai.inc/intro)
 
 ## questionFAQ
 
@@ -47,7 +47,7 @@ To ensure the stability of your position, a minimum collateral ratio (MCR) is re
 
 chevron-rightWhat are the fees for minting satUSD?[hashtag](#what-are-the-fees-for-minting-satusd)
 
-There is a one-time minting fee that ranges from 0.5% to 5%, and a 0% interest fee. _Learn more about minting fees_ [_here_](https://docs.river.inc/products/editor/minting#minting-costs)_. Why 0% interest fee? Learn more_ [_here_arrow-up-right](https://blog.satoshiprotocol.org/satoshi-protocol-slashes-borrowing-fees-to-0-unlock-bitcoin-liquidity-with-unprecedented-efficiency/)
+There is a one-time minting fee that ranges from 0.5% to 5%, and a 0% interest fee. _Learn more about minting fees_ [_here_](https://docs.riverai.inc/products/editor/minting#minting-costs)_. Why 0% interest fee? Learn more_ [_here_arrow-up-right](https://blog.satoshiprotocol.org/satoshi-protocol-slashes-borrowing-fees-to-0-unlock-bitcoin-liquidity-with-unprecedented-efficiency/)
 
 chevron-rightWhat is gas compensation?[hashtag](#what-is-gas-compensation)
 
@@ -133,7 +133,7 @@ chevron-rightWhich chains support satUSD bridging?[hashtag](#which-chains-suppor
 
 The availability of satUSD bridging **varies by network**. Some chains allow direct bridging between multiple networks, while others may have restrictions.
 
-For the latest supported chains and bridging options, please refer to the [**Bridge**](https://docs.river.inc/products/editor/bridge)**.**
+For the latest supported chains and bridging options, please refer to the [**Bridge**](https://docs.riverai.inc/products/editor/bridge)**.**
 
 chevron-right**What is Redemption?**[hashtag](#what-is-redemption)
 

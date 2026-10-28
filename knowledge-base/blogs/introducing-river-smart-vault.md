@@ -1,8 +1,10 @@
 # Blog: introducing-river-smart-vault
-Source: https://blog.river.inc/introducing-river-smart-vault/
-Scraped: 2026-05-08T07:53:55.041Z
+Source: https://blog.riverai.inc/introducing-river-smart-vault/
+Scraped: 2026-09-04T10:50:11.752Z
 
 ---
+
+<!-- EXCLUDE -->
 
 Crypto grew fast. DeFi liquidity didn’t.
 
@@ -10,7 +12,7 @@ Ecosystems stayed siloed, fragmented across chains.
 
 River’s chain-abstraction stablecoin system connects the pieces.
 
-With River, you can deposit on Chain A and mint satUSD on Chain B — staying native, no bridges. In just two months, TVL reached $600M, satUSD circulation hit $270M, and we [ranked #1 stablecoin](https://x.com/RiverdotInc/status/1954926121939816657?ref=blog.river.inc) on BNB Chain.
+With River, you can deposit on Chain A and mint satUSD on Chain B — staying native, no bridges. In just two months, TVL reached $600M, satUSD circulation hit $270M, and we [ranked #1 stablecoin](https://x.com/RiverdotInc/status/1954926121939816657?ref=blog.riverai.inc) on BNB Chain.
 
 But whenever we spoke with institutions and users, the same question came up:
 
@@ -48,7 +50,7 @@ Example : Deposit 100,000 USDT → After 45 days, withdraw:
 -   Real Yield: 2,100 satUSD (16.8% APR)
 -   Implied Yield: 150,000 River Pts
 
-[![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-2.png)](https://app.river.inc/smart-vault?ref=blog.river.inc)
+[![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-2.png)](https://app.river.inc/smart-vault?ref=blog.riverai.inc)
 
 Smart vault
 
@@ -72,7 +74,7 @@ Smart Vault returns are split into two parts.
 
 ### How to Join
 
-1.  Go to [app.river.inc](https://app.river.inc/?ref=blog.river.inc) on September 10, 14:00 (UTC+0)
+1.  Go to [app.riverai.inc](https://app.riverai.inc/?ref=blog.riverai.inc) on September 10, 14:00 (UTC+0)
 2.  Connect wallet, deposit USDT
 3.  Wait 45 days, claim returns
 
@@ -109,7 +111,7 @@ No debt. No liquidation. Just yield.
 
 ### Ready to Join?
 
-Smart Vault opens September 10, 14:00 (UTC+0) / 22:00 (UTC+8) at [app.river.inc](https://app.river.inc/?ref=blog.river.inc).
+Smart Vault opens September 10, 14:00 (UTC+0) / 22:00 (UTC+8) at [app.riverai.inc](https://app.riverai.inc/?ref=blog.riverai.inc).
 
 With a $10M cap and high institutional demand, spots will fill fast.
 
@@ -125,4 +127,4 @@ River is building the first chain-abstraction stablecoin system that connects li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

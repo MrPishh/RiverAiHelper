@@ -1,12 +1,12 @@
 # Doc: products-satusd+
-Source: https://docs.river.inc/products/satusd+
+Source: https://docs.riverai.inc/products/satusd+
 Scraped: 2026-05-09T13:49:45.283Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)
+1.  [Products](https://docs.riverai.inc/products)
 
 ## plus-largesatUSD+
 
@@ -20,7 +20,7 @@ Users can stake their **satUSD**, the over-collateralized stablecoin backed by *
 
 Staked satUSD is converted into **satUSD+**, a yield-bearing token that accrues revenue over time and can be used across other protocols.
 
-![](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FnXFlj0QdjdNsgAFU5P6A%252Fimage.png%3Falt%3Dmedia%26token%3D223b8509-de0d-465b-8d0d-3668429c7ae9&width=768&dpr=3&quality=100&sign=7da6003d&sv=2)
+![](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FnXFlj0QdjdNsgAFU5P6A%252Fimage.png%3Falt%3Dmedia%26token%3D223b8509-de0d-465b-8d0d-3668429c7ae9&width=768&dpr=3&quality=100&sign=7da6003d&sv=2)
 
 Stake satUSD
 

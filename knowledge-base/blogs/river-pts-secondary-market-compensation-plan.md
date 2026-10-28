@@ -1,6 +1,6 @@
 # Blog: river-pts-secondary-market-compensation-plan
-Source: https://blog.river.inc/river-pts-secondary-market-compensation-plan/
-Scraped: 2026-05-08T07:53:42.569Z
+Source: https://blog.riverai.inc/river-pts-secondary-market-compensation-plan/
+Scraped: 2026-09-04T10:50:18.697Z
 
 ---
 
@@ -63,15 +63,15 @@ If the total net trading cost across all eligible addresses is 1,000,000 units a
 
 It receives 1% of the pool — **200 RIVER**, distributed as Staked RIVER across the quarterly schedule.
 
-Full allocation details: [Public Compensation Sheet](https://docs.google.com/spreadsheets/d/1EWl8b0A6CoEE8nwdn_7bNzq_JyWYG1dII65oj10uSAo/edit?usp=sharing&ref=blog.river.inc)
+Full allocation details: [Public Compensation Sheet](https://docs.google.com/spreadsheets/d/1EWl8b0A6CoEE8nwdn_7bNzq_JyWYG1dII65oj10uSAo/edit?usp=sharing&ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/03/CleanShot-2026-03-02-at-14.22.57@2x.jpg)
 
-[Compensation List](https://docs.google.com/spreadsheets/d/1EWl8b0A6CoEE8nwdn_7bNzq_JyWYG1dII65oj10uSAo/edit?usp=sharing&ref=blog.river.inc)
+[Compensation List](https://docs.google.com/spreadsheets/d/1EWl8b0A6CoEE8nwdn_7bNzq_JyWYG1dII65oj10uSAo/edit?usp=sharing&ref=blog.riverai.inc)
 
 ### **How to Check Your Staked RIVER**
 
-Once distributed, visit [https://app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+Once distributed, visit [https://app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 
 On this page you can view your Staked RIVER balance, your quarterly milestones, and the ongoing River Pts staking rewards you are earning.
 
@@ -79,7 +79,7 @@ While your RIVER remains staked, it continues to earn River Pts through staking 
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/03/image.png)
 
-[Staked RIVER](https://app.river.inc/river?ref=blog.river.inc)
+[Staked RIVER](https://app.river.inc/river?ref=blog.riverai.inc)
 
 [
 
@@ -91,13 +91,13 @@ Staking aligns long term participation with voting power and weekly emissions.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/RIVER-Staking-3-1.jpg)
 
-](https://blog.river.inc/river-staking-activation/)
+](https://blog.riverai.inc/river-staking-activation/)
 
 ### **Distribution Timeline**
 
 The compensation form is now closed. Compensation is expected to be distributed via smart contract to eligible addresses within the next one to two weeks.
 
-If you have any questions, please reach out in [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) or through official community channels.
+If you have any questions, please reach out in [Discord](https://discord.com/invite/river-inc?ref=blog.riverai.inc) or through official community channels.
 
 * * *
 
@@ -131,4 +131,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 1.4 : Public Sale Buyback Completed
-Source: https://gov.river.inc/t/the-countermeasure-1-4-public-sale-buyback-completed/56
+Source: https://gov.riverai.inc/t/the-countermeasure-1-4-public-sale-buyback-completed/56
 Scraped: 2026-05-10T01:04:13.439Z
 
 ---

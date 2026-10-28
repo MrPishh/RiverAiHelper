@@ -1,7 +1,8 @@
 # Blogs Knowledge Base — Curation Context
 
-Source: blog.river.inc
+Source: blog.riverai.inc
 Last curated: 2026-05-10
+Domain migrated from blog.river.inc to blog.riverai.inc on 2026-09-04 — old domain retired.
 
 ---
 
@@ -57,7 +58,7 @@ Note: `dynamic-airdrop-conversion-2.md` and `dynamic-airdrop-conversion-3.md` al
 
 | Field | Value | Meaning |
 |---|---|---|
-| `sitemapUrl` | `https://blog.river.inc/sitemap-posts.xml` | Where `/sync blog` reads the post list from |
+| `sitemapUrl` | `https://blog.riverai.inc/sitemap-posts.xml` | Where `/sync blog` reads the post list from |
 | `configuredSinceDate` | `2025-05-15` | Permanent floor — never scrape posts published before this date (River blog launch date). Hard-coded in `bot.js` as `BLOG_SINCE_DATE`. |
 | `effectiveSinceDate` | auto-managed | Starts equal to `configuredSinceDate`. Advances automatically to the oldest remaining post's date whenever posts are physically deleted from disk. Prevents re-scraping of intentionally removed content. |
 | `excluded` | URL list | Managed by `/exclude-blog url:<url>` / `/include-blog url:<url>`. Posts on this list are permanently skipped on all future syncs even if they appear in the sitemap. Distinct from `<!-- EXCLUDE -->` markers — the exclusion list prevents re-scraping; markers only strip content from RAG. |
@@ -66,7 +67,7 @@ Note: `dynamic-airdrop-conversion-2.md` and `dynamic-airdrop-conversion-3.md` al
 
 ## Future sync instructions
 
-When scraping new blogs from blog.river.inc:
+When scraping new blogs from blog.riverai.inc:
 1. Add new files normally — do not auto-exclude
 2. Check if the blog introduces new products, features, or events not yet in KB
 3. If a blog is a Chinese/Korean translation of an existing English blog, apply EXCLUDE

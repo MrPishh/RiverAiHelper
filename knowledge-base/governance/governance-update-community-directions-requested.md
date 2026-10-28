@@ -1,5 +1,5 @@
 # Governance: Governance Update | Community Directions Requested
-Source: https://gov.river.inc/t/governance-update-community-directions-requested/69
+Source: https://gov.riverai.inc/t/governance-update-community-directions-requested/69
 Scraped: 2026-05-10T01:04:10.123Z
 
 ---

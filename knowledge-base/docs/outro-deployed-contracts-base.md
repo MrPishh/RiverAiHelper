@@ -1,13 +1,13 @@
 # Doc: outro-deployed-contracts-base
-Source: https://docs.river.inc/outro/deployed-contracts/base
+Source: https://docs.riverai.inc/outro/deployed-contracts/base
 Scraped: 2026-05-09T13:50:01.296Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)chevron-right
-2.  [sim-cardsDeployed Contracts](https://docs.river.inc/outro/deployed-contracts)
+1.  [OUTRO](https://docs.riverai.inc/outro)chevron-right
+2.  [sim-cardsDeployed Contracts](https://docs.riverai.inc/outro/deployed-contracts)
 
 ## Base
 

@@ -1,12 +1,12 @@
 # Doc: products-smart-vault
-Source: https://docs.river.inc/products/smart-vault
+Source: https://docs.riverai.inc/products/smart-vault
 Scraped: 2026-05-09T13:49:46.607Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)
+1.  [Products](https://docs.riverai.inc/products)
 
 ## vaultSmart Vault
 
@@ -50,7 +50,7 @@ Deposited assets stay active through strategy modules generating real returns vi
 5.  **Earn rewards** from asset performance and staking pool
     
 
-![Smart Vault Architecture ](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fxbv7VVP4RlzrS64oyXMM%252Fimage.png%3Falt%3Dmedia%26token%3D92c77e9b-8e46-48e2-8363-f011b9ba656e&width=768&dpr=3&quality=100&sign=c441b03a&sv=2)
+![Smart Vault Architecture ](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fxbv7VVP4RlzrS64oyXMM%252Fimage.png%3Falt%3Dmedia%26token%3D92c77e9b-8e46-48e2-8363-f011b9ba656e&width=768&dpr=3&quality=100&sign=c441b03a&sv=2)
 
 **1\. Internal satUSD System**
 

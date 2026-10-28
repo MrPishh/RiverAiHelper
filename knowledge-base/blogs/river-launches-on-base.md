@@ -1,6 +1,6 @@
 # Blog: river-launches-on-base
-Source: https://blog.river.inc/river-launches-on-base/
-Scraped: 2026-05-08T07:54:01.368Z
+Source: https://blog.riverai.inc/river-launches-on-base/
+Scraped: 2026-09-04T10:50:07.151Z
 
 ---
 
@@ -36,7 +36,7 @@ This pool is among the most capital-efficient opportunities for stablecoin LPs o
 
 ### **How to Get Started on Base**
 
-1.  Visit [app.river.inc/mint](https://app.river.inc/mint?ref=blog.river.inc)
+1.  Visit [app.riverai.inc/mint](https://app.riverai.inc/mint?ref=blog.riverai.inc)
 2.  Connect wallet, switch to Base
 3.  Deposit wETH, wBTC, clBTC, or cbBTC
 4.  Maintain a minimum 110% - 150% collateral ratio
@@ -74,4 +74,4 @@ River is building a circulatory system that connects capital, yield, and contrib
 
 It enables users to access stablecoin liquidity, earn protocol rewards, and convert participation into on-chain ownership. At the center of this system is satUSD, an overcollateralized stablecoin that powers value creation and value circulation across ecosystems.
 
-[Website](https://river.inc/?ref=blog.river.inc) | App | Docs | Twitter | Discord
+[Website](https://riverai.inc/?ref=blog.riverai.inc) | [App](https://app.riverai.inc/?ref=blog.riverai.inc) | [Docs](https://docs.riverai.inc/?ref=blog.riverai.inc) | [Twitter](https://x.com/RiverdotInc?ref=blog.riverai.inc) | Discord

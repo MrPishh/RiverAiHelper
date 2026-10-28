@@ -1,5 +1,5 @@
 # Blog: river-statement-bevm-investment-refund
-Source: https://blog.river.inc/river-statement-bevm-investment-refund/
+Source: https://blog.riverai.inc/river-statement-bevm-investment-refund/
 Scraped: 2026-05-08T07:53:54.326Z
 
 ---

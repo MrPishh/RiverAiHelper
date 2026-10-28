@@ -1,9 +1,8 @@
 # Blog: river-staking-activation
-Source: https://blog.river.inc/river-staking-activation/
-Scraped: 2026-05-08T07:53:46.540Z
+Source: https://blog.riverai.inc/river-staking-activation/
+Scraped: 2026-09-04T10:50:16.268Z
 
 ---
-
 
 River Staking is now going live.
 
@@ -67,7 +66,7 @@ Weekly emission may also adjust over time, so please check announcements for upd
 
 ### **How to Stake RIVER**
 
-1.  Go to $RIVER staking : [https://app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+1.  Go to $RIVER staking : [https://app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 2.  View your RIVER balance, multipliers, and available epochs.
 3.  Select an epoch to Stake your RIVER
 4.  Stake your RIVER and confirm
@@ -92,4 +91,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

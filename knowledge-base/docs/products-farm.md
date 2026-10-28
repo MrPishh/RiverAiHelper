@@ -1,12 +1,12 @@
 # Doc: products-farm
-Source: https://docs.river.inc/products/farm
+Source: https://docs.riverai.inc/products/farm
 Scraped: 2026-05-09T13:49:48.639Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)
+1.  [Products](https://docs.riverai.inc/products)
 
 ## building-columnsNexus Yield Module (NYM)
 

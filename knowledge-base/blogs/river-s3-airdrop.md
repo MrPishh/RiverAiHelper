@@ -1,8 +1,10 @@
 # Blog: river-s3-airdrop
-Source: https://blog.river.inc/river-s3-airdrop/
-Scraped: 2026-05-08T07:53:52.143Z
+Source: https://blog.riverai.inc/river-s3-airdrop/
+Scraped: 2026-09-04T10:50:13.751Z
 
 ---
+
+<!-- EXCLUDE -->
 
 On 2025-09-22, River completed the TGE of $RIVER. That day wasn’t just a launch — it was the beginning of a new stage.
 
@@ -44,7 +46,7 @@ Each action comes with a **2x–50x multiplier** depending on type.
 
 River Pts are tracked through weekly snapshots, with updates typically published over the weekend.
 
-We will also organize special campaigns such as a [10M RIVER trading competition](https://x.com/RiverdotInc/status/1970117812460118385?ref=blog.river.inc) where participants can earn additional River Pts. Please follow River’s official announcements for the latest details.
+We will also organize special campaigns such as a [10M RIVER trading competition](https://x.com/RiverdotInc/status/1970117812460118385?ref=blog.riverai.inc) where participants can earn additional River Pts. Please follow River’s official announcements for the latest details.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-8.png)
 
@@ -55,7 +57,7 @@ Use satUSD to Earn River Pts
 River4FUN turns your social engagement into River Pts.
 
 -   **Tweet to earn**: connect your X account, and post River-related tweets to earn River Pts.
--   **Campaigns**: beyond daily tweets, River will launch special campaigns such as [Vote4Creators](https://x.com/River4fun/status/1972601216028062135?ref=blog.river.inc) or local meetup where you can collect additional points.
+-   **Campaigns**: beyond daily tweets, River will launch special campaigns such as [Vote4Creators](https://x.com/River4fun/status/1972601216028062135?ref=blog.riverai.inc) or local meetup where you can collect additional points.
 -   **Ongoing updates**: your River Pts are updated daily based on participation, ensuring fairness and transparency.
 
 With River4FUN, every engagement counts — what you share and how you interact in the community will eventually convert into $RIVER.
@@ -91,9 +93,9 @@ In S3, River Pts become even more versatile:
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/09/image-11.png)
 
-[Convert River Pts](https://app.river.inc/airdrop?ref=blog.river.inc)
+[Convert River Pts](https://app.river.inc/airdrop?ref=blog.riverai.inc)
 
-[Dynamic Airdrop Conversion: A New Standard for Airdrop](https://blog.river.inc/river-dynamic-airdrop-conversion/)
+[Dynamic Airdrop Conversion: A New Standard for Airdrop](https://blog.riverai.inc/river-dynamic-airdrop-conversion/)
 
 * * *
 
@@ -113,7 +115,7 @@ Use satUSD in DeFi, join River4FUN to make your voice count, and take part in Ri
 
 River Pts are tracked with weekly snapshots, multipliers go from 2x to 50x, and campaigns with extra rewards will pop up along the way — keep an eye on announcements so you don’t miss them.
 
-The biggest change this season is [**Dynamic Airdrop Conversion**](https://blog.river.inc/river-dynamic-airdrop-conversion/).
+The biggest change this season is [**Dynamic Airdrop Conversion**](https://blog.riverai.inc/river-dynamic-airdrop-conversion/).
 
 Once you claim River Pts, you can convert them into $RIVER whenever you want.
 
@@ -137,4 +139,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

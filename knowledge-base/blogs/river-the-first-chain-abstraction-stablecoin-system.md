@@ -1,5 +1,5 @@
 # Blog: river-the-first-chain-abstraction-stablecoin-system
-Source: https://blog.river.inc/river-the-first-chain-abstraction-stablecoin-system/
+Source: https://blog.riverai.inc/river-the-first-chain-abstraction-stablecoin-system/
 Scraped: 2026-05-08T07:53:57.260Z
 
 ---
@@ -27,7 +27,7 @@ On the other side, DeFi’s heartbeat — TVL — is only $150B, still below its
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/08/image-7.png)
 
-[DeFi TVL](https://defillama.com/?ref=blog.river.inc)
+[DeFi TVL](https://defillama.com/?ref=blog.riverai.inc)
 
 Scroll through DeFiLlama’s Chains page and you’ll see it:
 
@@ -47,15 +47,15 @@ Wherever opportunity arises, you can act in a single click.
 
 No intermediaries. No borders. No delays.
 
-This is the essence of [@RiverdotInc](https://x.com/@RiverdotInc?ref=blog.river.inc) : a chain-abstraction stablecoin system, where assets flow to opportunity as naturally as water — fluid, seamless, and borderless
+This is the essence of [@RiverdotInc](https://x.com/@RiverdotInc?ref=blog.riverai.inc) : a chain-abstraction stablecoin system, where assets flow to opportunity as naturally as water — fluid, seamless, and borderless
 
 Omni-CDP is the first step.
 
 Today River spans 8+ ecosystems, 30+ partners, $600M+ in TVL, and $270M+ satUSD in circulation (as of 2025-08-10)
 
-> 600M TVL and 270M satUSD flowing with River [pic.twitter.com/kZTxiNpk5X](https://t.co/kZTxiNpk5X?ref=blog.river.inc)
+> 600M TVL and 270M satUSD flowing with River [pic.twitter.com/kZTxiNpk5X](https://t.co/kZTxiNpk5X?ref=blog.riverai.inc)
 > 
-> — River (@RiverdotInc) [August 28, 2025](https://twitter.com/RiverdotInc/status/1961001774711705785?ref_src=twsrc%5Etfw&ref=blog.river.inc)
+> — River (@RiverdotInc) [August 28, 2025](https://twitter.com/RiverdotInc/status/1961001774711705785?ref_src=twsrc%5Etfw&ref=blog.riverai.inc)
 
 600M TVL
 
@@ -67,7 +67,7 @@ River is not “another stablecoin issuer.”It is a system — redefining how v
 
 Tron has generated $3.6B in revenue over the past 3 years and now hosts over $87B USDT
 
-Supporting [@PlasmaFDN](https://x.com/@PlasmaFDN?ref=blog.river.inc) and [@stable](https://x.com/@stable?ref=blog.river.inc) makes sense.
+Supporting [@PlasmaFDN](https://x.com/@PlasmaFDN?ref=blog.riverai.inc) and [@stable](https://x.com/@stable?ref=blog.riverai.inc) makes sense.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/08/image-8.png)
 

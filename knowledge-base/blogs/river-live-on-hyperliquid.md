@@ -1,6 +1,6 @@
 # Blog: river-live-on-hyperliquid
-Source: https://blog.river.inc/river-live-on-hyperliquid/
-Scraped: 2026-05-08T07:53:42.101Z
+Source: https://blog.riverai.inc/river-live-on-hyperliquid/
+Scraped: 2026-09-04T10:50:19.195Z
 
 ---
 
@@ -67,13 +67,13 @@ Both steps are quick, but skipping the second one means your RIVER never reaches
 
 #### **Step 1 — Bridge RIVER to HyperEVM**
 
--   Navigate to Bridge [https://app.river.inc/bridge](https://t.co/63CpOCEt2T?ref=blog.river.inc)
+-   Navigate to Bridge [https://app.riverai.inc/bridge](https://app.riverai.inc/bridge?ref=blog.riverai.inc)
 -   Bridge RIVER to HyperEVM
 -   Received RIVER on HyperEVM
 
 #### **Step 2 — Transfer from HyperEVM to HyperCore**
 
--   Go to Hyperliquid [https://app.hyperliquid.xyz/trade](https://t.co/BPGq3iJVTF?ref=blog.river.inc)
+-   Go to Hyperliquid [https://app.hyperliquid.xyz/trade](https://t.co/BPGq3iJVTF?ref=blog.riverai.inc)
 -   Find RIVER in your balance
 -   Transfer from HyperEVM → Spot ( HyperCore )
 -   Receive RIVER on Hyperliquid Spot
@@ -85,15 +85,15 @@ Two things to note before you start:
 -   You need a small amount of HYPE to cover gas on Hyperliquid
 -   Make sure the final balance lands in your spot wallet, not a perp margin position
 
-Not sure where to start? Watch the full video walkthrough: [https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt](https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt&ref=blog.river.inc)
+Not sure where to start? Watch the full video walkthrough: [https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt](https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt&ref=blog.riverai.inc)
 
 * * *
 
 ### Quick Links
 
--   Bridge RIVER: [https://app.river.inc/bridge](https://app.river.inc/bridge?ref=blog.river.inc)
--   Trade RIVER/USDC: [https://app.hyperliquid.xyz/trade/RIVER/USDC](https://app.hyperliquid.xyz/trade/RIVER/USDC?ref=blog.river.inc)
--   Bridge tutorial: [https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt](https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt&ref=blog.river.inc)
+-   Bridge RIVER: [https://app.riverai.inc/bridge](https://app.riverai.inc/bridge?ref=blog.riverai.inc)
+-   Trade RIVER/USDC: [https://app.hyperliquid.xyz/trade/RIVER/USDC](https://app.hyperliquid.xyz/trade/RIVER/USDC?ref=blog.riverai.inc)
+-   Bridge tutorial: [https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt](https://youtu.be/rcaJNbETcpU?si=9Gh2D2IyIDxucKJt&ref=blog.riverai.inc)
 
 * * *
 
@@ -103,4 +103,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

@@ -1,8 +1,10 @@
 # Blog: river-dynamic-airdrop-conversion
-Source: https://blog.river.inc/river-dynamic-airdrop-conversion/
-Scraped: 2026-05-08T07:53:51.703Z
+Source: https://blog.riverai.inc/river-dynamic-airdrop-conversion/
+Scraped: 2026-09-04T10:50:12.248Z
 
 ---
+
+<!-- EXCLUDE -->
 
 In crypto, distribution has always been a blunt instrument. Airdrops happen once, fast hands win, late hands lose. The result ? 
 
@@ -16,11 +18,10 @@ River’s airdrop does not end in a single claim. Instead, it unfolds over 180 d
 
 At launch, 1B River Pts are allocated, representing up to 30% of total supply, equal to 30M RIVER.
 
-Tokenomics → [https://docs.river.inc/tokenomics](https://docs.river.inc/tokenomics?ref=blog.river.inc)
+Tokenomics → [https://docs.riverai.inc/tokenomics](https://docs.riverai.inc/tokenomics?ref=blog.riverai.inc)
 
 Holders can convert their River Pts into $RIVER anytime during the 180-day window — in one transaction or multiple.
 
-<!-- EXCLUDE -->
 The key: **the longer you wait, the higher the rate.**
 
 The difference is clear. Suppose you hold 1M River Pts:
@@ -39,7 +40,6 @@ Dynamic Airdrop Conversion
 By **Day 180**, 1M River Pts reach their maximum potential: **30,000 $RIVER**.
 
 This design ensures that early exiters claim less, while long-term holders can capture the full upside — up to **270× more tokens** than converting on Day 1.
-<!-- /EXCLUDE -->
 
 ## **How to Claim Your River Pts** 
 
@@ -63,7 +63,7 @@ Check Your River Pts
 
 To receive RIVER tokens, you’ll first need to claim your River Pts, and then decide when and how to convert them.
 
-1.  Go to **Airdrop page** → [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+1.  Go to **Airdrop page** → [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.riverai.inc)
 2.  **Connect wallet or X** account
 3.  Check your **River Pts balance**
 4.  Click **Claim** River Pts
@@ -99,4 +99,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

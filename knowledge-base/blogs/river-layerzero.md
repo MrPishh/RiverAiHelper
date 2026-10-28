@@ -1,6 +1,6 @@
 # Blog: river-layerzero
-Source: https://blog.river.inc/river-layerzero/
-Scraped: 2026-05-08T07:53:57.707Z
+Source: https://blog.riverai.inc/river-layerzero/
+Scraped: 2026-09-04T10:50:09.627Z
 
 ---
 
@@ -36,7 +36,7 @@ With LayerZero, River connects fragmented assets across chains and enables satUS
 
 ### **How to Use River**
 
-1.  Go to [app.river.inc](https://app.river.inc/?ref=blog.river.inc)
+1.  Go to [app.riverai.inc](https://app.riverai.inc/?ref=blog.riverai.inc)
 2.  Choose a source chain and deposit asset
 3.  Select a destination chain
 4.  Confirm to mint satUSD
@@ -69,4 +69,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 River features the first omni-CDP module that allows users to collateralize assets on Chain A and mint stablecoin satUSD on Chain B — without bridging the assets.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

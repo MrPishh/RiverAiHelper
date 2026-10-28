@@ -1,6 +1,6 @@
 # Blog: 2026-world-cup-voting-challenge
-Source: https://blog.river.inc/2026-world-cup-voting-challenge/
-Scraped: 2026-06-05T08:36:54.871Z
+Source: https://blog.riverai.inc/2026-world-cup-voting-challenge/
+Scraped: 2026-09-04T10:50:21.257Z
 
 ---
 
@@ -10,7 +10,7 @@ River opens the bracket to the community. RIVER stakers predict who advances acr
 
 Each round closes before the matches that decide it. Voting power comes from staked RIVER, following the governance framework already live on River.
 
--   Vote here → [app.river.inc/fun](https://app.river.inc/fun?ref=blog.river.inc)
+-   Vote here → [app.riverai.inc/fun](https://app.riverai.inc/fun?ref=blog.riverai.inc)
 
 * * *
 
@@ -20,7 +20,7 @@ Each round closes before the matches that decide it. Voting power comes from sta
 -   450K River Pts total, 150K per round
 -   Vote for the team you support each round
 -   Predict top 32 / top 8 / Champion by voting
--   Stake RIVER to earn voting power, longer epochs carry a higher multiplier from 1x to 24x (details in [Conversion 3.0](https://gov.river.inc/t/conversion-3-0-activation/185?ref=blog.river.inc) and [RIVER docs](https://docs.river.inc/tokenomics/usdriver?ref=blog.river.inc))
+-   Stake RIVER to earn voting power, longer epochs carry a higher multiplier from 1x to 24x (details in [Conversion 3.0](https://gov.riverai.inc/t/conversion-3-0-activation/185?ref=blog.riverai.inc) and [RIVER docs](https://docs.riverai.inc/tokenomics/usdriver?ref=blog.riverai.inc))
 
 * * *
 
@@ -54,16 +54,21 @@ The multiplier rises with the staking epoch, 1x (3 months) - 24x (24 months)
 
 Voting power comes from how much RIVER you stake and how long you stake it. Stake 100 RIVER for 24 months and the 24x multiplier gives you 2,400 voting power.
 
-Say the round pool is 150,000 River Pts, and the total voting power on every team that advances adds up to 100,000. Here is how the same 2,400 plays out two ways.
+The round pool is 150,000 River Pts, split evenly across the 32 teams that advance, so each advancing team carries a fixed pool of 150,000 / 32 = 4,687.5 River Pts.
 
-| You cast 2,400 as | Outcome | Votes that count | Your share |
+Your share of a team is that team's pool times your voting power over the total voting power on that team. Only teams that advance get rewards.
+
+So the lever is not how much you cast, it is how crowded the team you back is. The same 2,400 takes a bigger slice of a lighter team.
+
+| You put 2,400 on | Team's total votes | Outcome | Your share |
 | --- | --- | --- | --- |
-| All on one team | Team advances | 2,400 | 3,600 River Pts |
-| 800 on each of three teams | Two advance, one out | 1,600 | 2,400 River Pts |
+| A crowded top team | 10,000 | Advances | 1,125 River Pts |
+| A lighter team | 3,000 | Advances | 3,750 River Pts |
+| A team that gets knocked out | Any | Eliminated | 0 River Pts |
 
-Your share is the pool times your winning votes over that total, so 150,000 × (2,400 / 100,000) = 3,600 and 150,000 × (1,600 / 100,000) = 2,400
+Your share is the team pool times your votes over that team's total, so 4,687.5 × (2,400 / 10,000) = 1,125 and 4,687.5 × (2,400 / 3,000) = 3,750.
 
-Only votes on teams that advance count, so in the spread case the 800 on the team that goes out earns nothing.
+Votes on a team that goes out get no rewards, no matter how much you vote.
 
 * * *
 
@@ -71,7 +76,7 @@ Only votes on teams that advance count, so in the spread case the 800 on the tea
 
 To vote, you need voting power, which comes from staking RIVER. If you do not hold any yet, here is how to get it
 
--   Go to [app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+-   Go to [app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 -   Click "Stake"
 -   Enter the amount of RIVER to stake
 -   Choose a staking epoch of 3 - 24 months (longer epochs earn a higher multiplier)
@@ -86,12 +91,12 @@ Keep in mind that voting power is read from the last Saturday's snapshot, so a n
 
 #### Vote for your team
 
--   Go to [app.river.inc/fun](https://app.river.inc/fun?ref=blog.river.inc)
+-   Go to [app.riverai.inc/fun](https://app.riverai.inc/fun?ref=blog.riverai.inc)
 -   Select the team you want to support
 -   Decide how many votes you plan to cast
 -   Click Confirm
 
-Vote here → app.river.inc/fun
+Vote here → app.riverai.inc/fun
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/06/CleanShot-2026-06-05-at-13.15.34@2x.jpg)
 
@@ -105,4 +110,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

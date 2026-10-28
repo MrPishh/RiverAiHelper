@@ -1,13 +1,13 @@
 # Doc: outro-satusd-oracle-dia-oracle
-Source: https://docs.river.inc/outro/satusd-oracle/dia-oracle
+Source: https://docs.riverai.inc/outro/satusd-oracle/dia-oracle
 Scraped: 2026-05-09T13:49:55.843Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)chevron-right
-2.  [arrow-progresssatUSD Oracle](https://docs.river.inc/outro/satusd-oracle)
+1.  [OUTRO](https://docs.riverai.inc/outro)chevron-right
+2.  [arrow-progresssatUSD Oracle](https://docs.riverai.inc/outro/satusd-oracle)
 
 ## DIA Oracle
 

@@ -1,8 +1,10 @@
 # Blog: river4fun-earn-by-staking-and-sharing
-Source: https://blog.river.inc/river4fun-earn-by-staking-and-sharing/
-Scraped: 2026-05-08T07:54:00.957Z
+Source: https://blog.riverai.inc/river4fun-earn-by-staking-and-sharing/
+Scraped: 2026-09-04T10:50:07.543Z
 
 ---
+
+<!-- EXCLUDE -->
 
 River4FUN is the contribution layer of River, designed to reward users not just for capital, but for participation and influence.
 
@@ -68,7 +70,7 @@ Each day, the protocol adjusts River Pts emissions based on project's mindshare
 
 Stake wBNB
 
-The staking contract has been fully audited by Zenith : [https://github.com/zenith-security/reports/tree/main/reports](https://github.com/zenith-security/reports/tree/main/reports?ref=blog.river.inc)
+The staking contract has been fully audited by Zenith : [https://github.com/zenith-security/reports/tree/main/reports](https://github.com/zenith-security/reports/tree/main/reports?ref=blog.riverai.inc)
 
 ## How to Start
 
@@ -87,4 +89,4 @@ River4FUN brings a new dimension to DeFi participation. It gives users a way to 
 
 If you’re ready to turn your voice and assets into ownership, join River4FUN and start earning today.
 
-Join River4FUN → [https://app.river.inc/fun](https://app.river.inc/fun?ref=blog.river.inc)
+Join River4FUN → [https://app.riverai.inc/fun](https://app.riverai.inc/fun?ref=blog.riverai.inc)

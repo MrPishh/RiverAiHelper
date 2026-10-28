@@ -1,5 +1,5 @@
 # Blog: satoshi-protocol-raises-2m-in-seed-round-funding
-Source: https://blog.river.inc/satoshi-protocol-raises-2m-in-seed-round-funding/
+Source: https://blog.riverai.inc/satoshi-protocol-raises-2m-in-seed-round-funding/
 Scraped: 2026-05-08T07:53:56.553Z
 
 ---
@@ -80,4 +80,4 @@ The funding from this round will be used to further develop Satoshi Protocol’s
 
 Satoshi Protocol is a revolutionary "universal" stablecoin protocol backed by Bitcoin. It allows users to deposit BTC or LST as collateral to mint the stablecoin $SAT on both Bitcoin mainnet and multiple L2s.
 
-[Website](https://satoshiprotocol.org/?ref=blog.satoshiprotocol.org) | [Web APP](https://app.satoshiprotocol.org/dashboard?ref=blog.satoshiprotocol.org) | [Twitter](https://twitter.com/SatoshiBEVM?ref=blog.satoshiprotocol.org) | [Telegram](https://t.me/satoshi_sat?ref=blog.satoshiprotocol.org) | [Discord](https://discord.gg/satoshiprotocol?ref=blog.satoshiprotocol.org) | [Docs](https://docs.satoshiprotocol.org/intro/introduction?ref=blog.satoshiprotocol.org) | [Blog](https://blog.river.inc/)
+[Website](https://satoshiprotocol.org/?ref=blog.satoshiprotocol.org) | [Web APP](https://app.satoshiprotocol.org/dashboard?ref=blog.satoshiprotocol.org) | [Twitter](https://twitter.com/SatoshiBEVM?ref=blog.satoshiprotocol.org) | [Telegram](https://t.me/satoshi_sat?ref=blog.satoshiprotocol.org) | [Discord](https://discord.gg/satoshiprotocol?ref=blog.satoshiprotocol.org) | [Docs](https://docs.satoshiprotocol.org/intro/introduction?ref=blog.satoshiprotocol.org) | [Blog](https://blog.riverai.inc/)

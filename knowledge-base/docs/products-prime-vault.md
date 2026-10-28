@@ -1,12 +1,12 @@
 # Doc: products-prime-vault
-Source: https://docs.river.inc/products/prime-vault
+Source: https://docs.riverai.inc/products/prime-vault
 Scraped: 2026-05-09T13:49:47.450Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)
+1.  [Products](https://docs.riverai.inc/products)
 
 ## shield-checkPrime Vault
 
@@ -40,7 +40,7 @@ The underlying assets are ultimately secured in custodial wallets rather than co
 
 > **Note**: Users do not hold any debt; satUSD never enters user wallets.
 
-![](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FsE5ZCVACyGYfumaO0iw7%252Fimage.png%3Falt%3Dmedia%26token%3D8eebdc00-b529-4037-8ed0-0f63551418e7&width=768&dpr=3&quality=100&sign=262f98d1&sv=2)
+![](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FsE5ZCVACyGYfumaO0iw7%252Fimage.png%3Falt%3Dmedia%26token%3D8eebdc00-b529-4037-8ed0-0f63551418e7&width=768&dpr=3&quality=100&sign=262f98d1&sv=2)
 
 -   **Custodian Integration:** assets remain with leading custodians and listed company partners.
     

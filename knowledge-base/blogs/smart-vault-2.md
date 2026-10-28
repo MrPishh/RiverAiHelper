@@ -1,16 +1,18 @@
 # Blog: smart-vault-2
-Source: https://blog.river.inc/smart-vault-2/
-Scraped: 2026-05-08T07:53:48.572Z
+Source: https://blog.riverai.inc/smart-vault-2/
+Scraped: 2026-09-04T10:50:22.726Z
 
 ---
 
-The [first Smart Vault](https://blog.river.inc/introducing-river-smart-vault/) round reached **$10M USDT** in deposits within **12 hours**, generating **16.5% real yield** and **+24% implied yield** through River Pts.
+<!-- EXCLUDE -->
+
+The [first Smart Vault](https://blog.riverai.inc/introducing-river-smart-vault/) round reached **$10M USDT** in deposits within **12 hours**, generating **16.5% real yield** and **+24% implied yield** through River Pts.
 
 At the current River Pts market price (~$0.04), the implied APR equals roughly **48%**, bringing total estimated returns for Phase 1 participants to **~64% APR**.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/10/CleanShot-2025-10-31-at-22.38.31@2x.jpg)
 
-[10M USDT filled in 12hr](https://x.com/RiverdotInc/status/1965964700153426038?ref=blog.river.inc)
+[10M USDT filled in 12hr](https://x.com/RiverdotInc/status/1965964700153426038?ref=blog.riverai.inc)
 
 * * *
 
@@ -77,13 +79,13 @@ Time-driven value discovery across liquidity, behavior, and belief
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/thumbnail/River-Pts-Conversion-pr-1.jpg)
 
-](https://blog.river.inc/dynamic-airdrop-conversion-3/)
+](https://blog.riverai.inc/dynamic-airdrop-conversion-3/)
 
 * * *
 
 ### **How to Join USDT Smart Vault Phase 2**
 
-1.  **Visit** [app.river.inc](https://app.river.inc/?ref=blog.river.inc) on **November 1, 14:00 (UTC+0)**
+1.  **Visit** [app.riverai.inc](https://app.riverai.inc/?ref=blog.riverai.inc) on **November 1, 14:00 (UTC+0)**
 2.  **Connect your wallet** and select **USDT Smart Vault – Phase 2**
 3.  **Deposit USDT** — there is no minimum, cap
 4.  **Wait 45 days** for the earning period (Nov 5 – Dec 14)
@@ -108,7 +110,7 @@ Here’s how it works:
 
 No liquidation. No debt. Just yield.
 
-Learn more → [https://docs.river.inc/products/smart-vault](https://docs.river.inc/products/smart-vault?ref=blog.river.inc)
+Learn more → [https://docs.riverai.inc/products/smart-vault](https://docs.riverai.inc/products/smart-vault?ref=blog.riverai.inc)
 
 ### **Why It Matters**
 
@@ -126,4 +128,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

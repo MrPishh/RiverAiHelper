@@ -1,6 +1,6 @@
 # Blog: dynamic-airdrop-conversion-3-0
-Source: https://blog.river.inc/dynamic-airdrop-conversion-3-0/
-Scraped: 2026-06-05T08:36:56.150Z
+Source: https://blog.riverai.inc/dynamic-airdrop-conversion-3-0/
+Scraped: 2026-09-04T10:50:20.742Z
 
 ---
 
@@ -17,7 +17,7 @@ Conversion 3.0 is restructured around four updates:
 -   Unlock schedule and staking epoch anchored to each Season
 -   Expanded set of eight staking epochs, from 3 to 24 months
 
-Full mechanism details are in the [Conversion 3.0 activation](https://gov.river.inc/t/conversion-3-0-activation/?ref=blog.river.inc).
+Full mechanism details are in the [Conversion 3.0 activation](https://gov.riverai.inc/t/conversion-3-0-activation/?ref=blog.riverai.inc).
 
 * * *
 
@@ -31,7 +31,7 @@ Contributors who stay active across Seasons keep accruing River Pts and keep con
 
 S5 runs April 22 through June 30 as a transitional Season. From S6 onward, every Season covers a full quarter. 
 
-River Pts earned in any Season remain claimable within a specific window ( S4 – 60 days, see [S4 Airdrop is Live](https://blog.river.inc/s4-airdrop-is-live/) )
+River Pts earned in any Season remain claimable within a specific window ( S4 – 60 days, see [S4 Airdrop is Live](https://blog.riverai.inc/s4-airdrop-is-live/) )
 
 Once claimed, they remain convertible across all subsequent Seasons.
 
@@ -67,7 +67,7 @@ The S5 ideal rate is 0.01: 10,000 River Pts produce a base output of 100 Staked 
 
 The **actual rate** at execution depends on the conversion activity at that moment and the Staking epoch (3-24 months) you selected.
 
-Conversion activity follows the [integral pricing model from 2.0](https://blog.river.inc/conversion-2-0/). Denser participation compresses the rate, quieter periods recover it.
+Conversion activity follows the [integral pricing model from 2.0](https://blog.riverai.inc/conversion-2-0/). Denser participation compresses the rate, quieter periods recover it.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/05/image-10.png)
 
@@ -115,13 +115,13 @@ Same Season, same staking epoch, same unstake date, the Season anchors that. Out
 
 Claim and convert are two different actions.
 
-**Claim** is receiving the eligible River Pts allocation through the airdrop page. River Pts earned in any Season remain claimable in 60 days. See [S4 Airdrop is Live](https://blog.river.inc/s4-airdrop-is-live/)
+**Claim** is receiving the eligible River Pts allocation through the airdrop page. River Pts earned in any Season remain claimable in 60 days. See [S4 Airdrop is Live](https://blog.riverai.inc/s4-airdrop-is-live/)
 
 **Convert** is exchanging River Pts for Staked $RIVER under Conversion 3.0.
 
 ### Conversion
 
--   Go to Airdrop at [https://app.river.inc/airdrop](https://app.river.inc/airdrop?ref=blog.river.inc)
+-   Go to Airdrop at [https://app.riverai.inc/airdrop](https://app.riverai.inc/airdrop?ref=blog.river.inc)
 -   Check the live conversion rate and capacity
 
 The actual rate updates every block. Always confirm the actual rate and the remaining daily cap before converting.
@@ -132,7 +132,7 @@ Convert River Pts to receive Staked RIVER
 
 Eight staking epochs are available, each with its own unlock date. Conversion 3.0 makes the conversion predictable.
 
--   Go to River staking at [https://app.river.inc/river](https://app.river.inc/river?ref=blog.river.inc)
+-   Go to River staking at [https://app.riverai.inc/river](https://app.riverai.inc/river?ref=blog.riverai.inc)
 -   Confirm to receive Staked RIVER
 -   View your final Staked RIVER amount, actual conversion result, and full history.
 
@@ -162,4 +162,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

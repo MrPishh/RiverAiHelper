@@ -1,5 +1,5 @@
 # Blog: river-follow-up-2
-Source: https://blog.river.inc/river-follow-up-2/
+Source: https://blog.riverai.inc/river-follow-up-2/
 Scraped: 2026-05-08T07:53:47.271Z
 
 ---
@@ -74,7 +74,7 @@ River 的目標始終如一：**長期、穩定、有機的增長。**
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2025/11/data-src-image-67822fc8-c347-4f6a-ac85-15069a8bb3b3.png)
 
-TGE 以來 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.river.inc) 價格走勢
+TGE 以來 [$RIVER](https://x.com/search?q=%24RIVER&src=cashtag_click&ref=blog.riverai.inc) 價格走勢
 
 ### **機制升級與後續行動**
 

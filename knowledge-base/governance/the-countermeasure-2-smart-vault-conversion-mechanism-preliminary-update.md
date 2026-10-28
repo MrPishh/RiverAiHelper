@@ -1,5 +1,5 @@
 # Governance: The Countermeasure 2 — Smart Vault & Conversion Mechanism Preliminary Update
-Source: https://gov.river.inc/t/the-countermeasure-2-smart-vault-conversion-mechanism-preliminary-update/12
+Source: https://gov.riverai.inc/t/the-countermeasure-2-smart-vault-conversion-mechanism-preliminary-update/12
 Scraped: 2026-05-10T01:04:28.566Z
 
 ---

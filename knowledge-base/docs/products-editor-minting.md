@@ -1,13 +1,13 @@
 # Doc: products-editor-minting
-Source: https://docs.river.inc/products/editor/minting
+Source: https://docs.riverai.inc/products/editor/minting
 Scraped: 2026-05-09T13:49:38.124Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Products](https://docs.river.inc/products)chevron-right
-2.  [dollar-signOmni-CDP](https://docs.river.inc/products/editor)
+1.  [Products](https://docs.riverai.inc/products)chevron-right
+2.  [dollar-signOmni-CDP](https://docs.riverai.inc/products/editor)
 
 ## Minting
 
@@ -15,7 +15,7 @@ River allows users to collateralize BTC and LST assets across multiple chains an
 
 River introduces Omni-CDP, enabling users to deposit BTC or LST on a source chain and mint satUSD on a destination chain.
 
-![](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fltl964Muq1lSqAqWtkBY%252Fimage.png%3Falt%3Dmedia%26token%3D94935bc4-6408-4d7e-a924-e6c953242d68&width=768&dpr=3&quality=100&sign=d497b95e&sv=2)
+![](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fltl964Muq1lSqAqWtkBY%252Fimage.png%3Falt%3Dmedia%26token%3D94935bc4-6408-4d7e-a924-e6c953242d68&width=768&dpr=3&quality=100&sign=d497b95e&sv=2)
 
 **How It Works?**
 

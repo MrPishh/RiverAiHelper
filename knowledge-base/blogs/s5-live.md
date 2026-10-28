@@ -1,6 +1,6 @@
 # Blog: s5-live
-Source: https://blog.river.inc/s5-live/
-Scraped: 2026-05-08T07:53:40.526Z
+Source: https://blog.riverai.inc/s5-live/
+Scraped: 2026-09-04T10:50:24.595Z
 
 ---
 
@@ -59,7 +59,7 @@ Staking aligns long term participation with voting power and weekly emissions.
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/size/w1200/2025/12/RIVER-Staking-3.jpg)
 
-](https://blog.river.inc/river-staking-activation/)
+](https://blog.riverai.inc/river-staking-activation/)
 
 ### 2\. Partner Campaigns
 
@@ -113,4 +113,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

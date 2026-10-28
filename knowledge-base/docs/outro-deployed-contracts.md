@@ -1,12 +1,12 @@
 # Doc: outro-deployed-contracts
-Source: https://docs.river.inc/outro/deployed-contracts
+Source: https://docs.riverai.inc/outro/deployed-contracts
 Scraped: 2026-05-09T13:49:56.581Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [OUTRO](https://docs.river.inc/outro)
+1.  [OUTRO](https://docs.riverai.inc/outro)
 
 ## sim-cardsDeployed Contracts
 

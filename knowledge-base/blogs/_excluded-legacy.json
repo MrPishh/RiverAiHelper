@@ -1,0 +1,550 @@
+{
+  "posts": {
+    "https://blog.riverai.inc/satoshi-protocol-now-live-on-hemi-mainnet/": {
+      "slug": "satoshi-protocol-now-live-on-hemi-mainnet",
+      "title": "Satoshi Protocol Now Live on Hemi Mainnet",
+      "publishedTime": "2025-03-12T15:54:56.000Z",
+      "firstSeen": "2026-09-04T10:36:38.394Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-live-on-bnb-chain/": {
+      "slug": "satoshi-protocol-live-on-bnb-chain",
+      "title": "Satoshi Protocol Now Live on BNB Chain",
+      "publishedTime": "2025-03-01T12:20:33.000Z",
+      "firstSeen": "2026-09-04T10:36:38.530Z"
+    },
+    "https://blog.riverai.inc/claim-s1-gold/": {
+      "slug": "claim-s1-gold",
+      "title": "Wrapping Up Season 1: Claim Your GOLD &amp; Join the Satoshi FUN Waitlist",
+      "publishedTime": "2025-03-05T15:41:35.000Z",
+      "firstSeen": "2026-09-04T10:36:38.534Z"
+    },
+    "https://blog.riverai.inc/why-satoshi-built-ai/": {
+      "slug": "why-satoshi-built-ai",
+      "title": "Satoshi Protocol and AI: A Smarter Approach to Liquidity Governance",
+      "publishedTime": "2025-03-14T08:54:16.000Z",
+      "firstSeen": "2026-09-04T10:36:38.567Z"
+    },
+    "https://blog.riverai.inc/satoshi-fun-intro/": {
+      "slug": "satoshi-fun-intro",
+      "title": "Introducing Satoshi FUN: The First AI-Driven Liquidity Governance",
+      "publishedTime": "2025-03-10T06:38:43.000Z",
+      "firstSeen": "2026-09-04T10:36:38.678Z"
+    },
+    "https://blog.riverai.inc/introducing-satoshi-v2/": {
+      "slug": "introducing-satoshi-v2",
+      "title": "Introducing Satoshi Protocol V2: Revolutionizing the Universal Stablecoin Experience",
+      "publishedTime": "2025-02-09T13:25:29.000Z",
+      "firstSeen": "2026-09-04T10:36:38.710Z"
+    },
+    "https://blog.riverai.inc/how-to-migrate-from-satoshi-v1-to-v2/": {
+      "slug": "how-to-migrate-from-satoshi-v1-to-v2",
+      "title": "Migrate from Satoshi Protocol V1 to V2",
+      "publishedTime": "2025-02-11T14:52:37.000Z",
+      "firstSeen": "2026-09-04T10:36:38.732Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-10k-squared-guard-nfts-minted-1-in-bob-community-voting-and-6k-pell-oats-minted-2/": {
+      "slug": "bi-weekly-recap-10k-squared-guard-nfts-minted-1-in-bob-community-voting-and-6k-pell-oats-minted-2",
+      "title": "Bi-Weekly Recap: Launched Satoshi Protocol V2 and Airdrop S1 Snapshot",
+      "publishedTime": "2025-02-17T03:55:42.000Z",
+      "firstSeen": "2026-09-04T10:36:38.755Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-10k-squared-guard-nfts-minted-1-in-bob-community-voting-and-6k-pell-oats-minted/": {
+      "slug": "bi-weekly-recap-10k-squared-guard-nfts-minted-1-in-bob-community-voting-and-6k-pell-oats-minted",
+      "title": "Bi-Weekly Recap: 10k+ Squared Guard NFTs Minted, #1 in BOB Community Voting, and 6k Pell OATs Minted",
+      "publishedTime": "2025-02-03T03:08:29.000Z",
+      "firstSeen": "2026-09-04T10:36:38.758Z"
+    },
+    "https://blog.riverai.inc/btcfi-made-easy-unveiling-satoshi-protocol-app-v2/": {
+      "slug": "btcfi-made-easy-unveiling-satoshi-protocol-app-v2",
+      "title": "BTCFi Made Easy: Unveiling Satoshi Protocol New Interface",
+      "publishedTime": "2024-12-03T10:06:53.000Z",
+      "firstSeen": "2026-09-04T10:36:38.830Z"
+    },
+    "https://blog.riverai.inc/squared-guard-nft-satoshi-pell-and-bsquared-unite-for-btcfi/": {
+      "slug": "squared-guard-nft-satoshi-pell-and-bsquared-unite-for-btcfi",
+      "title": "Squared Guard NFT: Satoshi, Pell and BSquared Unite for BTCFi",
+      "publishedTime": "2024-12-16T12:39:11.000Z",
+      "firstSeen": "2026-09-04T10:36:38.955Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-1-in-bob-community-voting-5-9k-pell-oats-minted-and-6k-squared-guard-nfts-minted/": {
+      "slug": "bi-weekly-recap-1-in-bob-community-voting-5-9k-pell-oats-minted-and-6k-squared-guard-nfts-minted",
+      "title": "Bi-Weekly Recap: #1 in BOB Community Voting, 5.9k Pell OATs Minted, and 6k+ Squared Guard NFTs Minted",
+      "publishedTime": "2025-01-16T09:05:53.000Z",
+      "firstSeen": "2026-09-04T10:36:39.001Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocols-2024-recap-key-achievements-and-whats-next/": {
+      "slug": "satoshi-protocols-2024-recap-key-achievements-and-whats-next",
+      "title": "Satoshi Protocol’s 2024 Recap: Key Achievements and What’s Next",
+      "publishedTime": "2024-12-27T09:53:12.000Z",
+      "firstSeen": "2026-09-04T10:36:39.124Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-1-in-bob-community-voting-published-2024-recap-and-3k-squared-guard-nfts-minted/": {
+      "slug": "bi-weekly-recap-1-in-bob-community-voting-published-2024-recap-and-3k-squared-guard-nfts-minted",
+      "title": "Bi-Weekly Recap: #1 in BOB Community Voting, Published 2024 Recap, and 3k+ Squared Guard NFTs Minted",
+      "publishedTime": "2025-01-01T12:00:03.000Z",
+      "firstSeen": "2026-09-04T10:36:39.142Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-23m-in-tvl-mr-block-summit-event-sponsorship-and-live-on-b2-network/": {
+      "slug": "bi-weekly-recap-23m-in-tvl-mr-block-summit-event-sponsorship-and-live-on-b2-network",
+      "title": "Bi-Weekly Recap: 23M+ in TVL, Mr.Block Summit Event Sponsorship, and Live on B² Network",
+      "publishedTime": "2024-12-17T08:02:48.000Z",
+      "firstSeen": "2026-09-04T10:36:39.166Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-now-live-on-b2-network/": {
+      "slug": "satoshi-protocol-now-live-on-b2-network",
+      "title": "Satoshi Protocol Now Live on B² Network",
+      "publishedTime": "2024-12-10T09:01:44.000Z",
+      "firstSeen": "2026-09-04T10:36:39.234Z"
+    },
+    "https://blog.riverai.inc/babylon-staking-phase-1-cap-3-everything-you-need-to-know/": {
+      "slug": "babylon-staking-phase-1-cap-3-everything-you-need-to-know",
+      "title": "Babylon Staking Phase-1, Cap-3: Everything You Need to Know",
+      "publishedTime": "2024-12-06T08:29:47.000Z",
+      "firstSeen": "2026-09-04T10:36:39.314Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-satusd-listed-on-defillama-tabei-sponsorship-and-pell-partnership/": {
+      "slug": "bi-weekly-recap-satusd-listed-on-defillama-tabei-sponsorship-and-pell-partnership",
+      "title": "Bi-Weekly Recap: satUSD Listed on DefiLlama, TABEI Sponsorship and Pell Partnership",
+      "publishedTime": "2024-12-01T15:55:13.000Z",
+      "firstSeen": "2026-09-04T10:36:39.368Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-14b-bob-community-votes-devcon-side-event-and-pell-partnership/": {
+      "slug": "bi-weekly-recap-14b-bob-community-votes-devcon-side-event-and-pell-partnership",
+      "title": "Bi-Weekly Recap: 14B BOB Community Votes, Devcon Side-Event and Pell Partnership",
+      "publishedTime": "2024-11-17T14:25:59.000Z",
+      "firstSeen": "2026-09-04T10:36:39.496Z"
+    },
+    "https://blog.riverai.inc/partnership-with-pell-network/": {
+      "slug": "partnership-with-pell-network",
+      "title": "Partnership with Pell Network",
+      "publishedTime": "2024-11-08T12:04:14.000Z",
+      "firstSeen": "2026-09-04T10:36:39.511Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-125m-bob-spice-distribution-omni-mochi-party-and-oku-partnership-oct-16-31/": {
+      "slug": "bi-weekly-recap-125m-bob-spice-distribution-omni-mochi-party-and-oku-partnership-oct-16-31",
+      "title": "Bi-Weekly Recap: 125M BOB Spice Distribution, Omni Mochi Party and Oku Partnership (Oct 16 - 31)",
+      "publishedTime": "2024-11-01T08:00:41.000Z",
+      "firstSeen": "2026-09-04T10:36:39.556Z"
+    },
+    "https://blog.riverai.inc/satoshi-spice-distribution-rules-update/": {
+      "slug": "satoshi-spice-distribution-rules-update",
+      "title": "Satoshi Spice Distribution Rules Update",
+      "publishedTime": "2024-10-17T17:11:50.000Z",
+      "firstSeen": "2026-09-04T10:36:39.572Z"
+    },
+    "https://blog.riverai.inc/how-users-take-advantage-of-bitcoin-0-interest-loans/": {
+      "slug": "how-users-take-advantage-of-bitcoin-0-interest-loans",
+      "title": "How Users Take Advantage of Bitcoin 0% Interest Loans",
+      "publishedTime": "2024-10-25T06:05:06.000Z",
+      "firstSeen": "2026-09-04T10:36:39.630Z"
+    },
+    "https://blog.riverai.inc/partnership-with-oku/": {
+      "slug": "partnership-with-oku",
+      "title": "Partnership with Oku",
+      "publishedTime": "2024-10-21T16:09:01.000Z",
+      "firstSeen": "2026-09-04T10:36:39.656Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-bob-community-voting-omni-mochi-party-and-bybit-wsot-oct-1-15/": {
+      "slug": "bi-weekly-recap-bob-community-voting-omni-mochi-party-and-bybit-wsot-oct-1-15",
+      "title": "Bi-Weekly Recap: BOB Community Voting, Omni Mochi Party and Bybit WSOT (Oct 1 - 15)",
+      "publishedTime": "2024-10-16T06:55:14.000Z",
+      "firstSeen": "2026-09-04T10:36:39.837Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-x-omni-network-mochi-party-campaign-is-live/": {
+      "slug": "satoshi-protocol-x-omni-network-mochi-party-campaign-is-live",
+      "title": "Satoshi Protocol x Omni Network: Mochi Party Campaign is Live!",
+      "publishedTime": "2024-10-07T14:45:03.000Z",
+      "firstSeen": "2026-09-04T10:36:39.840Z"
+    },
+    "https://blog.riverai.inc/babylon-staking-phase1-cap2-everything-you-need-to-know/": {
+      "slug": "babylon-staking-phase1-cap2-everything-you-need-to-know",
+      "title": "Babylon Staking Phase1 - Cap2 : Everything You Need to Know",
+      "publishedTime": "2024-10-05T10:50:00.000Z",
+      "firstSeen": "2026-09-04T10:36:39.892Z"
+    },
+    "https://blog.riverai.inc/partnership-with-redstone/": {
+      "slug": "partnership-with-redstone",
+      "title": "Partnership with RedStone",
+      "publishedTime": "2024-10-04T14:34:52.000Z",
+      "firstSeen": "2026-09-04T10:36:39.929Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-token2049-satusd-introduction-and-other-events-sep-16-30/": {
+      "slug": "bi-weekly-recap-token2049-satusd-introduction-and-other-events-sep-16-30",
+      "title": "Bi-Weekly Recap: Token2049, satUSD introduction and other events (Sep 16 - 30)",
+      "publishedTime": "2024-10-01T14:24:18.000Z",
+      "firstSeen": "2026-09-04T10:36:40.012Z"
+    },
+    "https://blog.riverai.inc/bob-fusion-the-final-season/": {
+      "slug": "bob-fusion-the-final-season",
+      "title": "BOB Fusion : The Final Season",
+      "publishedTime": "2024-09-26T09:49:32.000Z",
+      "firstSeen": "2026-09-04T10:36:40.018Z"
+    },
+    "https://blog.riverai.inc/what-is-sky-a-guide-to-makerdao-upgrade-and-impact/": {
+      "slug": "what-is-sky-a-guide-to-makerdao-upgrade-and-impact",
+      "title": "What is Sky, A Guide to MakerDAO Upgrade and Impact",
+      "publishedTime": "2024-09-18T16:38:28.000Z",
+      "firstSeen": "2026-09-04T10:36:40.182Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-bob-forge-nfts-arch-network-partnership-and-satusd-announcement-sep-1-16/": {
+      "slug": "bi-weekly-recap-bob-forge-nfts-arch-network-partnership-and-satusd-announcement-sep-1-16",
+      "title": "Bi-Weekly Recap: BOB Forge NFTs, Arch Network Partnership and satUSD Announcement (Sep 1 -15)",
+      "publishedTime": "2024-09-17T08:55:57.000Z",
+      "firstSeen": "2026-09-04T10:36:40.185Z"
+    },
+    "https://blog.riverai.inc/why-we-need-borrowing-and-redemption-fees/": {
+      "slug": "why-we-need-borrowing-and-redemption-fees",
+      "title": "Why We Need Borrowing and Redemption Fees",
+      "publishedTime": "2024-09-06T14:34:07.000Z",
+      "firstSeen": "2026-09-04T10:36:40.221Z"
+    },
+    "https://blog.riverai.inc/sat-stablecoin-is-renaming-to-satusd-2/": {
+      "slug": "sat-stablecoin-is-renaming-to-satusd-2",
+      "title": "SAT Stablecoin is Renaming to satUSD",
+      "publishedTime": "2024-09-11T14:18:45.000Z",
+      "firstSeen": "2026-09-04T10:36:40.262Z"
+    },
+    "https://blog.riverai.inc/partnership-with-nubit/": {
+      "slug": "partnership-with-nubit",
+      "title": "Partnership with Nubit",
+      "publishedTime": "2024-09-10T13:02:21.000Z",
+      "firstSeen": "2026-09-04T10:36:40.290Z"
+    },
+    "https://blog.riverai.inc/stablecoin-carnival-satoshi-sovryn-and-segment/": {
+      "slug": "stablecoin-carnival-satoshi-sovryn-and-segment",
+      "title": "Stablecoin Carnival : Satoshi, Sovryn and Segment",
+      "publishedTime": "2024-08-21T11:56:27.000Z",
+      "firstSeen": "2026-09-04T10:36:40.494Z"
+    },
+    "https://blog.riverai.inc/babylon-staking-explained-overview-of-6-btc-staking-protocols/": {
+      "slug": "babylon-staking-explained-overview-of-6-btc-staking-protocols",
+      "title": "Babylon Staking Explained: Overview of 6 BTC Staking Protocols",
+      "publishedTime": "2024-08-31T12:21:21.000Z",
+      "firstSeen": "2026-09-04T10:36:40.496Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-stablecoin-carnival-mint-sat-with-bitget-wallet-and-babylon-staking/": {
+      "slug": "bi-weekly-recap-stablecoin-carnival-mint-sat-with-bitget-wallet-and-babylon-staking",
+      "title": "Bi-Weekly Recap: Stablecoin Carnival, Mint $SAT with Bitget Wallet and Babylon Staking",
+      "publishedTime": "2024-09-02T03:25:23.000Z",
+      "firstSeen": "2026-09-04T10:36:40.507Z"
+    },
+    "https://blog.riverai.inc/mint-sat-with-bitget-wallet-win-137-5m-bob-spice/": {
+      "slug": "mint-sat-with-bitget-wallet-win-137-5m-bob-spice",
+      "title": "Mint $SAT with Bitget Wallet, Win 137.5M BOB Spice!",
+      "publishedTime": "2024-08-26T09:27:59.000Z",
+      "firstSeen": "2026-09-04T10:36:40.556Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-bevm-olympics-bob-spice-and-nym-launch-aug-1-15/": {
+      "slug": "bi-weekly-recap-bevm-olympics-bob-spice-and-nym-launch-aug-1-15",
+      "title": "Bi-Weekly Recap: BEVM Olympics, BOB Spice, and NYM Launch (Aug 1-16)",
+      "publishedTime": "2024-08-17T12:37:17.000Z",
+      "firstSeen": "2026-09-04T10:36:40.608Z"
+    },
+    "https://blog.riverai.inc/deposit-btc-and-earn-bob-spice-your-guide-to-rewards/": {
+      "slug": "deposit-btc-and-earn-bob-spice-your-guide-to-rewards",
+      "title": "Deposit BTC and Earn BOB Spice: Your Guide to Rewards",
+      "publishedTime": "2024-08-07T18:04:56.000Z",
+      "firstSeen": "2026-09-04T10:36:40.701Z"
+    },
+    "https://blog.riverai.inc/swap-usdt-usdc-for-sat-to-earn-more-spice/": {
+      "slug": "swap-usdt-usdc-for-sat-to-earn-more-spice",
+      "title": "Swap USDT/USDC for $SAT to earn more Spice!",
+      "publishedTime": "2024-08-13T14:36:45.000Z",
+      "firstSeen": "2026-09-04T10:36:40.725Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-joins-bevm-defi-olympics-with-bonus-points-offer/": {
+      "slug": "satoshi-protocol-joins-bevm-defi-olympics-with-bonus-points-offer",
+      "title": "Satoshi Protocol Joins BEVM DeFi Olympics with Bonus Points Offer!",
+      "publishedTime": "2024-08-06T06:38:11.000Z",
+      "firstSeen": "2026-09-04T10:36:40.752Z"
+    },
+    "https://blog.riverai.inc/leaderboard-referral-program/": {
+      "slug": "leaderboard-referral-program",
+      "title": "Leaderboard — Referral Program",
+      "publishedTime": "2024-03-28T15:57:42.000Z",
+      "firstSeen": "2026-09-04T10:36:40.801Z"
+    },
+    "https://blog.riverai.inc/partnership-with-segment-finance/": {
+      "slug": "partnership-with-segment-finance",
+      "title": "Partnership with Segment Finance",
+      "publishedTime": "2024-08-15T12:22:30.000Z",
+      "firstSeen": "2026-09-04T10:36:40.802Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-secures-3rd-place-at-anduro-hackathon-during-bitcoin2024/": {
+      "slug": "satoshi-protocol-secures-3rd-place-at-anduro-hackathon-during-bitcoin2024",
+      "title": "Satoshi Protocol Secures 3rd Place at Anduro Hackathon During Bitcoin2024",
+      "publishedTime": "2024-09-09T14:11:55.000Z",
+      "firstSeen": "2026-09-04T10:36:40.836Z"
+    },
+    "https://blog.riverai.inc/launch-on-bob-mainnet/": {
+      "slug": "launch-on-bob-mainnet",
+      "title": "Satoshi Protocol Now Live on BOB Mainnet",
+      "publishedTime": "2024-07-27T12:41:43.000Z",
+      "firstSeen": "2026-09-04T10:36:40.945Z"
+    },
+    "https://blog.riverai.inc/bi-weekly-recap-sdk-release-omni-integration-and-launch-on-bob-july-16-31/": {
+      "slug": "bi-weekly-recap-sdk-release-omni-integration-and-launch-on-bob-july-16-31",
+      "title": "Bi-Weekly Recap: SDK Release, Omni Integration, and launch on BoB (July 16-31)",
+      "publishedTime": "2024-08-01T14:46:01.000Z",
+      "firstSeen": "2026-09-04T10:36:41.006Z"
+    },
+    "https://blog.riverai.inc/partnership-with-sovryn/": {
+      "slug": "partnership-with-sovryn",
+      "title": "Partnership with Sovryn",
+      "publishedTime": "2024-07-31T04:14:45.000Z",
+      "firstSeen": "2026-09-04T10:36:41.017Z"
+    },
+    "https://blog.riverai.inc/adjustment-to-minimum-collateral-ratio-mcr-for-lst-assets/": {
+      "slug": "adjustment-to-minimum-collateral-ratio-mcr-for-lst-assets",
+      "title": "Adjustment to Minimum Collateral Ratio (MCR) for LST Assets",
+      "publishedTime": "2024-07-17T14:44:39.000Z",
+      "firstSeen": "2026-09-04T10:36:41.028Z"
+    },
+    "https://blog.riverai.inc/partnership-with-zulu-network/": {
+      "slug": "partnership-with-zulu-network",
+      "title": "Partnership with Zulu Network",
+      "publishedTime": "2024-07-18T12:35:42.000Z",
+      "firstSeen": "2026-09-04T10:36:41.119Z"
+    },
+    "https://blog.riverai.inc/apro-oracle-partnerhips/": {
+      "slug": "apro-oracle-partnerhips",
+      "title": "Partnership with APRO Oralce",
+      "publishedTime": "2024-07-19T13:19:05.000Z",
+      "firstSeen": "2026-09-04T10:36:41.145Z"
+    },
+    "https://blog.riverai.inc/satoshi-bi-weekly-recap-seed-funding-secured-community-vote-victory-miner-partnerships-formed-july-1-15/": {
+      "slug": "satoshi-bi-weekly-recap-seed-funding-secured-community-vote-victory-miner-partnerships-formed-july-1-15",
+      "title": "Satoshi Bi-Weekly Recap: Seed Funding Secured, Community Vote Victory, Miner Partnerships Formed (July 1-15)",
+      "publishedTime": "2024-07-16T14:57:57.000Z",
+      "firstSeen": "2026-09-04T10:36:41.241Z"
+    },
+    "https://blog.riverai.inc/partnership-with-master-protocol/": {
+      "slug": "partnership-with-master-protocol",
+      "title": "Partnership with Master Protocol",
+      "publishedTime": "2024-07-10T10:06:20.000Z",
+      "firstSeen": "2026-09-04T10:36:41.349Z"
+    },
+    "https://blog.riverai.inc/satoshi-bi-weekly-recap-macaron-trading-competition-fee-reduction-and-extra-points-june-16-30/": {
+      "slug": "satoshi-bi-weekly-recap-macaron-trading-competition-fee-reduction-and-extra-points-june-16-30",
+      "title": "Satoshi Bi-Weekly Recap: Macaron Trading competition, Fee Reduction and Extra Points (June 16-30)",
+      "publishedTime": "2024-07-01T13:51:26.000Z",
+      "firstSeen": "2026-09-04T10:36:41.383Z"
+    },
+    "https://blog.riverai.inc/partnership-with-anome/": {
+      "slug": "partnership-with-anome",
+      "title": "Partnership with Anome",
+      "publishedTime": "2024-06-29T12:39:10.000Z",
+      "firstSeen": "2026-09-04T10:36:41.394Z"
+    },
+    "https://blog.riverai.inc/earn-more-climb-higher-deposit-assets-to-earn-collateral-points-in-the-referral-program/": {
+      "slug": "earn-more-climb-higher-deposit-assets-to-earn-collateral-points-in-the-referral-program",
+      "title": "Earn More, Climb Higher: Deposit Assets to Earn Collateral Points in the Referral Program",
+      "publishedTime": "2024-06-26T06:57:04.000Z",
+      "firstSeen": "2026-09-04T10:36:41.399Z"
+    },
+    "https://blog.riverai.inc/strategic-partnership-with-bido-finance/": {
+      "slug": "strategic-partnership-with-bido-finance",
+      "title": "Strategic Partnership with Bido Finance",
+      "publishedTime": "2024-04-14T05:58:43.000Z",
+      "firstSeen": "2026-09-04T10:36:41.449Z"
+    },
+    "https://blog.riverai.inc/strategic-partnerships-with-bevmswap/": {
+      "slug": "strategic-partnerships-with-bevmswap",
+      "title": "Strategic Partnerships with BEVMSwap",
+      "publishedTime": "2024-04-17T08:47:55.000Z",
+      "firstSeen": "2026-09-04T10:36:41.552Z"
+    },
+    "https://blog.riverai.inc/strategy-partnerships-with-oooo/": {
+      "slug": "strategy-partnerships-with-oooo",
+      "title": "Strategy Partnerships with oooo",
+      "publishedTime": "2024-04-28T09:12:20.000Z",
+      "firstSeen": "2026-09-04T10:36:41.740Z"
+    },
+    "https://blog.riverai.inc/partnership-with-beast/": {
+      "slug": "partnership-with-beast",
+      "title": "Partnership with Beast",
+      "publishedTime": "2024-05-11T13:54:58.000Z",
+      "firstSeen": "2026-09-04T10:36:41.768Z"
+    },
+    "https://blog.riverai.inc/partnerships-with-dotswap/": {
+      "slug": "partnerships-with-dotswap",
+      "title": "Partnerships with DotSwap",
+      "publishedTime": "2024-05-22T07:30:22.000Z",
+      "firstSeen": "2026-09-04T10:36:41.831Z"
+    },
+    "https://blog.riverai.inc/strategy-partnerships-with-runes-terminal/": {
+      "slug": "strategy-partnerships-with-runes-terminal",
+      "title": "Strategy Partnerships with Runes Terminal",
+      "publishedTime": "2024-05-21T15:25:22.000Z",
+      "firstSeen": "2026-09-04T10:36:41.833Z"
+    },
+    "https://blog.riverai.inc/strategy-partnerships-with-runesbridge/": {
+      "slug": "strategy-partnerships-with-runesbridge",
+      "title": "Strategy Partnerships with RunesBridge",
+      "publishedTime": "2024-05-25T05:34:43.000Z",
+      "firstSeen": "2026-09-04T10:36:41.884Z"
+    },
+    "https://blog.riverai.inc/partnership-with-bitlayer/": {
+      "slug": "partnership-with-bitlayer",
+      "title": "Partnership with Bitlayer",
+      "publishedTime": "2024-06-09T08:35:25.000Z",
+      "firstSeen": "2026-09-04T10:36:41.906Z"
+    },
+    "https://blog.riverai.inc/partnership-with-lorenzo-protocol/": {
+      "slug": "partnership-with-lorenzo-protocol",
+      "title": "Partnership with Lorenzo Protocol",
+      "publishedTime": "2024-06-11T07:59:35.000Z",
+      "firstSeen": "2026-09-04T10:36:42.054Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-slashes-borrowing-fees-to-0-unlock-bitcoin-liquidity-with-unprecedented-efficiency/": {
+      "slug": "satoshi-protocol-slashes-borrowing-fees-to-0-unlock-bitcoin-liquidity-with-unprecedented-efficiency",
+      "title": "Satoshi Protocol Slashes Borrowing Fees to 0%! Unlock Bitcoin Liquidity with Unprecedented Efficiency",
+      "publishedTime": "2024-06-22T07:21:21.000Z",
+      "firstSeen": "2026-09-04T10:36:42.055Z"
+    },
+    "https://blog.riverai.inc/partnership-w-macaron/": {
+      "slug": "partnership-w-macaron",
+      "title": "Partnership with Macaron",
+      "publishedTime": "2024-06-14T06:23:15.000Z",
+      "firstSeen": "2026-09-04T10:36:42.091Z"
+    },
+    "https://blog.riverai.inc/partnership-with-polyflow/": {
+      "slug": "partnership-with-polyflow",
+      "title": "Partnership with Polyflow",
+      "publishedTime": "2024-06-23T15:03:10.000Z",
+      "firstSeen": "2026-09-04T10:36:42.124Z"
+    },
+    "https://blog.riverai.inc/satoshi-testnet-recap-100k-participants-and-the-road-to-mainnet/": {
+      "slug": "satoshi-testnet-recap-100k-participants-and-the-road-to-mainnet",
+      "title": "Satoshi Testnet Recap : 100k participants and the Road to Mainnet",
+      "publishedTime": "2024-03-19T13:59:56.000Z",
+      "firstSeen": "2026-09-04T10:36:42.198Z"
+    },
+    "https://blog.riverai.inc/4-17-5-1-satoshi-bi-week-recap-strategic-partnerships-drive-user-growth-and-tvl-surge/": {
+      "slug": "4-17-5-1-satoshi-bi-week-recap-strategic-partnerships-drive-user-growth-and-tvl-surge",
+      "title": "[4.17–5.1] Satoshi Bi-Week Recap: Strategic Partnerships Drive User Growth and TVL Surge",
+      "publishedTime": "2024-05-02T13:58:51.000Z",
+      "firstSeen": "2026-09-04T10:36:42.226Z"
+    },
+    "https://blog.riverai.inc/satoshi-bi-week-recap-satoshis-integration-with-binance-wallet-and-partnerships-with-dia-bido/": {
+      "slug": "satoshi-bi-week-recap-satoshis-integration-with-binance-wallet-and-partnerships-with-dia-bido",
+      "title": "Satoshi Bi-Week Recap: Satoshi’s Integration with Binance Wallet and Partnerships with DIA &amp; Bido",
+      "publishedTime": "2024-04-18T11:39:46.000Z",
+      "firstSeen": "2026-09-04T10:36:42.401Z"
+    },
+    "https://blog.riverai.inc/bi-week-recap-seed-funding-and-launch-on-bevm-mainnet/": {
+      "slug": "bi-week-recap-seed-funding-and-launch-on-bevm-mainnet",
+      "title": "Bi-Week Recap: Seed Funding and Launch on BEVM Mainnet",
+      "publishedTime": "2024-04-03T02:44:15.000Z",
+      "firstSeen": "2026-09-04T10:36:42.429Z"
+    },
+    "https://blog.riverai.inc/earn-your-share-of-60-000-usdt-in-the-satoshi-protocol-macaron-trading-competition/": {
+      "slug": "earn-your-share-of-60-000-usdt-in-the-satoshi-protocol-macaron-trading-competition",
+      "title": "Earn Your Share of $60,000 USDT in the Satoshi Protocol &amp; Macaron Trading Competition!",
+      "publishedTime": "2024-06-17T02:20:45.000Z",
+      "firstSeen": "2026-09-04T10:36:42.499Z"
+    },
+    "https://blog.riverai.inc/5-2-5-15-satoshi-bi-week-recap-amas-airdrops-and-accolades-a-busy-fortnight-in-btcfi/": {
+      "slug": "5-2-5-15-satoshi-bi-week-recap-amas-airdrops-and-accolades-a-busy-fortnight-in-btcfi",
+      "title": "[5.2–5.15] Satoshi Bi-Week Recap: AMAs, Airdrops, and Accolades — A Busy Fortnight in BTCFi",
+      "publishedTime": "2024-05-17T11:44:07.000Z",
+      "firstSeen": "2026-09-04T10:36:42.521Z"
+    },
+    "https://blog.riverai.inc/satoshi-bi-week-recap-partnerships-innovation-and-bybit-airdrop-frenzy-may-15-31/": {
+      "slug": "satoshi-bi-week-recap-partnerships-innovation-and-bybit-airdrop-frenzy-may-15-31",
+      "title": "Satoshi Bi-Week Recap: Partnerships, Innovation, and Bybit Airdrop Frenzy (May 15–31)",
+      "publishedTime": "2024-06-01T13:45:47.000Z",
+      "firstSeen": "2026-09-04T10:36:42.564Z"
+    },
+    "https://blog.riverai.inc/satoshi-bi-weekly-recap-ranking-1-in-bevm-vote-launch-on-bitlayer-and-support-for-lorenzos/": {
+      "slug": "satoshi-bi-weekly-recap-ranking-1-in-bevm-vote-launch-on-bitlayer-and-support-for-lorenzos",
+      "title": "Satoshi Bi-Weekly Recap: Ranking #1 in BEVM Vote, Launch on Bitlayer and support for Lorenzo’s…",
+      "publishedTime": "2024-06-16T10:52:52.000Z",
+      "firstSeen": "2026-09-04T10:36:42.620Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-the-first-cdp-on-bevm-unleash-btcfi-for-everyone/": {
+      "slug": "satoshi-protocol-the-first-cdp-on-bevm-unleash-btcfi-for-everyone",
+      "title": "Satoshi Protocol : The First CDP on BEVM , Unleash BTCFi for everyone",
+      "publishedTime": "2024-02-24T12:34:15.000Z",
+      "firstSeen": "2026-09-04T10:36:42.659Z"
+    },
+    "https://blog.riverai.inc/satoshi-testnet-launch-a-gateway-to-btcfi/": {
+      "slug": "satoshi-testnet-launch-a-gateway-to-btcfi",
+      "title": "Satoshi Testnet Launch : A Gateway to BTCFi",
+      "publishedTime": "2024-02-28T13:45:38.000Z",
+      "firstSeen": "2026-09-04T10:36:42.662Z"
+    },
+    "https://blog.riverai.inc/satoshi-testnet-launch-complete-quest-to-mint-genesis-spark-nft/": {
+      "slug": "satoshi-testnet-launch-complete-quest-to-mint-genesis-spark-nft",
+      "title": null,
+      "publishedTime": "2024-03-06T12:25:12.000Z",
+      "firstSeen": "2026-09-04T10:36:42.742Z"
+    },
+    "https://blog.riverai.inc/satoshi-ama-recap-mechanism-economic-model-and-future-outlook/": {
+      "slug": "satoshi-ama-recap-mechanism-economic-model-and-future-outlook",
+      "title": "Satoshi AMA Recap : Mechanism, Economic Model, and Future Outlook",
+      "publishedTime": "2024-03-16T11:05:58.000Z",
+      "firstSeen": "2026-09-04T10:36:42.753Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-is-live-on-mainnet-referral-program-and-next-steps/": {
+      "slug": "satoshi-protocol-is-live-on-mainnet-referral-program-and-next-steps",
+      "title": null,
+      "publishedTime": "2024-03-28T15:57:35.000Z",
+      "firstSeen": "2026-09-04T10:36:42.792Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-secured-seed-funding-led-by-web3port-foundation-and-waterdrip-capital/": {
+      "slug": "satoshi-protocol-secured-seed-funding-led-by-web3port-foundation-and-waterdrip-capital",
+      "title": "Satoshi Protocol Secured Seed Funding, Led by Web3Port Foundation and Waterdrip Capital",
+      "publishedTime": "2024-03-26T04:34:32.000Z",
+      "firstSeen": "2026-09-04T10:36:42.852Z"
+    },
+    "https://blog.riverai.inc/simple-tasks-big-rewards-earn-500k-oshi-in-the-satoshi-protocol-airdrop/": {
+      "slug": "simple-tasks-big-rewards-earn-500k-oshi-in-the-satoshi-protocol-airdrop",
+      "title": "Simple Tasks, Big Rewards: Earn 500k OSHI in the Satoshi Protocol Airdrop!",
+      "publishedTime": "2024-04-04T08:28:27.000Z",
+      "firstSeen": "2026-09-04T10:36:42.863Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-partners-with-bido-and-support-wstbtc-as-collateral/": {
+      "slug": "satoshi-protocol-partners-with-bido-and-support-wstbtc-as-collateral",
+      "title": "Satoshi Protocol Partners with Bido and Support wstBTC as collateral",
+      "publishedTime": "2024-04-22T07:16:26.000Z",
+      "firstSeen": "2026-09-04T10:36:42.923Z"
+    },
+    "https://blog.riverai.inc/satoshi-binance-web3-wallet-airdrop-campaign-concluded/": {
+      "slug": "satoshi-binance-web3-wallet-airdrop-campaign-concluded",
+      "title": "Satoshi × Binance Web3 Wallet Airdrop Campaign Concluded",
+      "publishedTime": "2024-05-07T04:08:38.000Z",
+      "firstSeen": "2026-09-04T10:36:42.979Z"
+    },
+    "https://blog.riverai.inc/rewards-beyond-discount-bitcoin-deposit-sat-into-stability-pool-to-earn-additional-points/": {
+      "slug": "rewards-beyond-discount-bitcoin-deposit-sat-into-stability-pool-to-earn-additional-points",
+      "title": "Rewards Beyond Discount Bitcoin: Deposit SAT into Stability Pool to Earn Additional Points",
+      "publishedTime": "2024-05-16T13:16:25.000Z",
+      "firstSeen": "2026-09-04T10:36:42.979Z"
+    },
+    "https://blog.riverai.inc/share-600k-of-bevm-in-bybit-btc-l2-airdrop-season-with-satoshi-protocol/": {
+      "slug": "share-600k-of-bevm-in-bybit-btc-l2-airdrop-season-with-satoshi-protocol",
+      "title": "Share $600K of $BEVM in Bybit BTC L2 Airdrop Season with Satoshi Protocol",
+      "publishedTime": "2024-05-28T10:27:38.000Z",
+      "firstSeen": "2026-09-04T10:36:43.001Z"
+    },
+    "https://blog.riverai.inc/60m-bevm-airdrop-all-rewards-will-be-distributed-to-community/": {
+      "slug": "60m-bevm-airdrop-all-rewards-will-be-distributed-to-community",
+      "title": "$60M BEVM Airdrop, All Rewards will be distributed to Community.",
+      "publishedTime": "2024-06-08T05:42:11.000Z",
+      "firstSeen": "2026-09-04T10:36:43.064Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-deployed-on-bitlayer-a-leap-for-btcfi/": {
+      "slug": "satoshi-protocol-deployed-on-bitlayer-a-leap-for-btcfi",
+      "title": "Satoshi Protocol Deployed on Bitlayer: A Leap for BTCFi",
+      "publishedTime": "2024-06-10T08:43:04.000Z",
+      "firstSeen": "2026-09-04T10:36:43.085Z"
+    },
+    "https://blog.riverai.inc/satoshi-protocol-now-accepts-lorenzo-stbtc-as-collateral-on-bitlayer/": {
+      "slug": "satoshi-protocol-now-accepts-lorenzo-stbtc-as-collateral-on-bitlayer",
+      "title": "Satoshi Protocol now accepts Lorenzo stBTC as collateral on Bitlayer",
+      "publishedTime": "2024-06-12T09:56:48.000Z",
+      "firstSeen": "2026-09-04T10:36:43.152Z"
+    }
+  }
+}

@@ -1,12 +1,12 @@
 # Doc: tokenomics-airdrop
-Source: https://docs.river.inc/tokenomics/airdrop
+Source: https://docs.riverai.inc/tokenomics/airdrop
 Scraped: 2026-05-09T13:50:13.198Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Tokenomics](https://docs.river.inc/tokenomics)
+1.  [Tokenomics](https://docs.riverai.inc/tokenomics)
 
 ## balloonAirdrop
 
@@ -14,9 +14,9 @@ Dynamic Airdrop Conversion 3.0 : First seasonal incentive model
 
 Dynamic Airdrop Conversion is the conversion mechanism between River Pts and $RIVER.
 
-[Conversion 3.0arrow-up-right](https://blog.river.inc/dynamic-airdrop-conversion-3-0/) is the first seasonal incentives model from River that balances contributions and sustains token distribution through recurring Seasons. It changes airdrops from a single distribution to a structure that runs every Season.
+[Conversion 3.0arrow-up-right](https://blog.riverai.inc/dynamic-airdrop-conversion-3-0/) is the first seasonal incentives model from River that balances contributions and sustains token distribution through recurring Seasons. It changes airdrops from a single distribution to a structure that runs every Season.
 
-Conversion 1.0 introduced the first time-encoded tokenomics, aligning rewards with long-term contributors. [Conversion 2.0arrow-up-right](https://gov.river.inc/t/conversion-2-0-activation/) added the integral curve, daily cap, and half-life recovery.
+Conversion 1.0 introduced the first time-encoded tokenomics, aligning rewards with long-term contributors. [Conversion 2.0arrow-up-right](https://gov.riverai.inc/t/conversion-2-0-activation/) added the integral curve, daily cap, and half-life recovery.
 
 The 180-day curve closed on April 22, 2026, with 650M River Pts converted across 2 Seasons. Conversion 3.0 is now live.
 
@@ -62,15 +62,15 @@ Supply not converted in a given Season carries forward, sustaining distribution 
 
 The 30 % allocation acts as a long-term ceiling, released Season by Season as the network grows.
 
-Real-time conversion data is shown at [**app.river.inc/airdrop**arrow-up-right](https://app.river.inc/airdrop)
+Real-time conversion data is shown at [**app.riverai.inc/airdrop**arrow-up-right](https://app.riverai.inc/airdrop)
 
 Suppose you hold 10,000 River Pts.
 
-Each Season is set with a constant ideal rate. The [S5 ideal rate is 0.01arrow-up-right](https://blog.river.inc/s5-live/), meaning 10,000 River Pts produce a base output of 100 Staked RIVER at the ideal rate.
+Each Season is set with a constant ideal rate. The [S5 ideal rate is 0.01arrow-up-right](https://blog.riverai.inc/s5-live/), meaning 10,000 River Pts produce a base output of 100 Staked RIVER at the ideal rate.
 
 The actual rate at execution depends on the conversion activity at that moment and the staking epoch (3 to 24 months) you select. Conversion activity follows the integral pricing model from 2.0. Denser participation compresses the rate, quieter periods recover it.
 
-![Dynamic Airdrop Conversion 3.0](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fam3ffqkuOI7JVRGng3WM%252Fimage.png%3Falt%3Dmedia%26token%3D5b7591f4-61a1-4f47-9599-3a5e0b954387&width=768&dpr=3&quality=100&sign=73150e69&sv=2)
+![Dynamic Airdrop Conversion 3.0](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252Fam3ffqkuOI7JVRGng3WM%252Fimage.png%3Falt%3Dmedia%26token%3D5b7591f4-61a1-4f47-9599-3a5e0b954387&width=768&dpr=3&quality=100&sign=73150e69&sv=2)
 
 **Example : 10k River Pts / 3 months**
 
@@ -304,16 +304,16 @@ Every Staked Until date anchors to a Season boundary. Voting power stays active 
 
 River Pts are awarded based on real activity across the River ecosystem. They reflect contributions in DeFi, social engagement, and staking, and accrue across Seasons.
 
-They reflect contributions in DeFi, social engagement, and staking. ([S5 Airdroparrow-up-right](https://blog.river.inc/s5-live/))
+They reflect contributions in DeFi, social engagement, and staking. ([S5 Airdroparrow-up-right](https://blog.riverai.inc/s5-live/))
 
--   [**Omni-CDP**arrow-up-right](https://app.river.inc/staking) **/ satUSD / Vaults**: add liquidity (e.g. satUSD/USDT), stake in Smart Vault or Prime Vault, hold YT. Actions include multipliers (2× to 25×).
+-   [**Omni-CDP**arrow-up-right](https://app.riverai.inc/staking) **/ satUSD / Vaults**: add liquidity (e.g. satUSD/USDT), stake in Smart Vault or Prime Vault, hold YT. Actions include multipliers (2× to 25×).
     
--   [**River4FUN**arrow-up-right](https://app.river.inc/fun) **/ Social Engagement**: connect your X account, post content, participate in campaigns — your engagement is converted into Pts.
+-   [**River4FUN**arrow-up-right](https://app.riverai.inc/fun) **/ Social Engagement**: connect your X account, post content, participate in campaigns — your engagement is converted into Pts.
     
--   [**Staked RIVER**arrow-up-right](https://app.river.inc/river) : Staking $RIVER is how you accumulate River Pts, gain voting power, and participate in River governance.
+-   [**Staked RIVER**arrow-up-right](https://app.riverai.inc/river) : Staking $RIVER is how you accumulate River Pts, gain voting power, and participate in River governance.
     
 
-Claim is receiving the eligible River Pts allocation through the airdrop page. River Pts earned in any Season remain claimable within a specific window (S4 — 60 days, see [S4 Airdrop is Livearrow-up-right](https://blog.river.inc/)).
+Claim is receiving the eligible River Pts allocation through the airdrop page. River Pts earned in any Season remain claimable within a specific window (S4 — 60 days, see [S4 Airdrop is Livearrow-up-right](https://blog.riverai.inc/)).
 
 Once claimed, Pts remain convertible across all subsequent Seasons.
 
@@ -328,9 +328,9 @@ Once claimed, Pts remain convertible across all subsequent Seasons.
 6.  Confirm to receive Staked RIVER
     
 
-View your final Staked RIVER amount, actual conversion result, and full history at [app.river.inc/riverarrow-up-right](https://app.river.inc/river).
+View your final Staked RIVER amount, actual conversion result, and full history at [app.riverai.inc/riverarrow-up-right](https://app.riverai.inc/river).
 
-[**Season 5**arrow-up-right](https://blog.river.inc/s5-live/) is open to everyone.
+[**Season 5**arrow-up-right](https://blog.riverai.inc/s5-live/) is open to everyone.
 
 Most actions to earn River Pts are the same as in Season 4, including minting, staking, swapping, and joining campaigns.
 
@@ -338,7 +338,7 @@ The only difference is the claiming time.
 
 This is a new opportunity to start earning River Pts and participate in the ecosystem.
 
-Learn more : [https://blog.river.inc/s5-live/arrow-up-right](https://blog.river.inc/s5-live/)
+Learn more : [https://blog.riverai.inc/s5-live/arrow-up-right](https://blog.riverai.inc/s5-live/)
 
 Last updated 47 minutes ago
 

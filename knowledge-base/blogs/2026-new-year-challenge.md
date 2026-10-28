@@ -1,6 +1,6 @@
 # Blog: 2026-new-year-challenge
-Source: https://blog.river.inc/2026-new-year-challenge/
-Scraped: 2026-05-08T07:53:44.030Z
+Source: https://blog.riverai.inc/2026-new-year-challenge/
+Scraped: 2026-09-04T10:50:23.210Z
 
 ---
 
@@ -58,7 +58,7 @@ If multiple entries land on the same price, **earlier submissions will be priori
 
 Fill out the form with your tweet link, your price prediction, and the wallet address where you want rewards sent.
 
-Google form → [https://forms.gle/MJ2JWUEdUqj3JeNF9](https://forms.gle/MJ2JWUEdUqj3JeNF9?ref=blog.river.inc)
+Google form → [https://forms.gle/MJ2JWUEdUqj3JeNF9](https://forms.gle/MJ2JWUEdUqj3JeNF9?ref=blog.riverai.inc)
 
 ### Rules and disclaimer
 
@@ -81,5 +81,4 @@ River is building a chain-abstraction stablecoin system that connects assets, li
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
-<!-- /EXCLUDE -->
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

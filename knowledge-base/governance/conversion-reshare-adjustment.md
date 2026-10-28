@@ -1,5 +1,5 @@
 # Governance: Conversion Reshare Adjustment
-Source: https://gov.river.inc/t/conversion-reshare-adjustment/167
+Source: https://gov.riverai.inc/t/conversion-reshare-adjustment/167
 Scraped: 2026-05-10T01:04:03.099Z
 
 ---
@@ -88,6 +88,6 @@ This adjustment applies to all conversions going forward.
 
 #### [](#p-314-reference-6)Reference
 
-*   [Conversion 2.0 Activation](https://gov.river.inc/t/conversion-2-0-activation/151/1)
-*   [Conversion 2.0 is LIVE](https://blog.river.inc/conversion-2-0/)
-*   [River Staking Parameters for Activation](https://gov.river.inc/t/river-staking-parameters-for-activation/147)
+*   [Conversion 2.0 Activation](https://gov.riverai.inc/t/conversion-2-0-activation/151/1)
+*   [Conversion 2.0 is LIVE](https://blog.riverai.inc/conversion-2-0/)
+*   [River Staking Parameters for Activation](https://gov.riverai.inc/t/river-staking-parameters-for-activation/147)

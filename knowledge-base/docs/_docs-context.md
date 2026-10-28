@@ -1,7 +1,8 @@
 # Docs Knowledge Base — Curation Context
 
-Source: docs.river.inc
+Source: docs.riverai.inc
 Last curated: 2026-05-10
+Domain migrated from docs.river.inc to docs.riverai.inc on 2026-09-04 — old domain retired.
 
 ---
 
@@ -9,7 +10,7 @@ Last curated: 2026-05-10
 
 Official product documentation — how things work, step-by-step guides, contract addresses, oracle specs, audit reports. This is the most authoritative source for product mechanics and technical details.
 
-Docs are scraped from docs.river.inc and represent the current state of the official documentation. When a doc conflicts with a blog or governance post, the doc takes precedence unless a corrections file explicitly overrides it.
+Docs are scraped from docs.riverai.inc and represent the current state of the official documentation. When a doc conflicts with a blog or governance post, the doc takes precedence unless a corrections file explicitly overrides it.
 
 ---
 
@@ -41,7 +42,7 @@ Docs are scraped from docs.river.inc and represent the current state of the offi
 
 | Field | Value | Meaning |
 |---|---|---|
-| `sitemapUrl` | `https://docs.river.inc/sitemap-pages.xml` | Where `/sync doc` reads the page list from |
+| `sitemapUrl` | `https://docs.riverai.inc/sitemap-pages.xml` | Where `/sync doc` reads the page list from |
 | `configuredSinceDate` | — | No date floor. All pages in the sitemap are scraped regardless of publish date |
 | `excluded` | — | No URL-level exclusion list for docs. Unlike blogs, there is no `/exclude-doc` command. To skip a doc page, apply `<!-- EXCLUDE -->` markers inside the file instead |
 
@@ -49,7 +50,7 @@ Docs are scraped from docs.river.inc and represent the current state of the offi
 
 ## Future sync instructions
 
-When scraping updated docs from docs.river.inc:
+When scraping updated docs from docs.riverai.inc:
 1. Always overwrite existing doc files — docs are the live authoritative source
 2. After sync, check if any corrections files are now outdated (i.e., if the main doc has been updated to reflect what the correction was fixing)
 3. Check `outro-deployed-contracts-*.md` files after any new chain integration announcement — new chain deployments will need a new file

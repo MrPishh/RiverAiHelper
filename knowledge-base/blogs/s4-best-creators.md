@@ -1,6 +1,6 @@
 # Blog: s4-best-creators
-Source: https://blog.river.inc/s4-best-creators/
-Scraped: 2026-05-08T07:53:39.749Z
+Source: https://blog.riverai.inc/s4-best-creators/
+Scraped: 2026-09-04T10:50:19.714Z
 
 ---
 
@@ -16,7 +16,7 @@ S4 Best Creators is a community-led campaign. RIVER Stakers decide which creator
 
 No algorithmic ranking. Voting power comes from staked RIVER, following the governance framework already live on River.
 
-Vote here → [app.river.inc/fun](https://app.river.inc/4fun?ref=blog.river.inc)
+Vote here → [app.riverai.inc/fun](https://app.riverai.inc/4fun?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/04/image-18.png)
 
@@ -32,7 +32,7 @@ The campaign runs across **two weekly rounds**, from April 27 to May 11.
 -   Each address votes once per round
 -   Two rounds total, snapshots refresh weekly
 
-Voting power is derived directly from the staking position on-chain. The formula follows the [River Staking Parameters for Activation](https://gov.river.inc/t/river-staking-parameters-for-activation/147?ref=blog.river.inc)
+Voting power is derived directly from the staking position on-chain. The formula follows the [River Staking Parameters for Activation](https://gov.riverai.inc/t/river-staking-parameters-for-activation/147?ref=blog.riverai.inc)
 
 **Voting power = staked amount × multiplier**
 
@@ -84,7 +84,7 @@ Candidates are drawn from creators active across Season 4. Submissions remain op
 
 Creators can submit their own work. Community members can nominate others.
 
-Submission → [**https://forms.gle/4cN9AxrzpMJzmcg27**](https://forms.gle/MFDyrmueemY6uUC69?ref=blog.river.inc)
+Submission → [**https://forms.gle/4cN9AxrzpMJzmcg27**](https://forms.gle/MFDyrmueemY6uUC69?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/04/image-17.png)
 
@@ -143,7 +143,7 @@ For creators:
 -   Share your submission with the community
 -   Track your position on the leaderboard as votes come in
 
-Vote here: [app.river.inc/fun](https://app.river.inc/4fun?ref=blog.river.inc)
+Vote here: [app.riverai.inc/fun](https://app.riverai.inc/4fun?ref=blog.riverai.inc)
 
 ![](https://storage.ghost.io/c/a1/d6/a1d63116-fa30-4449-943c-8539b953740a/content/images/2026/04/image-19.png)
 
@@ -165,5 +165,4 @@ River is building the first chain-abstraction stablecoin system that connects as
 
 Powered by the omni-CDP stablecoin satUSD, River allows users to collateralize assets on one chain and mint on another — natively earning, leveraging, and scaling across networks.
 
-[River App](https://app.river.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.river.inc/?ref=blog.river.inc)
-<!-- /EXCLUDE -->
+[River App](https://app.riverai.inc/?ref=blog.river.inc) | [@RiverdotInc](https://x.com/riverdotinc?ref=blog.river.inc) | [Telegram](https://t.me/river_inc?ref=blog.river.inc) | [Discord](https://discord.com/invite/river-inc?ref=blog.river.inc) | [Docs](https://docs.riverai.inc/?ref=blog.river.inc)

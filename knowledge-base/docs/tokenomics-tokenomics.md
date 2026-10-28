@@ -1,12 +1,12 @@
 # Doc: tokenomics-tokenomics
-Source: https://docs.river.inc/tokenomics/tokenomics
+Source: https://docs.riverai.inc/tokenomics/tokenomics
 Scraped: 2026-05-09T13:50:11.897Z
 
 ---
 
 ⌘Ctrlk
 
-1.  [Tokenomics](https://docs.river.inc/tokenomics)
+1.  [Tokenomics](https://docs.riverai.inc/tokenomics)
 
 ## chart-pieTokenomics
 
@@ -20,7 +20,7 @@ As satUSD adoption scales, RIVER ensures that value creation flows back to the s
 
 **Total Supply: 100,000,000 RIVER**
 
-![](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FdOd3yeweRCsNy5Zje5RY%252Fimage.png%3Falt%3Dmedia%26token%3D7a803cc1-4722-4cf8-930c-3ee977b5009f&width=768&dpr=3&quality=100&sign=fe1a7a22&sv=2)
+![](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252FdOd3yeweRCsNy5Zje5RY%252Fimage.png%3Falt%3Dmedia%26token%3D7a803cc1-4722-4cf8-930c-3ee977b5009f&width=768&dpr=3&quality=100&sign=fe1a7a22&sv=2)
 
 Liquidity
 
@@ -52,7 +52,7 @@ Ecosystem
 
 24,000,000
 
-![](https://docs.river.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252F39ie0hgXeaX8wa8oJjW3%252Fimage.png%3Falt%3Dmedia%26token%3Df860620c-8229-4a0f-8809-0adf7e5ffa5d&width=768&dpr=3&quality=100&sign=1bd3edb8&sv=2)
+![](https://docs.riverai.inc/~gitbook/image?url=https%3A%2F%2F3162812039-files.gitbook.io%2F%7E%2Ffiles%2Fv0%2Fb%2Fgitbook-x-prod.appspot.com%2Fo%2Fspaces%252FPZA7LS6LjeZIqysGy3p7%252Fuploads%252F39ie0hgXeaX8wa8oJjW3%252Fimage.png%3Falt%3Dmedia%26token%3Df860620c-8229-4a0f-8809-0adf7e5ffa5d&width=768&dpr=3&quality=100&sign=1bd3edb8&sv=2)
 
 * * *
 
@@ -66,9 +66,9 @@ Ecosystem
     
 -   Each Season sets a constant ideal rate.
     
--   The actual rate at execution updates every block based on conversion activity, following the integral pricing model from [2.0arrow-up-right](https://blog.river.inc/conversion-2-0/).
+-   The actual rate at execution updates every block based on conversion activity, following the integral pricing model from [2.0arrow-up-right](https://blog.riverai.inc/conversion-2-0/).
     
--   [Eight staking epochsarrow-up-right](https://docs.river.inc/tokenomics/usdriver) are available, from 3 to 24 months. Each epoch anchors the unlock date to a Season boundary and applies a voting power multiplier (1x to 24x).
+-   [Eight staking epochsarrow-up-right](https://docs.riverai.inc/tokenomics/usdriver) are available, from 3 to 24 months. Each epoch anchors the unlock date to a Season boundary and applies a voting power multiplier (1x to 24x).
     
 
 **Dynamic Airdrop Conversion (S5, ideal rate 0.01):**
@@ -98,9 +98,9 @@ Actual output varies block by block based on conversion density.
 -   Establish the community as River's largest and most empowered holders.
     
 
-The real-time conversion rate is available on the [official airdrop pagearrow-up-right](https://app.river.inc/airdrop).
+The real-time conversion rate is available on the [official airdrop pagearrow-up-right](https://app.riverai.inc/airdrop).
 
-Full mechanism details are in the [dynamic airdrop conversion documentarrow-up-right](https://blog.river.inc/dynamic-airdrop-conversion-3-0/).
+Full mechanism details are in the [dynamic airdrop conversion documentarrow-up-right](https://blog.riverai.inc/dynamic-airdrop-conversion-3-0/).
 
 * * *
 
