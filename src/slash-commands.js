@@ -37,7 +37,7 @@ const path     = require('path');
 const ROOT_DIR = path.join(__dirname, '..');
 
 const { REST, Routes, ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
-const { isEnabled, toggle, getStatus } = require('./toggles');
+const { toggle, getStatus } = require('./toggles');
 
 // ─── Command definitions ──────────────────────────────────────────────────────
 
@@ -488,7 +488,7 @@ function createSlashHandler(discordClient, config, modules) {
                               (f.previouslyKnownAs ? ` (seen before as "${f.previouslyKnownAs}")` : ' (never seen before this sync)')
                           ).join('\n') +
                           (result.flaggedForReview.length > 8 ? `\n  …and ${result.flaggedForReview.length - 8} more (see logs)` : '') +
-                          `\nUse \`/include-blog\` on any of these if they should be in the KB despite the date floor.`
+                          `\nUse \`/blog action:Include\` on any of these if they should be in the KB despite the date floor.`
                         : '';
                     const dateNote  = result.effectiveSince !== result.configuredSince
                         ? `\nConfigured since: ${result.configuredSince} | Scraping from: **${result.effectiveSince}**`

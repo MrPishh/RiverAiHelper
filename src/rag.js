@@ -210,7 +210,7 @@ function cosine(a, b) {
 
 async function searchKB(query, topK = TOP_K) {
     const cache = loadCache();
-    if (cache.chunks.length === 0) return { context: '(Knowledge base is empty — run /sync-knowledge to index it.)', sources: [], rawChunks: [] };
+    if (cache.chunks.length === 0) return { context: '(Knowledge base is empty — run /sync type:Knowledge to index it.)', sources: [], rawChunks: [] };
 
     const [queryVec] = await embed([query]);
 

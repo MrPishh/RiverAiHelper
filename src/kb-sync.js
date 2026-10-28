@@ -353,7 +353,7 @@ async function syncBlog() {
             // whose true publish date sits right at the floor but reads as live/current
             // content (the 2026-09-04 migration surfaced exactly this for blog.riverai.inc/river/,
             // published_time 2025-05-13, two days before the 2025-05-15 floor). Hold it
-            // out of the KB but report it so a human can `/include-blog` it if it belongs.
+            // out of the KB but report it so a human can `/blog action:Include` it if it belongs.
             // If this exact URL is already in the legacy registry (a previously-seen,
             // deliberately-excluded post), surface its known title too — a title match
             // against what we recorded before is a strong "still the same old post" signal.

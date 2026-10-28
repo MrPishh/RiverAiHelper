@@ -38,66 +38,66 @@
 // L148     SECTIONS_START
 // L149     SECTIONS_END
 // L154     KNOWN_FINDINGS
-// L161   Small helpers
-// L164     readText()
-// L169     walk()
-// L186     listCodeFiles()
-// L193     listDocFiles()
-// L202     splitText()
-// L210     joinText()
-// L215     cell()
-// L219   JavaScript scanner
-// L224     REGEX_AFTER_WORDS
-// L228     scanJs()
-// L240       fail()
-// L242       newline()
-// L244       regexAllowed()
-// L251       push()
-// L255       readTemplate()
-// L367     codeFingerprint()
-// L371   Code file analysis
-// L374     DEF_PATTERNS
-// L383     HEADER_RE
-// L384     RULE_RE
-// L385     BOX_TEXT_RE
-// L388     commentText()
-// L400     firstSentence()
-// L408     stripContents()
-// L418     analyzeCode()
-// L424       isCode()
-// L436       isCommentOnly()
-// L485       purposeAbove()
-// L505       matchDef()
-// L514       blockEnd()
-// L572       lineOf()
-// L627   Contents block
-// L630     renderContents()
-// L656   Docs
-// L659     mdHeadings()
-// L673     slug()
-// L680     anchorsOf()
-// L693     stripSections()
-// L703     renderSections()
-// L718       safe()
-// L725     tableUnder()
-// L742     ticks()
-// L746   CODE_INDEX.md
-// L749     renderIndex()
-// L752       loc()
-// L840   Drift checks
-// L843     runChecks()
-// L848       err()
-// L854       warn()
-// L855       docLines()
-// L1036      usedElsewhere()
-// L1042  Build
-// L1045    envNames()
-// L1052    build()
-// L1112    staleFiles()
-// L1117    printReport()
-// L1131    runOnce()
-// L1154    watch()
-// L1158      trigger()
+// L158   Small helpers
+// L161     readText()
+// L166     walk()
+// L183     listCodeFiles()
+// L190     listDocFiles()
+// L199     splitText()
+// L207     joinText()
+// L212     cell()
+// L216   JavaScript scanner
+// L221     REGEX_AFTER_WORDS
+// L225     scanJs()
+// L237       fail()
+// L239       newline()
+// L241       regexAllowed()
+// L248       push()
+// L252       readTemplate()
+// L364     codeFingerprint()
+// L368   Code file analysis
+// L371     DEF_PATTERNS
+// L380     HEADER_RE
+// L381     RULE_RE
+// L382     BOX_TEXT_RE
+// L385     commentText()
+// L397     firstSentence()
+// L405     stripContents()
+// L415     analyzeCode()
+// L421       isCode()
+// L433       isCommentOnly()
+// L482       purposeAbove()
+// L502       matchDef()
+// L511       blockEnd()
+// L569       lineOf()
+// L624   Contents block
+// L627     renderContents()
+// L653   Docs
+// L656     mdHeadings()
+// L670     slug()
+// L677     anchorsOf()
+// L690     stripSections()
+// L700     renderSections()
+// L715       safe()
+// L722     tableUnder()
+// L739     ticks()
+// L743   CODE_INDEX.md
+// L746     renderIndex()
+// L749       loc()
+// L837   Drift checks
+// L840     runChecks()
+// L845       err()
+// L851       warn()
+// L852       docLines()
+// L1033      usedElsewhere()
+// L1039  Build
+// L1042    envNames()
+// L1049    build()
+// L1109    staleFiles()
+// L1114    printReport()
+// L1128    runOnce()
+// L1151    watch()
+// L1155      trigger()
 // ----- end of contents -----
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
@@ -152,9 +152,6 @@ const SECTIONS_END   = '-->';
 // separate work). Listed here they are reported as warnings instead of errors, so
 // --check can pass; remove an entry once the code is fixed. Key: "check|file|name".
 const KNOWN_FINDINGS = new Map([
-    ['dead code|src/blog-scraper.js|fs',       'unused import — awaiting approval to remove'],
-    ['dead code|src/blog-scraper.js|ROOT_DIR', 'unused constant — awaiting approval to remove'],
-    ['dead code|src/slash-commands.js|isEnabled', 'unused import — awaiting approval to remove'],
     ['dead code|weekly-report/community-report/community-report.js|readCollabMessages', 'kept on purpose for the future Business Proposals report section'],
 ]);
 

@@ -272,7 +272,7 @@ function createMonitorModule(anthropic, { trackUsage = null } = {}) {
     }
 
     // ── Announcement auto-scan ─────────────────────────────────────────────────
-    // Called during /sync-knowledge. Reads raw weekly announcement files,
+    // Called during /sync type:Knowledge. Reads raw weekly announcement files,
     // filters to entries newer than the last scan, strips already-indexed blog
     // URLs, then asks Haiku whether remaining content contains net-new facts.
     // If yes, appends a summary to the relevant curated file.
