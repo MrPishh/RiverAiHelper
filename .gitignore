@@ -7,14 +7,25 @@ node_modules/
 
 # ── Generated / runtime state ─────────────────────────────────────────────────
 knowledge-base/.embeddings-cache.json
-toggles.json
-usage-stats.json
+knowledge-base/corrections/_drafts/
+data/toggles.json
+data/usage-stats.json
+weekly-report/community-report/report-cache.json
 
 # ── User data & logs ──────────────────────────────────────────────────────────
+# data/ holds scammer records, Telegram bans/admins and watch logs (user IDs) — never commit
+data/*
+!data/.gitkeep
+# Learned Q&A pairs contain community members' questions — keep local only
+channel-learning/*/
+# Batch-audit outputs contain community messages; the scripts themselves are committed
+scripts/intent-batch-audit/messages.json
+scripts/intent-batch-audit/results-summary.json
+scripts/intent-batch-audit/batch-id.txt
 intent/*.jsonl
 weekly-report/member-stats/**/*.jsonl
+logs/
 *.log
-bot-startup.log
 
 # ── Private owner notes (not part of bot code) ────────────────────────────────
 _dev-notes/
