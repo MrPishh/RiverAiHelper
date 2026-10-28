@@ -44,14 +44,16 @@ Each incoming message is classified into one intent category. The category deter
 
 ## Context rules (override category)
 
-These apply regardless of what category a message falls into.
+These apply regardless of what category a message falls into (as implemented in `src/commands.js` and `telegram/telegram-adapter.js`).
 
 | Rule | Condition | Bot behaviour |
 |---|---|---|
-| Staff engaged | Staff has already replied in the thread | Do not respond unless directly @mentioned |
-| Already handled | The original question has already received a bot answer in this thread | Do not pile on with a second response |
-| Community stepped in | A non-staff community member has replied to the original message | Do not respond — intent and whether to intervene depends on what they said and whether it helps or harms. Default: stay out. |
-| Thread noise | Multiple people have replied and the conversation is active | Do not add to the noise. If the question still needs answering, it belongs in a ticket. |
+| Staff engaged | Staff replied to the user, or posted any message while that user's auto-answer was pending | The pending auto-answer is cancelled and unprompted auto-answers to that user are blocked for 3 minutes; for the next 20 minutes the wait is 3 minutes instead of 5. @mentions and replies to the bot are still answered. |
+| Community stepped in | A non-staff member replies to a question that is waiting for an auto-answer | The reply is classified. Only genuine `community-help` cancels the bot's answer; anything else (including `scam-content`) leaves it running, so scammers can't silence the bot. |
+| Self-resolution | The asker says it's sorted ("ok", "fixed", "working now"…) while their auto-answer is pending | The pending auto-answer is cancelled. |
+| Answer limit | The bot has given the same user 2 complete answers in the same channel within 2 hours | The next one is replaced by a link to open a support ticket. |
+
+Not implemented (earlier ideas): "Already handled — don't pile on with a second answer in a thread" and "Thread noise — stay out of busy multi-person threads".
 
 ---
 
@@ -94,7 +96,7 @@ A known attack pattern: scammer sets their display name to closely resemble a st
 Default is still to stay out. The risk of a bot correction: if the community member is building fake trust (potential scammer), the bot engaging with them gives their presence more legitimacy. If they are genuinely trying to help, the bot correcting them publicly undermines them. Staff should handle factual corrections in public threads.
 
 **Abusive messages directed at scammers vs community members**
-Context determines the category. "You want your mom to get laid?" replying to a scammer's deleted message is venting at a bad actor — not community abuse. The same message directed at a real community member unprovoked is `community-conduct`. Check what the message is replying to before classifying. When `community-conduct` is confirmed, the bot can step in briefly to ask the person to keep the space respectful — but should not escalate or lecture.
+Context determines the category. "You want your mom to get laid?" replying to a scammer's deleted message is venting at a bad actor — not community abuse. The same message directed at a real community member unprovoked is `community-conduct`. Check what the message is replying to before classifying. `community-conduct` is not answered by the bot — it is logged for reports; on Telegram, a watched user's abusive message is deleted.
 
 **@mention does not always mean "answer this"**
 A user @mentioning the bot while asking for a ticket check or human admin is not a protocol question. The @mention is a reach for any attention. Intent still needs to be classified — the trigger mechanism does not determine the response.

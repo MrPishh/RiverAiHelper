@@ -90,3 +90,5 @@ River4FUN brings a new dimension to DeFi participation. It gives users a way to 
 If you’re ready to turn your voice and assets into ownership, join River4FUN and start earning today.
 
 Join River4FUN → [https://app.riverai.inc/fun](https://app.riverai.inc/fun?ref=blog.riverai.inc)
+
+<!-- /EXCLUDE -->

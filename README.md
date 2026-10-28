@@ -7,7 +7,7 @@ A Discord and Telegram support bot for River Protocol. It answers community ques
 - **Answers questions** on Discord and Telegram — when @mentioned, when someone replies to one of its answers, or unprompted in answer channels after giving staff 5 minutes to reply first. How each case is handled: `docs/ARCHITECTURE.md` § How a message flows.
 - **Replies are tagged** `ANSWER:` (answered from the KB), `CLARIFY:` (asks one follow-up question) or `ESCALATE:` (sends the user to a support ticket).
 - **Follow-up footer:** on Discord, ANSWER and CLARIFY replies end with *"-# To follow up: reply to this message or @RiverAiBot — no wait."* — replying or @mentioning skips the 5-minute staff wait. Telegram replies have no footer.
-- **Blocks scams** — detects scam messages and name impersonation; with the scam blocker on, deletes them and times the sender out.
+- **Blocks scams** — detects scam messages and name impersonation; on Discord, with the scam blocker on, deletes them and times the sender out. On Telegram only users on the moderation list are moderated.
 - **Keeps its knowledge current** — syncs the docs and blog sitemaps, captures announcements, and learns Q&A pairs from staff replies.
 - **Reports** — weekly or daily community reports and member join/leave stats (see `weekly-report/README.md`).
 
@@ -61,15 +61,17 @@ Runtime state that survives restarts. Not in git — created on first write; `da
 
 ### `logs/`
 
-| File | What it holds |
-|---|---|
-| `bot-startup.log` | Start-up output from an early pm2 setup. No longer written — kept for reference. |
+Empty — kept for any future log files (the old `bot-startup.log` was deleted on 2026-10-29). The bot's own output goes to pm2's logs (`pm2 logs river-bot`); since 2026-10-29 every line starts with an ISO timestamp.
+
+### Tests
+
+`npm test` runs the offline test suite in `test/` (no network, never touches real data). `npm run eval` checks answer quality against the real models — see CLAUDE.md § Generated parts and checks.
 
 ## Knowledge base
 
 ```
 knowledge-base/
-  README.md                      ← Notes on the folder (also indexed by RAG)
+  README.md                      ← Notes on the folder for developers (not indexed)
   core-facts.md                  ← Permanent facts injected into every Claude prompt
   docs/
     _docs-context.md             ← Curation notes: purpose, known issues, sync rules
@@ -114,9 +116,9 @@ channel-learning/
   <channel>/qa-log.md            ← Q&A pairs learned from staff replies (local only)
 ```
 
-**Search priority:** corrections rank 1.3×, blogs and announcements 1.1×, docs 1.0×. Files and folders starting with `_`, and the raw `*_ann` / `*_tweet` folders, are not indexed.
+**Search priority:** corrections rank 1.3×, blogs and announcements 1.1×, docs 1.0×. Files and folders starting with `_` (e.g. `corrections/_drafts/`), `README.md` files, and the raw `*_ann` / `*_tweet` folders are not indexed.
 
-**`<!-- EXCLUDE -->` markers:** a section wrapped in `<!-- EXCLUDE -->…<!-- /EXCLUDE -->` is stripped before indexing — kept in the file, never retrieved. Use it for outdated content. Docs files carrying a marker are skipped by `/sync type:Doc force:true`, and syncs re-apply the marker when they rewrite a file.
+**`<!-- EXCLUDE -->` markers:** a section wrapped in `<!-- EXCLUDE -->…<!-- /EXCLUDE -->` is stripped before indexing — kept in the file, never retrieved. An unclosed `<!-- EXCLUDE -->` hides everything after it (whole-file exclusion: put it right after the header). The list of excluded blog posts and why is in `knowledge-base/blogs/_blogs-context.md`. Use it for outdated content. Docs files carrying a marker are skipped by `/sync type:Doc force:true`, and syncs re-apply the marker when they rewrite a file.
 
 **To add a core fact:** edit `knowledge-base/core-facts.md`, then run `/sync type:Knowledge` in Discord.
 

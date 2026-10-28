@@ -112,7 +112,7 @@ const ROOT = path.join(__dirname, '..');
 // What gets indexed and checked. Add a new code folder to CODE_ROOTS, or it
 // stays invisible to the index and the checks.
 
-const CODE_ROOTS = ['bot.js', 'src', 'telegram', 'intent', 'weekly-report', 'scripts'];
+const CODE_ROOTS = ['bot.js', 'src', 'telegram', 'intent', 'weekly-report', 'scripts', 'test'];
 
 // Never walked: dependencies, data the bot writes, private notes, tooling.
 const SKIP_DIRS = new Set(['node_modules', '.git', '.claude', 'data', 'logs', 'knowledge-base', 'channel-learning', '_dev-notes']);

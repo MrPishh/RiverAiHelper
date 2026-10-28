@@ -25,19 +25,19 @@
 // L115    isStaff()
 // L121    isBotMentioned()
 // L126    stripBotMention()
-// L134    looksResolved()
-// L139    trackerKey()
-// L143  Spoof-detection helpers
-// L146    LEET_MAP
-// L147    STRIP_WORDS_RE
-// L150    normalizeDisplayName()
-// L159    levenshtein()
-// L178    looksLikeSpoofedName()
-// L191    HELPER_OFFER_RE
-// L194    looksLikeHelperOffer()
-// L199  Knowledge helpers
-// L204    splitMessage()
-// L222    saveQAPair()
+// L133    looksResolved()
+// L138    trackerKey()
+// L142  Spoof-detection helpers
+// L145    LEET_MAP
+// L146    STRIP_WORDS_RE
+// L149    normalizeDisplayName()
+// L158    levenshtein()
+// L177    looksLikeSpoofedName()
+// L190    HELPER_OFFER_RE
+// L193    looksLikeHelperOffer()
+// L198  Knowledge helpers
+// L203    splitMessage()
+// L221    saveQAPair()
 // ----- end of contents -----
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
@@ -122,11 +122,10 @@ function isBotMentioned(message, botUserId) {
     return message.mentions.users.has(botUserId);
 }
 
-// Removes the bot's @mention from message text.
+// Removes every @mention of the bot (both <@id> and the older <@!id> form) from message text.
 function stripBotMention(content, botUserId) {
     return content
-        .replace(`<@${botUserId}>`, '')
-        .replace(`<@!${botUserId}>`, '')
+        .replace(new RegExp(`<@!?${botUserId}>`, 'g'), '')
         .trim();
 }
 

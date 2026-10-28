@@ -31,7 +31,7 @@ const REPHRASE_WINDOW_MS         = 2 * 60 * 60 * 1000;
 const MAX_BOT_ANSWERS_BEFORE_TICKET = 2;
 // How long a conversation stays alive for follow-ups.
 const CONV_EXPIRY_MS             = 30 * 60 * 1000;
-const STAFF_ENGAGED_WINDOW_MS    = 3 * 60 * 1000;   // 3 min hard block after staff replies to a user
+const STAFF_ENGAGED_WINDOW_MS    = 3 * 60 * 1000;   // 3 min hard block after staff engage a user (reply to them, or post while their answer is pending)
 const POST_STAFF_WAIT_MS         = 3 * 60 * 1000;   // shorter wait for same user after staffEngaged expires
 const POST_STAFF_CONTEXT_MS      = 20 * 60 * 1000;  // how long POST_STAFF_WAIT applies (20 min window)
 // How long a user's community-discussion message is kept as context for their next message.
@@ -50,7 +50,7 @@ const REFERRAL_CODES = ['JosephineOral', 'MrPishh'];
 // Wrapped in objects so mutations to scalar values propagate across modules.
 // (Exporting a bare primitive snapshots its value at require-time.)
 const coreFacts     = { value: '' };   // set by loadCoreFacts()
-const referralCode  = { idx: 0 };     // incremented by askClaude()
+const referralCode  = { idx: 0 };     // incremented by buildInitialHistory() (once per new conversation)
 
 // userId::channelId → { messages: [{id, content, ts}], userId, channelId, timer, lastMessage, storedAt }
 // A pending Scenario 3 batch. Messages from the same user in the same channel that arrive

@@ -11,8 +11,8 @@
 // L22    ROOT_DIR
 // L23    KB_DIR
 // L24    CL_DIR
-// L27    readMdFiles()
-// L53    getSourceFiles()
+// L28    readMdFiles()
+// L54    getSourceFiles()
 // ----- end of contents -----
 
 const fs = require('fs');
@@ -24,6 +24,7 @@ const KB_DIR   = path.join(ROOT_DIR, 'knowledge-base');
 const CL_DIR   = path.join(ROOT_DIR, 'channel-learning');
 
 // Recursively reads every non-empty .md file under `dir` as { label, content }.
+// README.md files are skipped — they describe the folder for developers, not River knowledge.
 function readMdFiles(dir, labelPrefix) {
     const sections = [];
     if (!fs.existsSync(dir)) return sections;
@@ -34,7 +35,7 @@ function readMdFiles(dir, labelPrefix) {
         if (entry.isDirectory()) {
             const nested = readMdFiles(fullPath, `${labelPrefix}/${entry.name}`);
             sections.push(...nested);
-        } else if (entry.isFile() && entry.name.endsWith('.md')) {
+        } else if (entry.isFile() && entry.name.endsWith('.md') && entry.name.toLowerCase() !== 'readme.md') {
             try {
                 const content = fs.readFileSync(fullPath, 'utf8').trim();
                 if (content) {

@@ -45,7 +45,7 @@ Moderated users are stored in `data/tg-perma-ban.json` (local only), keyed by us
 |---|---|
 | `watch` | The user stays. Every message is classified; harmful ones (scam, abuse, or clear FUD) are deleted and admins get an alert DM. |
 | `mute` | The user cannot send messages. Re-applied on every rejoin and whenever a captcha bot restores their permissions. |
-| `kick` | Kicked once — now, or on their next join — then dropped to watch mode. |
+| `kick` | Kicked once — now, or on their next join — then dropped to watch mode. A later rejoin is not kicked; admins get a "watched user has rejoined" alert. |
 | `ban` | Banned now and on every rejoin attempt; messages revoked. |
 
 Escalation: `/tgwatch` → `/tgmute` → `/tgkick` → `/tgban`. De-escalation: `/tgunwatch` (remove), `/tgunmute` and `/tgunkick` (→ watch), `/tgunban` (remove and unban).

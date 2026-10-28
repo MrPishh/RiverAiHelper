@@ -35,8 +35,8 @@
 // L241    buildPrompt()
 // L271  Core builder — returns report data without posting anywhere
 // L274    buildCommunityReport()
-// L369  Discord poster — wraps builder and posts to REPORTS_CHANNEL_ID
-// L372    generateCommunityReport()
+// L370  Discord poster — wraps builder and posts to REPORTS_CHANNEL_ID
+// L373    generateCommunityReport()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -312,7 +312,8 @@ async function buildCommunityReport(anthropic, {
     const tg = (platform === 'telegram' || platform === 'both')
         ? readTelegramMessages(from, to, CHINESE_TELEGRAM_TOPIC_ID)
         : null;
-    const tickets  = readTicketMessages(from, to);
+    // Support tickets are Discord channels, so a Telegram-only report leaves them out.
+    const tickets  = (platform === 'discord' || platform === 'both') ? readTicketMessages(from, to) : [];
     const dcChinese = (platform === 'discord' || platform === 'both') && CHINESE_DISCORD_CHANNEL_ID
         ? readChineseDiscordMessages(from, to, CHINESE_DISCORD_CHANNEL_ID)
         : null;

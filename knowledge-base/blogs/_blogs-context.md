@@ -38,7 +38,18 @@ Do NOT exclude a blog just because a governance doc covers the same topic. Both 
 | `dynamic-airdrop-conversion-2.md` | Market price snapshot blog — bot should not reference historical prices; mechanism already covered in main blog |
 | `dynamic-airdrop-conversion-3.md` | Same as above |
 
+| `introducing-river-smart-vault.md` | Whole-file since 2026-10-29 — Smart Vault deposits are closed (see `corrections/smart-vault-deposits-closed.md`) |
+| `smart-vault-2.md` | Same as above |
+| `river-s3-airdrop.md` | Whole-file since 2026-10-29 — past season (S3) campaign |
+| `season2-airdrop-is-live.md` | Whole-file since 2026-10-29 — past season (S2) campaign |
+| `riverpts-public-sale-50m.md` | Whole-file since 2026-10-29 — outdated price figures (see `corrections/riverpts-pricing.md`) |
+| `river4fun-earn-by-staking-and-sharing.md` | Whole-file since 2026-10-29 — removed River4FUN features (see `corrections/river4fun-outdated-features.md`) |
+
+Partial exclusion: `river-dynamic-airdrop-conversion.md` — an 18-line section (restored 2026-10-29 from git).
+
 Note: `dynamic-airdrop-conversion-2.md` and `dynamic-airdrop-conversion-3.md` also had partial EXCLUDE markers on rate tables from a previous session; the full-file exclusion covers those.
+
+**History (2026-10-29):** the 2026-09-04 domain resync re-added only an opening marker to rewritten files, which hid nothing, so the 5 whole-file exclusions above it and the partial one quietly came back into answers. The six files added above carried such a lone marker too, but had no record here; they were made whole-file exclusions because each is superseded by a correction or is a past-season campaign. Remove the markers from any of them to bring it back. The sync now re-applies whole-file and partial markers correctly (`reapplyExclusions` in `src/kb-sync.js`), and an unclosed marker hides to the end of the file.
 
 ---
 

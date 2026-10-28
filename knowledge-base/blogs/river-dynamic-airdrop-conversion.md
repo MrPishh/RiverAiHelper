@@ -4,8 +4,6 @@ Scraped: 2026-09-04T10:50:12.248Z
 
 ---
 
-<!-- EXCLUDE -->
-
 In crypto, distribution has always been a blunt instrument. Airdrops happen once, fast hands win, late hands lose. The result ? 
 
 Liquidity churn, mercenary users, and misaligned communities.
@@ -22,6 +20,7 @@ Tokenomics → [https://docs.riverai.inc/tokenomics](https://docs.riverai.inc/to
 
 Holders can convert their River Pts into $RIVER anytime during the 180-day window — in one transaction or multiple.
 
+<!-- EXCLUDE -->
 The key: **the longer you wait, the higher the rate.**
 
 The difference is clear. Suppose you hold 1M River Pts:
@@ -40,6 +39,7 @@ Dynamic Airdrop Conversion
 By **Day 180**, 1M River Pts reach their maximum potential: **30,000 $RIVER**.
 
 This design ensures that early exiters claim less, while long-term holders can capture the full upside — up to **270× more tokens** than converting on Day 1.
+<!-- /EXCLUDE -->
 
 ## **How to Claim Your River Pts** 
 

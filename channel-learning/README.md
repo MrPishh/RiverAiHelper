@@ -16,7 +16,7 @@ channel-learning/
 
 ## How it works
 
-When a staff member replies to a user's question in #general or #support, the bot appends the question and the staff reply to that channel's `qa-log.md` (`saveQAPair` in `src/utils.js`). `buildIndex()` indexes these files alongside the knowledge base.
+When a staff member replies to a user's question in #general or #support, the bot appends the question and the staff reply to that channel's `qa-log.md` (`saveQAPair` in `src/utils.js`). Only replies to real questions are saved — messages the classifier marks as one of the four answerable intents (since 2026-10-29); replies to greetings, hype or chat are not learned. Learning needs Discord replies switched on (`/toggle`), because that is when messages are classified. `buildIndex()` indexes these files alongside the knowledge base.
 
 ## Notes
 

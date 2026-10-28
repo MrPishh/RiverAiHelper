@@ -51,10 +51,10 @@
 // L886         Scenario 0 — Reply to bot's CLARIFY question
 // L902         Scenario 0.5 — Reply to a regular bot answer
 // L933         Scenario 1 — @mention
-// L957         Scenario 3 — Unprompted message
-// L1088    Join / leave tracking
-// L1092      ACTIVE_STATUSES
-// L1093      GONE_STATUSES
+// L958         Scenario 3 — Unprompted message
+// L1089    Join / leave tracking
+// L1093      ACTIVE_STATUSES
+// L1094      GONE_STATUSES
 // ----- end of contents -----
 
 const fs            = require('fs');
@@ -273,8 +273,8 @@ function createTelegramAdapter({
 
     // ── Watched-user message handler ─────────────────────────────────────────
     // Called for every message from a user in the watchlist.
-    // Classifies the message; on harmful intent: deletes it, mutes the user,
-    // and DMs all cached admins a report.
+    // Classifies the message; on harmful intent: deletes it, logs evidence, and DMs the
+    // alert admins. (Muting is separate: /tgmute, re-applied on rejoin and after captcha.)
 
     async function handleWatchedMessage(ctx, msg, fromId, text, threadId) {
         console.log(`[TG-WATCH] Message from watched user ${fromId}: "${text.slice(0, 120)}"`);
@@ -591,7 +591,7 @@ function createTelegramAdapter({
                 return;
             }
             const lines = entries.map(e => {
-                const modeLabel = e.mode === 'ban' ? '🚫 ban' : e.mode === 'kick' ? '👢 kick' : '👁 watch';
+                const modeLabel = { ban: '🚫 ban', kick: '👢 kick', mute: '🔇 mute' }[e.mode] ?? '👁 watch';
                 const who       = e.username ? `@${e.username}` : String(e.userId);
                 return `${modeLabel} — ${who}\n  ID: ${e.userId}\n  Reason: ${e.reason ?? 'none'}\n  Rejoins: ${e.rejoinCount}`;
             });
@@ -627,7 +627,7 @@ function createTelegramAdapter({
             'Escalation (↑ up, ↓ down):\n' +
             '/tgwatch <userId> [reason]  — monitor, delete harmful msgs\n' +
             '/tgmute <userId> [reason]   — permanent mute (survives rejoin/captcha)\n' +
-            '/tgkick <userId> [reason]   — kicked on every rejoin\n' +
+            '/tgkick <userId> [reason]   — kicked once, then watch mode\n' +
             '/tgban <userId> [reason]    — banned on every rejoin\n' +
             '\nDe-escalation:\n' +
             '/tgunwatch <userId>  — remove from watchlist entirely\n' +
@@ -947,7 +947,8 @@ function createTelegramAdapter({
                     await target.reply(`For ticket or account-specific issues, please reach out to the team directly in <#${SUPPORT_CHANNEL_ID}> — I'm not able to check ticket status or escalate to staff.`);
                     return;
                 }
-                // Direct @mention → always answer, same as Discord Scenario 1.
+                // Direct @mention → always answer, like Discord Scenario 1 (but no scam action here —
+                // Telegram does not moderate first-time posters).
                 // Non-RESPOND_INTENTS still reach answerQuestion; Claude handles them gracefully.
                 const target = makeTgTarget(ctx, msg.chat.id, rawThreadId, msg.message_id);
                 await answerQuestion({ question, targetMessage: target, userId, channelId });

@@ -13,7 +13,9 @@ Decisions that look odd out of context, and things that were tried and removed �
 | Cloudflare WARP must be on to scrape `docs.riverai.inc` and `blog.riverai.inc` | The host machine's ISP filter (Cisco SSE) blocks both sites. Without WARP every scrape fails with HTTP 403 — check WARP before debugging code. |
 | TLS checks are off for scraping (`rejectUnauthorized: false`) in `blog-scraper.js` and the sitemap fetches | The sites' certificates are locally issued as seen from this machine, and Node rejects them. |
 | pm2 runs `node bot.js` directly (process `river-bot`) | Keeps the bot running so real-time announcements are never missed — the bot captures them only as they arrive. |
-| Gateway watchdog: exit after 30 min with no Discord gateway event | Added 2026-09-01 after a ~6-hour silent outage: a "zombie" connection stops delivering events without disconnecting, which discord.js cannot detect. Exiting lets pm2 restart the bot. |
+| Gateway watchdog: exit when no heartbeat is acknowledged for 10 min, or no event arrives for 6 h | Added 2026-09-01 after a ~6-hour silent outage: a "zombie" connection stops delivering events without disconnecting, which discord.js cannot detect. Exiting lets pm2 restart the bot. The first version watched events only (30 min) and so also restarted a healthy bot on a quiet night — 142 watchdog exits; heartbeats are acknowledged about every 41 s even when nobody talks (changed 2026-10-29). |
+| Login failures retry inside the bot (5 s → 5 min) instead of exiting | Exiting made pm2 restart the bot about every second during internet outages: 10,116 restarts and 24,086 failed logins, mostly DNS failures that never left the machine. Discord also limits how often a bot may log in. A bad token still exits (changed 2026-10-29). |
+| Every log line starts with an ISO timestamp; pm2 logs rotate daily | pm2's logs had no times, so errors and restarts couldn't be dated (changed 2026-10-29). |
 | `GUILD_ID` hard-coded in `telegram-adapter.js` | Turns `<#channelId>` mentions into Discord links on Telegram. Update it if the Discord server changes. |
 
 ## Domain, links and wording
@@ -22,6 +24,7 @@ Decisions that look odd out of context, and things that were tried and removed �
 |---|---|
 | Only ever share `riverai.inc` links | The project moved off `river.inc` on 2026-09-04; `river.inc` and its subdomains are retired. Never reintroduce a `river.inc` link in code, prompts or sync URLs. |
 | `river.inc` is still mentioned in `core-facts.md`, the scam-safety correction and `outro-official-links.md` | So the bot can redirect a user who reports the old domain as unreachable. |
+| Scraped blog posts keep `?ref=blog.river.inc` in their footer links | The live blog site still writes this old tracking tag (checked 2026-10-28 on `blog.riverai.inc/season-6-is-live/`: 5 footer links). The links themselves go to `riverai.inc`, X, Telegram and Discord, so they are left as scraped. |
 | URLs in angle brackets `<https://…>`, never `[text](url)` | Claude used to render URLs as markdown links; the system prompt forbids that. Angle brackets also stop Discord's link previews. |
 | …except `https://discord.com/channels/…` links | Discord renders these as native jump links; wrapping them breaks that. |
 | `core-facts.md` says "River had a testnet in the past but it is no longer active." | The earlier "there is no testnet and never has been one" was wrong. Never revert it. |
@@ -31,15 +34,20 @@ Decisions that look odd out of context, and things that were tried and removed �
 
 | Choice | Why |
 |---|---|
-| `BLOG_SINCE_DATE` = 2025-05-15 | The owner wants only posts from this date on; about 92 older posts are excluded. |
+| `BLOG_SINCE_DATE` = 2025-05-15 | The owner wants only posts from this date on; the 91 older posts are listed in `knowledge-base/blogs/_excluded-legacy.json`. |
 | `effectiveSinceDate` only advances when blog posts are deleted from disk | Recalculating it on every sync was a bug that made posts get skipped. |
 | `syncBlog` does not trust sitemap `<lastmod>` alone — it cross-checks each post's own `article:published_time` / `modified_time` | A site redeploy bumped `lastmod` on ~40 unchanged posts (seen in the 2026-09-04 migration). Do not remove the check or `knowledge-base/blogs/_excluded-legacy.json`, the registry it maintains. |
 | A post whose true publish date is before the floor is held for review, not auto-added or auto-dropped | Exactly the ambiguous case — a human decides with `/blog action:Include`. |
-| `<!-- EXCLUDE -->` markers are re-applied when a sync rewrites a file | A delete-and-recreate (e.g. a domain change) would otherwise silently drop a hand-added marker. |
+| `<!-- EXCLUDE -->` markers are re-applied when a sync rewrites a file | A delete-and-recreate (e.g. a domain change) would otherwise silently drop a hand-added marker. Whole-file exclusions wrap the new text; partial ones are re-wrapped where their text is unchanged and reported in the sync reply when it isn't. The first version re-added only an opening marker, which hid nothing (fixed 2026-10-29). |
+| An unclosed `<!-- EXCLUDE -->` hides everything to the end of the file | It is the natural "exclude the rest" form and what the old sync wrote, so it can never silently fail again. |
+| A question deleted before it is answered gets no answer | If the asker, a moderator, AutoMod, the scam blocker or another bot removed it, it no longer needs one — on Telegram the bot was replying to spam another bot had deleted (2026-10-29). |
+| A blog post found in the sitemap that was added by hand is rewritten in its existing file | Otherwise the same post ends up indexed twice (2026-10-29). |
 | The satoshi-protocol-v1 docs sitemap is not synced | The owner wants only the main River docs. |
 | Raw `*_ann` and `*_tweet` folders are never indexed | They are unprocessed Discord captures; curated files in `announcements/` are indexed instead. Tweets are not indexed at all (they mirror announcements, low signal). |
-| Correction updates are drafted to `corrections/_drafts/`, never applied automatically | A human must check a draft against the live correction. |
+| Correction updates are drafted to `corrections/_drafts/`, never applied automatically | A human must check a draft against the live correction. Folders starting with `_` are not indexed, so drafts never reach answers. |
+| README.md files are never indexed | They describe a folder for developers; they are not River knowledge (decided 2026-10-28). |
 | The correction check is two-stage (Haiku flags, then Sonnet drafts or says `NO_CHANGE_NEEDED`) and drafting is not awaited by `/sync` | One Sonnet call per flagged pair took minutes and hung the `/sync` reply; the second stage also filters Haiku's false positives. |
+| The check also covers `core-facts.md` and runs on announcement facts (`/sync type:Knowledge`) | Season 7 was announced and scanned, but `core-facts.md` kept saying "Season 5" because nothing compared announcements against it (added 2026-10-28). |
 | The staleness check sends each correction's full text, not a snippet | 600-character snippets cut off each file's scope statement, so Haiku flagged on topic overlap alone (fixed 2026-07-07). |
 | `channel-learning/` Q&A logs, `data/` and the intent logs stay local — never committed or uploaded | They contain community members' messages and user IDs (decided 2026-10-28; only `channel-learning/README.md` is tracked). |
 
@@ -74,8 +82,12 @@ Decisions that look odd out of context, and things that were tried and removed �
 | The scam blocker is OFF by default; plain link blocking is left to Discord's AutoMod | It targets what AutoMod misses: bio/profile redirects, t.me/wa.me links, name impersonation with DM offers, and social engineering. |
 | Escalating timeouts (N hours for the Nth infraction, max 28 days) | Repeat offenders step up. The infraction is recorded before any `await` so concurrent messages can't share a count (race fixed 2026-08-18). |
 | The bot never answers in ticket or collab channels | Staff handle tickets; the messages are only logged for reports. |
-| The Chinese channel and topic are never answered, but Discord scam checks still run there | Scam links went unblocked there until 2026-09-01. Answers stay English-only. |
+| The Chinese channel and topic are never answered, but Discord scam checks still run there | Scam links went unblocked there until 2026-09-01, so scam checks must not depend on whether the bot answers. |
 | `/check-permissions` is not registered | It was registered by accident and visible to everyone; removed from `COMMANDS` 2026-08-18, handler kept. |
+| The scam blocker never acts on staff | A staff member @mentioning the bot about a scam link was classified scam-content and could be deleted and timed out (fixed 2026-10-29). |
+| Q&A learning stores only staff replies to real questions | Staff replies to greetings and chat were being learned as if they were answers (changed 2026-10-29). |
+| A failed announcement check is retried on the next scan | The scan used to record its position before processing, so an API error lost that announcement for good (fixed 2026-10-29). |
+| The Anthropic SDK stays on 0.95.x for now | 1.x switches to a new API version (2026-10-21); upgrade once one real call has confirmed responses are unchanged. |
 | `/tgkick` kicks once, then drops the user to watch mode | They can rejoin; harmful messages are still deleted. |
 | Telegram has no proactive scam blocking for first-time offenders | Only watched users are moderated. A known gap (flagged 2026-08-18), not yet decided. |
 

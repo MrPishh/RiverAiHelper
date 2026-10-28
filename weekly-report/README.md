@@ -27,7 +27,7 @@ The Telegram staff panel (`/start` → Community Report → period → platform 
 
 1. Staff run `/report` (Discord) or use the Telegram panel.
 2. `community-report.js` reads `intent/dc-intent-log.jsonl`, `intent/tg-intent-log.jsonl` and `intent/ticket-log.jsonl` for the period.
-3. It keeps non-staff messages from #general, #support, support tickets, Telegram, and — when configured — the Chinese Discord channel and Telegram topic.
+3. It keeps non-staff messages from #general, #support, support tickets (Discord and Both reports only), Telegram, and — when configured — the Chinese Discord channel and Telegram topic.
 4. Claude writes three sections: Common Problems, Frequently Asked Questions, Conversation Highlights. Chinese messages are analysed but the report is always in English.
 5. The report is posted to `REPORTS_CHANNEL_ID`, or sent in the Telegram DM.
 

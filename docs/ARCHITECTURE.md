@@ -39,7 +39,7 @@ A Discord message in an answer channel (Telegram follows the same path in `teleg
 
 Any scenario that classifies `scam-content` calls `takeScamAction` (delete, escalating timeout, alert) when the scam blocker is ON.
 
-Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `knowledge-base/`, the announcement scan appends facts to curated files, and `buildIndex()` re-embeds only changed chunks into `knowledge-base/.embeddings-cache.json`.
+Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `knowledge-base/`, the announcement scan appends facts to curated files, new pages and facts are checked against the corrections and `core-facts.md` (proposed updates go to `corrections/_drafts/` for review), and `buildIndex()` re-embeds only changed chunks into `knowledge-base/.embeddings-cache.json`.
 
 ## External systems
 
@@ -90,7 +90,7 @@ Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `
 | Watch / mute / kick / ban | Telegram moderation modes, re-applied on rejoin. |
 | Staff panel | The Telegram DM menu (`/start`) for reports and member stats. |
 | Explanation embed | Staff "@bot + message link": shows which sources an answer used. |
-| Q&A learning | Saving a user question with the staff reply into `channel-learning/` for RAG. |
+| Q&A learning | Saving a user question (one the classifier marked answerable) with the staff reply into `channel-learning/` for RAG. |
 | Date floor | `BLOG_SINCE_DATE` / `effectiveSinceDate`: blog posts older than this are not synced. |
 | WARP | Cloudflare's VPN client; must be on for scraping. |
 
@@ -99,6 +99,7 @@ Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `
 | You add | Also update |
 |---|---|
 | A code file | A row in the CLAUDE.md file map; a file header comment and `// ─── Section ───` headers; a purpose comment above each definition. Then `npm run index`. |
+| A bug fix or behaviour change | A test in `test/` that fails without the change (`npm test`). A real wrong answer or misclassification → a case in `test/evals/cases.json` (`npm run eval`). |
 | A code folder | Add it to `CODE_ROOTS` in `scripts/build-index.js` (or it stays invisible to the index and checks), give it a README.md, and add it to the file map. |
 | A setting | `.env.example`, your `.env`, `docs/REFERENCE.md` § Settings and the code that reads it — the drift check compares all four. Read it in `bot.js` and pass it in, not inside a module. |
 | A slash command | Its definition in `COMMANDS` and a `cmd === '…'` branch in `src/slash-commands.js`, a row in `docs/REFERENCE.md` § Commands, and `_dev-notes/Bot commands.txt` if the owner asks. |

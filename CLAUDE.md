@@ -6,7 +6,7 @@ A Discord and Telegram support bot for River Protocol. It answers community ques
 
 1. **Current state** (active season, toggles, open items): read `CONTEXT.md` § Quick Reference — its generated section list at the top gives the line.
 2. **Find the code**: use the task table below, then look the name up in `CODE_INDEX.md` for its exact `file:line`, and read just that part with a small `limit`.
-3. **Inside a code file**: its first ~40 lines are a header and a generated Contents block (sections and definitions with line numbers).
+3. **Inside a code file**: the top of the file holds a header and a generated Contents block (sections and definitions with line numbers).
 4. **Long docs** (`CONTEXT.md`, `README.md`, …) start with a generated section list — read it, then jump to the section.
 5. **How it fits together / why it is this way**: `docs/ARCHITECTURE.md` (parts, message flow, glossary, "when you add…") and `docs/DECISIONS.md` (deliberate choices). Settings, commands, events and timers: `docs/REFERENCE.md`.
 
@@ -17,7 +17,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 - **`clientReady` not `ready`** — discord.js v14 typed event; do not revert.
 - **`node-fetch`** is ESM-only: always `const fetch = (await import('node-fetch')).default`, never `require('node-fetch')`.
 - **Cloudflare WARP** must be on to scrape `docs.riverai.inc` / `blog.riverai.inc`. A 403 while scraping → check WARP before the code.
-- **Only `riverai.inc` links.** `river.inc` and its subdomains are retired (2026-09-04). It stays only in `core-facts.md` and two other KB files (see `docs/DECISIONS.md`) so the bot can redirect users who report the old domain. Never reintroduce a `river.inc` link into code, prompts or sync URLs.
+- **Only `riverai.inc` links.** `river.inc` and its subdomains are retired (2026-09-04). It is mentioned on purpose only in `core-facts.md`, the scam-safety correction and `outro-official-links.md` (scraped blog posts also carry the live blog's own `?ref=blog.river.inc` tracking tags — harmless; see `docs/DECISIONS.md`) so the bot can redirect users who report the old domain. Never reintroduce a `river.inc` link into code, prompts or sync URLs.
 - **URLs in angle brackets** `<https://example.com>`, never `[text](url)` — except `https://discord.com/channels/…` links, which must not be wrapped.
 - **`effectiveSinceDate`** only advances when blog posts are deleted from disk — never recalculate it on a normal sync.
 - **Blog lastmod verification** in `syncBlog` (cross-check with `fetchPublishMeta`) and `knowledge-base/blogs/_excluded-legacy.json` must stay.
@@ -56,9 +56,15 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | `scripts/check-perms.js` | Diagnostic: the bot's Discord permissions per channel. |
 | `scripts/intent-batch-audit/prepare-and-submit.js` | One-time audit step 1: submit classified messages to the Batch API. |
 | `scripts/intent-batch-audit/analyze-results.js` | One-time audit step 2: tally the reviewer's verdicts. |
+| `scripts/scam-review/review-infractions.js` | Periodic AI review of scam-blocker actions (finds false positives). |
 | `scripts/build-index.js` | Index builder and drift checks (`npm run index`). |
 | `scripts/index-hook.js` | Claude Code edit hook: rebuilds the generated parts after each edit. |
 | `scripts/stop-hook.js` | Claude Code stop hook: runs the drift check before a turn ends. |
+| `test/helpers.js` | Test helpers: sandbox copies (tests never touch real data), fake Claude client. |
+| `test/message-handler.test.js` | Tests: channel gate, scam blocker vs staff, Q&A learning. |
+| `test/knowledge.test.js` | Tests: RAG index contents, EXCLUDE, blog numbering, announcement-scan retry, staleness check. |
+| `test/utils-and-reports.test.js` | Tests: small helpers and community-report rules. |
+| `test/evals/run-evals.js` | Answer-quality evals against the real models (`npm run eval`); cases in `test/evals/cases.json`. |
 | `CODE_INDEX.md` | Generated: every definition, setting, command, event and job with its line. |
 | `.claude/settings.json` | The two hooks above (shared). `.claude/settings.local.json` is personal — never edit or commit it. |
 | `docs/` | `ARCHITECTURE.md`, `DECISIONS.md`, `REFERENCE.md`. |
@@ -103,7 +109,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 
 - **A message:** `messageCreate` → logging → spoof check → routing (Scenario 0 / 0.5 / 1 / 2 / 3) → `classifyMessageIntent` → `answerQuestion` → `searchKB` + `rerankChunks` → `askClaude`.
 - **Scam:** layers 1–3 → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
-- **Knowledge:** `/sync` → `syncBlog` / `syncDocs` → `checkCorrectionStaleness` → `buildIndex`.
+- **Knowledge:** `/sync` → `syncBlog` / `syncDocs` or `scanAnnouncementsForNewFacts` → `checkCorrectionStaleness` (corrections + `core-facts.md`) → `buildIndex`.
 
 ## Generated parts and checks
 
@@ -123,5 +129,6 @@ It then checks the docs against the code: file map and task table above, code na
 
 Hooks in `.claude/settings.json` run it for you: after every edit (regenerate only) and when a turn ends (check; drift sends Claude back once to fix it).
 
-- **A change is finished only when `npm run index:check` passes.** Never write a line number into a doc — point to a heading or a name.
+- **Tests:** `npm test` (fast, offline, fakes only — run after every code change) and `npm run eval` (real models, costs a little — run after changing prompts, the classifier, the KB or answer logic). When you fix a bug or change behaviour, add a test in `test/` that fails without the fix; when the bot answers or classifies something wrong in real use, add the case to `test/evals/cases.json`.
+- **A change is finished only when `npm test` and `npm run index:check` pass.** Never write a line number into a doc — point to a heading or a name.
 - **After any change that alters behaviour**, run a description review (the "Description audit" prompt) — the scripts check that docs *point* to real things, not that what they *say* is still true — and record it in `.claude/last-description-review`.

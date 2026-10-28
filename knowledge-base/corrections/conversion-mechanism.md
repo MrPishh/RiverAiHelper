@@ -115,9 +115,17 @@ After 2.0 launched, participation data showed the majority chose the 3-month opt
 
 ---
 
-## S6 Current Parameters (Conversion 3.0)
+## S7 — current Season (Conversion 3.0)
 
-- **Season:** S6, July 1 – Sep 30, 2026 (conversion window and claim window both close Sep 30, 2026)
+- **Season:** S7, October 1 – December 31, 2026 (announced October 9, 2026). S8 follows January 1 – March 31, 2027.
+- **Ideal rate:** 0.01 (constant for S7, same as S5 and S6). 10,000 pts → 100 Staked RIVER at ideal rate.
+- **Other S7 parameters (caps, unlock dates):** not yet published in the knowledge base — do not quote S7-specific figures for these until the team confirms them. The S6 values below are the most recent confirmed ones; say so if you use them.
+- **S6 airdrop:** claimable until S7 ends (announced October 5, 2026).
+- **Claiming vs converting:** River Pts must first be claimed. Claimed River Pts sit in the user's wallet and can be converted at any time, in any later Season. River Pts not claimed before that Season's claim window closes are forfeited.
+
+## S6 Parameters (previous Season, Conversion 3.0)
+
+- **Season:** S6, July 1 – Sep 30, 2026 (ended). S6 results: ~1.2M RIVER staked, ~40M River Pts converted, ~10k participants (announced October 21, 2026).
 - **Ideal rate:** 0.01 (constant for S6). 10,000 pts → 100 Staked RIVER at ideal rate
 - **Actual rate:** floats around 0.01 based on conversion density. Denser activity compresses it below 0.01; quieter periods recover it toward 0.01.
 - **Daily cap:** 5,000,000 River Pts/day
@@ -135,9 +143,9 @@ After 2.0 launched, participation data showed the majority chose the 3-month opt
 Users often ask "why is the rate capped at 0.01?" or compare it to the old 0.03 maximum.
 
 **How to answer:**
-- 0.01 is the S5 **ideal rate** — a target constant, not a hard cap. The actual rate can be compressed below it during dense activity and recovers back toward it during quieter periods.
+- 0.01 is the **ideal rate** (S5, S6 and the current S7) — a target constant, not a hard cap. The actual rate can be compressed below it during dense activity and recovers back toward it during quieter periods.
 - The old 0.03 was the maximum of the Conversion 1.0/2.0 time-based curve at Day 180. That entire window closed April 22, 2026. Conversion 3.0 uses a different model — time within a Season no longer raises the rate.
-- Each Season sets its own ideal rate based on network scale. S5 and S6 have both been set at 0.01.
+- Each Season sets its own ideal rate based on network scale. S5, S6 and S7 have all been set at 0.01.
 - Longer staking epochs significantly offset the lower rate: 24-month receives 100% of base output vs 30% for 3-month, plus a 24x vs 1x voting power multiplier.
 
 ---

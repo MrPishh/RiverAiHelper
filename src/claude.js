@@ -35,10 +35,10 @@
 // L401      deleteConversation()
 // L407    Core answer function
 // L411      answerQuestion()
-// L507    Prune stale state entries (runs hourly)
-// L510      pruneStaleEntries()
-// L544    Core facts loader
-// L547      loadCoreFacts()
+// L514    Prune stale state entries (runs hourly)
+// L517      pruneStaleEntries()
+// L551    Core facts loader
+// L554      loadCoreFacts()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -495,6 +495,13 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
                 console.log(`[Answer] [${type}] Replied to ${userId} in #${channelId}`);
             }
         } catch (err) {
+            // The question was deleted while the answer was being written (Discord "Unknown
+            // Message" / Telegram "message to be replied not found") — a deleted question no
+            // longer needs an answer, so drop it quietly instead of posting an error reply.
+            if (err.code === 10008 || /unknown message|message to be replied not found|MESSAGE_REFERENCE_UNKNOWN_MESSAGE/i.test(err.message)) {
+                console.log(`[Answer] Skipped — the question from ${userId} was deleted before the reply`);
+                return;
+            }
             console.error('[Answer] Failed:', err.message);
             try {
                 await targetMessage.reply(

@@ -34,7 +34,7 @@ Any reference to a River Pts Vault that "locks until TGE" or "converts directly 
 
 ## Season-specific reward percentages — DO NOT QUOTE
 
-Do not quote reward breakdowns or quest percentages from past seasons (e.g. "10% of Season 2 rewards come from quests"). Season 2 ended long ago — we are currently in Season 6 (S6 runs July 1 – September 30, 2026; S5 concluded June 30, 2026). Past season mechanics are not current. If a user asks about current reward structure, direct them to check the official app or open a ticket for up-to-date figures.
+Do not quote reward breakdowns or quest percentages from past seasons (e.g. "10% of Season 2 rewards come from quests"). Season 2 ended long ago — we are currently in Season 7 (S7 runs October 1 – December 31, 2026; S6 concluded September 30, 2026). Past season mechanics are not current. If a user asks about current reward structure, direct them to check the official app or open a ticket for up-to-date figures.
 
 ---
 

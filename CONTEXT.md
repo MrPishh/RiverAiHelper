@@ -25,31 +25,31 @@ L230    Blog URL exclusion list
 L237    Docs has no exclusion mechanism
 L242  KB Monitor
 L246    1. Correction Staleness Check
-L265    2. Announcement Auto-Scan
-L296  Backfilling Missed Announcements
-L300    How to backfill
-L337    Preventing future gaps
-L349  Core Facts Design
-L351    What `core-facts.md` is for
-L356    How it works
-L362    The original problem that created this
-L378  Multi-Turn Conversation Design
-L380    The problem
-L385    How it works now
-L402    Why ANSWER / CLARIFY / ESCALATE tags
-L407  RAG Source Attribution
-L421    Chunk Re-ranking (inside `buildInitialHistory`)
-L434  Referral Code Rotation
-L456  System Prompt Features (getSystemPrompt)
-L469    Prompt Caching (added 2026-05-15)
-L479    Scam Detection — All Layers (updated 2026-06-13)
-L549  Known Issues and Fixed Bugs
-L551    Gotchas
-L561    Fixed bugs (history)
-L593  RAG Index State
-L603  Pending / Discussed But Not Done
-L617    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
-L625    💡 Improvements discussed but deferred
+L267    2. Announcement Auto-Scan
+L298  Backfilling Missed Announcements
+L302    How to backfill
+L339    Preventing future gaps
+L351  Core Facts Design
+L353    What `core-facts.md` is for
+L358    How it works
+L364    The original problem that created this
+L380  Multi-Turn Conversation Design
+L382    The problem
+L387    How it works now
+L404    Why ANSWER / CLARIFY / ESCALATE tags
+L409  RAG Source Attribution
+L423    Chunk Re-ranking (inside `buildInitialHistory`)
+L436  Referral Code Rotation
+L458  System Prompt Features (getSystemPrompt)
+L472    Prompt Caching (added 2026-05-15)
+L482    Scam Detection — All Layers (updated 2026-06-13)
+L552  Known Issues and Fixed Bugs
+L554    Gotchas
+L564    Fixed bugs (history)
+L596  RAG Index State
+L606  Pending / Discussed But Not Done
+L627    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
+L635    💡 Improvements discussed but deferred
 -->
 
 This file exists so any new Claude Code session can read it and immediately understand the full state of the project without needing conversation history.
@@ -61,7 +61,7 @@ This file exists so any new Claude Code session can read it and immediately unde
 **Bot:** Discord + Telegram support bot for River Protocol. Claude Sonnet-4-6 + Voyage AI RAG. All modules in `src/`.
 
 ### Active State
-- Conversion 3.0 / S6 is the active season (July 1 – Sep 30, 2026); S6 ideal rate is 0.01, same as S5
+- Conversion 3.0 / **Season 7** is the active season (October 1 – December 31, 2026, per the auto-extracted announcement in `ecosystem-milestones.md`); S7 ideal rate is 0.01, same as S5 and S6. `core-facts.md` and the corrections were updated to S7 on 2026-10-28 (takes effect after a restart or `/sync type:Knowledge`)
 - Scam blocker: **OFF** by default → `/toggle platform:Scam Blocker` to enable
 - Prompt caching: ON (5-min TTL, static system block cached)
 - Live price fetching: ON — `src/price-fetcher.js` (Dexscreener, 5-min cache, auto-injects on price questions)
@@ -73,7 +73,7 @@ This file exists so any new Claude Code session can read it and immediately unde
 - **How it fits together, glossary:** `docs/ARCHITECTURE.md` · **Why things are this way:** `docs/DECISIONS.md`
 
 ### Top Pending Items
-- **Batch intent log analysis** — started 2026-08-18, `msgbatch_01PzBGupfcCBv6nBYyawno9f` (Anthropic Batch API, Sonnet reviewer, 50% cost saving) — see "Time-based reminders" below for detail
+- **Batch intent log analysis** — done 2026-08-18 (`msgbatch_01PzBGupfcCBv6nBYyawno9f`, Sonnet reviewer): 4 taxonomy gaps fixed plus a follow-up scan (see `intent/intent-taxonomy.md` § Status); follow-up review items remain — see "Time-based reminders" below
 - **Prompt cache stats** — check after ~1 week (`cache_read_input_tokens` vs `cache_creation_input_tokens` ratio) — especially relevant now: 2026-08-18 fixed a regression that had silently dropped the cross-conversation cache breakpoint
 - **Log rotation** — implement when any intent log hits ~5 MB
 - **Telegram proactive scam-blocking** — Discord has `takeScamAction` (delete + timeout + alert) wired into every scenario that classifies intent; Telegram only moderates already-`watchedUsers`-flagged accounts reactively, with no equivalent action for a first-time offender's live message. Flagged 2026-08-18, not yet decided/built.
@@ -92,11 +92,11 @@ A Discord support bot for **River Protocol** that answers community questions us
 
 1. **Scenario 0** — User replies to bot's CLARIFY question → continues full conversation history
 2. **Scenario 0.5** — User replies to any bot ANSWER using the platform's reply feature (no @mention needed) AND message is more than one word → runs `classifyMessageIntent()` on the reply text first and only answers if the intent is in `RESPOND_INTENTS` (updated 2026-07-10, both platforms); `staff-ping` gets the support-channel redirect; everything else (e.g. `general-greeting`, `community-discussion`) is skipped and logged. Fixes a bug where replying to the bot's last message in a busy channel/thread — even when the reply was actually addressed to a different person, purely agreeing/venting with no question — still triggered a full Sonnet answer, because reply structure alone (not content) used to decide whether to respond.
-3. **Scenario 1** — User @mentions bot directly → classifies intent first; if `staff-ping`, redirects to support channel; otherwise answers immediately
+3. **Scenario 1** — User @mentions bot directly → classifies intent first; if `scam-content`, `takeScamAction` (no answer); if `staff-ping`, redirects to support channel; otherwise answers immediately
 4. **Scenario 2** — User @mentions bot as reply to another message → scam-content/staff-ping classification always checks the **original message** being replied to, never the mentioning user's own text (fixed 2026-08-18: classifying the mentioning user's own words under the original asker's identity could misattribute a scam-content action to the wrong, innocent user). If the mention carries its own text (e.g. staff replying to a vague question with their own clearer phrasing) and classification clears it, that text is used as the question for the *answer* — but the answer is still attributed to and threaded under whoever's message the mention replied to (so their conversation context continues correctly) — the reply itself lands on the mentioning user's message, not the original one, since the mentioning user typically pings the original asker separately. If the mention carries no text (pure "explain this" tag), falls back to fetching and answering the original message as before. If the replied-to message is the bot's own, the mention's own text is answered as a personal follow-up (there's no "original asker" to attribute it to).
 5. **Scenario 3** — User posts with no mention → classifies intent; only the 4 respond categories (`help-seeking`, `troubleshooting`, `onboarding`, `factual-question`) proceed to `scheduleAutoAnswer()` which waits STAFF_WAIT_MINUTES (5) then auto-answers if no staff reply. Messages from the same user in the same channel that arrive while a batch is already pending are folded into it instead of starting a competing timer (added 2026-08-18) — the batch is answered as one combined message once the original timer fires, not as N separate replies. See "Burst batching" below.
 
-**Channel gate:** `BOT_ANSWER_CHANNEL_IDS` only restricts unprompted auto-answers (Scenario 3). Direct `@mentions` (Scenarios 1 & 2) are allowed in any channel, including staff channels. However, the bot must have **Send Messages** permission in that channel in Discord's server settings, otherwise the reply will fail silently with `[Answer] Failed: Missing Permissions`.
+**Channel gate:** `BOT_ANSWER_CHANNEL_IDS` only restricts unprompted auto-answers (Scenario 3). Direct `@mentions` (Scenarios 1 & 2) and replies to the bot's own messages (Scenarios 0 & 0.5) work in any channel, including staff channels — replies were limited to answer channels until 2026-10-28, which made the "reply to follow up" footer untrue elsewhere. However, the bot must have **Send Messages** permission in that channel in Discord's server settings, otherwise the reply will fail silently with `[Answer] Failed: Missing Permissions`.
 
 **Claude response tags:** Every response starts with `ANSWER:`, `CLARIFY:`, or `ESCALATE:`.
 
@@ -189,7 +189,7 @@ The old heuristic passed any message with `?` or ≥ 8 words. "You should clear 
 
 Because the site's own redeploy also bumped `lastmod` on ~40 already-indexed blog posts (zero content change, confirmed via each post's `article:published_time`/`article:modified_time`), `syncBlog` no longer trusts sitemap `lastmod` alone — see "lastmod verification" below. The actual post-migration `/sync type:Blog` run: 40 updated, 0 added, 0 removed, 1 filtered (held for review, see below), 91 legacy pre-floor posts correctly stayed excluded.
 
-**`<!-- EXCLUDE -->` marker preservation:** a URL-keyed delete-and-recreate (like the domain migration) would normally wipe a hand-added `<!-- EXCLUDE -->` marker, since the fresh scrape has no marker. `syncDocs`/`syncBlog` in `src/kb-sync.js` capture which filenames carry the marker *before* any rewrite and reinsert it on write. Verified intact after the real post-migration sync on all 8 marked files: docs' `intro-publish-your-docs.md`; blogs' `river-follow-up-2.md`, `river-action-follow-up-ch.md`, `river-together-4m-river-pts.md`, `2026-new-year-challenge.md`, `s4-best-creators.md`, `dynamic-airdrop-conversion-2.md`, `dynamic-airdrop-conversion-3.md`. The blog `index.excluded` URL-list (`/blog action:Exclude`) is currently empty. Governance is manually curated (not code-synced), so it's unaffected by any of this.
+**`<!-- EXCLUDE -->` marker preservation:** a URL-keyed delete-and-recreate (like the domain migration) would normally wipe a hand-added `<!-- EXCLUDE -->` marker, since the fresh scrape has no marker. `syncDocs`/`syncBlog` in `src/kb-sync.js` capture which filenames carry the marker *before* any rewrite and reinsert it on write. ⚠️ **Was broken, fixed 2026-10-29:** the sync re-inserted only an *opening* marker at the top of a rewritten file, and `rag.js` stripped only opening/closing pairs — so the exclusion silently stopped working for every rewritten file (12 blog posts). Now `reapplyExclusions` re-applies whole-file and partial markers, an unclosed marker hides to the end of the file, and the 12 files were repaired (list and reasons in `knowledge-base/blogs/_blogs-context.md`). The earlier claim was: verified intact after the real post-migration sync on all 8 marked files: docs' `intro-publish-your-docs.md`; blogs' `river-follow-up-2.md`, `river-action-follow-up-ch.md`, `river-together-4m-river-pts.md`, `2026-new-year-challenge.md`, `s4-best-creators.md`, `dynamic-airdrop-conversion-2.md`, `dynamic-airdrop-conversion-3.md`. The blog `index.excluded` URL-list (`/blog action:Exclude`) is currently empty. Governance is manually curated (not code-synced), so it's unaffected by any of this.
 
 **lastmod verification (added 2026-09-04, `syncBlog` in `src/kb-sync.js`):** sitemap `lastmod` can move on a redeploy alone, with zero editorial change — not safe on its own to gate `BLOG_SINCE_DATE` or "did this post change." `fetchPublishMeta()` in `src/blog-scraper.js` reads each post's own `article:published_time`/`article:modified_time`/`og:title` (Ghost's immutable content dates) as a cross-check:
 - A candidate that's new-to-the-index but whose true `published_time` is still pre-floor is **not** silently added or silently dropped — it's held out of the KB and reported in the `/sync type:Blog` Discord reply under "Held back for review," with title + date, so a human decides via `/blog action:Include`. Real example from the migration sync: `blog.riverai.inc/river/` (`published_time` 2025-05-13, two days pre-floor) — flagged, then manually reviewed: it carries the `announcement` tag (a real, live tag page, just not featured in the site's nav) alongside already-indexed posts like `season2-airdrop-is-live` and `season-6-is-live`, so it's legitimate current content, not orphaned. Manually added 2026-09-04 (`knowledge-base/blogs/river.md`) since it fell outside the automated floor — future `/sync type:Blog` runs will maintain it normally (matches by URL) from here on.
@@ -245,7 +245,9 @@ Two background health checks that run automatically as part of sync commands. Bo
 
 ### 1. Correction Staleness Check
 
-**Triggered by:** `/sync type:Blog` and `/sync type:Doc` (after files are written, before reporting results)
+**Triggered by:** `/sync type:Blog` and `/sync type:Doc` (after files are written, before reporting results), and — since 2026-10-28 — `/sync type:Knowledge`, which checks each fact the announcement scan just extracted (so a new season announcement now flags outdated files).
+
+**What is reviewed:** every live correction file **plus `core-facts.md`** (added 2026-10-28 — it is injected into every answer and still said "Season 5" weeks into Season 7). A flagged name the model returns is only drafted if it matches one of these files.
 
 **What it does:** For each newly scraped file, Haiku compares the first 1500 chars of the new content against the **full text** of every active correction file. It's instructed to only flag a correction when it can point to a specific existing claim (a figure, date, or fact) that the new article actually contradicts or supersedes, within that correction's own stated scope — topical overlap alone (e.g. both mentioning "River Pts") is explicitly not sufficient. This check is fast (one Haiku call per new file) and is `await`ed directly in the sync command handler.
 
@@ -258,7 +260,7 @@ Two background health checks that run automatically as part of sync commands. Bo
 - `slash-commands.js` passes this array to `monitor.checkCorrectionStaleness(result.processedFiles)`
 - Returns `[{ newFile, correctionFile }]` — each entry shown as one warning line
 
-**Draft generation (added 2026-07-07, decoupled from the sync reply 2026-07-07 after it caused a multi-minute hang):** If any corrections were flagged, `slash-commands.js` fires `monitor.draftCorrectionUpdates(stale, result.processedFiles)` **without awaiting it** so the sync reply is never blocked. For each flagged pair, `draftCorrectionUpdate()` sends the **full** correction file plus the **full** new article to Sonnet (`claude-sonnet-4-6`) and asks it, first, whether a change is genuinely needed. If not — the correction's claims are still accurate, or the article is out of its stated scope — the model replies `NO_CHANGE_NEEDED` and no draft file is written at all; this is the second line of defense against false positives that slip past the Haiku flag. Otherwise it produces a complete updated version, changing only what the new article explicitly states and leaving everything else untouched, written to `knowledge-base/corrections/_drafts/<correction-file>.md` (gitignored) with a header noting the source article and timestamp. **Nothing is ever written to the live correction file automatically** — a human must diff the draft against the real file and manually apply/delete it. Once the batch finishes (one sequential Sonnet call per flagged pair — can take a while), a `📝 Correction review results:` follow-up message is posted per entry: a draft path, `reviewed, no change needed`, or `draft generation failed` (API error, or a flagged filename that didn't match a real correction file).
+**Draft generation (added 2026-07-07, decoupled from the sync reply 2026-07-07 after it caused a multi-minute hang):** If any corrections were flagged, `slash-commands.js` fires `monitor.draftCorrectionUpdates(stale, result.processedFiles)` **without awaiting it** so the sync reply is never blocked. For each flagged pair, `draftCorrectionUpdate()` sends the **full** correction file plus the first 6,000 characters of the new article to Sonnet (`claude-sonnet-4-6`) and asks it, first, whether a change is genuinely needed. If not — the correction's claims are still accurate, or the article is out of its stated scope — the model replies `NO_CHANGE_NEEDED` and no draft file is written at all; this is the second line of defense against false positives that slip past the Haiku flag. Otherwise it produces a complete updated version, changing only what the new article explicitly states and leaving everything else untouched, written to `knowledge-base/corrections/_drafts/<correction-file>.md` (gitignored) with a header noting the source article and timestamp. **Nothing is ever written to the live correction file automatically** — a human must diff the draft against the real file and manually apply/delete it. Once the batch finishes (one sequential Sonnet call per flagged pair — can take a while), a `📝 Correction review results:` follow-up message is posted per entry: a draft path, `reviewed, no change needed`, or `draft generation failed` (API error, or a flagged filename that didn't match a real correction file).
 
 **Why this had to be split in two:** the first version ran drafting inline inside `checkCorrectionStaleness`, awaited by `Promise.all([buildIndex(), checkCorrectionStaleness(...)])` in the sync handler — so the interaction reply waited on every flagged correction's Sonnet call before replying at all, turning a normally-instant `/sync` into a multi-minute hang with zero output in between.
 
@@ -463,6 +465,7 @@ Key rules injected into every Claude call:
 - **No `---` dividers** — Bold headers are fine; horizontal rules are not.
 - **ASSIGNED REFERRAL CODE** — not in the system prompt: added to the first user message of each conversation, so the cached system block stays identical (see Prompt Caching below).
 - **SOURCE PRIORITY** — corrections > blogs/announcements > docs.
+- **EXTERNAL LINKS** — only share URLs that appear in the provided context (KB chunks or the LIVE PRICES block); never links from training knowledge.
 - **SCAM SAFETY** — Dynamic injection (2026-05-15): injected only when `isScamConcern(question)` returns true. See Scam Concern Detection below.
 - **CONVERSATIONAL BREVITY** — Dynamic injection (added 2026-07-10): `getSystemPrompt(includeScamBlock, isFollowUp)` takes a second param; `askClaude()` sets `isFollowUp = history.length > 1` (true for Scenario 0/0.5/CLARIFY-continuation calls, false on a fresh first question). When true, injects a rule capping replies to 2-4 sentences, forbidding re-explanation of a mechanism already covered earlier in the thread (point back to it instead), and calling for a short acknowledgement rather than a full mechanic restatement when the user is just agreeing/venting. Added because conversational replies (e.g. a user agreeing with someone, then venting about price) were getting full multi-paragraph re-explanations of conversion mechanics on every turn.
 
@@ -596,7 +599,7 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 - **Cache location:** `knowledge-base/.embeddings-cache.json`
 - **Restart behaviour:** instant — `buildIndex()` on startup only calls Voyage AI for new/changed chunks. If nothing changed, 0 API calls are made.
 - **What's indexed:** `core-facts.md`, 45 docs pages, 47 blog posts (May 2025 onwards), governance folder (17 curated files), corrections (11 files), curated announcements (3 files), channel-learning Q&A logs
-- **Excluded from index:** `*_ann/` and `*_tweet/` monthly subfolders — excluded at **directory level** in `collectMdFiles` (not via EXCLUDE markers). Outdated blog sections excluded via `<!-- EXCLUDE -->` markers. The two mechanisms are distinct: directory-skip prevents the folder from ever being walked; EXCLUDE markers strip sections from files that are otherwise indexed.
+- **Excluded from index:** `*_ann/` and `*_tweet/` monthly subfolders and every folder starting with `_` (e.g. `corrections/_drafts/`) — excluded at **directory level** in `collectMdFiles` (not via EXCLUDE markers). Files starting with `_` and all `README.md` files are skipped too (README skip added 2026-10-28 — they are developer notes, not River knowledge; the next `/sync type:Knowledge` or restart drops the two that were indexed). Outdated blog sections excluded via `<!-- EXCLUDE -->` markers. The two mechanisms are distinct: directory-skip prevents the folder from ever being walked; EXCLUDE markers strip sections from files that are otherwise indexed.
 
 ---
 
@@ -608,11 +611,18 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 - **~~PM2 setup~~** — complete. Bot runs under PM2 (`river-bot`). Windows Task Scheduler handles auto-resurrect on login.
 - **~~Weekly report cache~~** — implemented 2026-06-03. `report-cache.json` keyed by `platform::model::fromDate::toDate`. Haiku and Sonnet cached separately. 14-day TTL. Extended to daily reports 2026-08-18 (previously weekly-only); `force: true` bypasses the cache on either.
 - **Support ticket + collab logging** — fully implemented. Non-staff messages from `SUPPORT_TICKET_CATEGORY_IDS` logged to `intent/ticket-log.jsonl`, `COLLAB_CATEGORY_IDS` logged to `intent/collab-log.jsonl`. Classification is write-time dumb (file = category); full thread classification happens at report time when the whole conversation is available. Tickets included in community reports as "Discord — Support Tickets" section. **Business Proposals section** deferred — when added, classify collab threads concurrently at report time using `Promise.all` (one Haiku call per thread). See `readCollabMessages` in `community-report.js` for the hook comment.
-- **~~Chinese channel logging (Discord)~~** — implemented 2026-06-06. Messages from `CHINESE_DISCORD_CHANNEL_ID` are logged to `dc-intent-log.jsonl` then the handler returns early — no live classification, no bot response. Historical backfill from 2026-06-01 (129 messages) completed via `intent/backfill-chinese.js`. Batch intent classification deferred.
+- **~~Chinese channel logging (Discord)~~** — implemented 2026-06-06. Messages from `CHINESE_DISCORD_CHANNEL_ID` are logged to `dc-intent-log.jsonl` then the handler returns early — no bot response. (Since 2026-09-01 messages there are also scam-classified and blocked like any other channel; they are still never answered.) Historical backfill from 2026-06-01 (129 messages) completed via `intent/backfill-chinese.js`. Batch intent classification deferred.
 - **~~Telegram DM persistent menu button~~** — implemented 2026-06-06. `setChatMenuButton` + `setMyCommands` called at bot startup in `telegram/telegram-adapter.js`. `/start` in a private DM opens the staff panel inline keyboard (Report / Stats). The "≡ Menu" button is persistent across sessions — user does not need to type `/start` each time.
 
 - **~~Stale command names in bot replies~~** — fixed 2026-10-28: the `/sync type:Blog` reply now says `/blog action:Include` (was `/include-blog`) and the empty-index message says `/sync type:Knowledge` (was `/sync-knowledge`). Unused `fs`, `path`, `ROOT_DIR` (`blog-scraper.js`) and `isEnabled` (`slash-commands.js`) removed the same day.
-- **Still open (found 2026-10-28, owner to decide):** the scam-blocker toggle reply says "1h timeouts" (timeouts now escalate); `stripIndexedBlogUrls` in `kb-monitor.js` still matches only `blog.river.inc` links, so reposts on the new domain are no longer stripped.
+- **~~Toggle reply and announcement-scan domain~~** — fixed 2026-10-28: the scam-blocker toggle reply now says "escalating timeouts"; `stripIndexedBlogUrls` now matches `blog.riverai.inc`.
+- **~~Season 7 not reflected in answers~~** — fixed 2026-10-28: `core-facts.md`, `conversion-mechanism.md`, `riverpts-pricing.md` and `river4fun-outdated-features.md` updated to S7, with the owner's claiming rule (claimed River Pts convert any time; unclaimed ones are forfeited when the claim window closes). S7 ideal rate 0.01 (confirmed by the owner 2026-10-28). Original finding: the bot captured the S7 announcement and the `/sync type:Knowledge` scan added "Season 7 launches October 1 – December 31" to `ecosystem-milestones.md`. But `core-facts.md` (in every prompt, "always true") still says **Season 5**, and the corrections `conversion-mechanism.md`, `riverpts-pricing.md` and `river4fun-outdated-features.md` (ranked 1.3×) still say S6 — both outrank the scanned fact. Root cause: the announcement scan only appends to the three curated announcement files; nothing flags `core-facts.md` or corrections when an announcement contradicts them (the correction staleness check runs only on newly synced blog/doc pages). Done so far: the staleness check now runs on announcement findings and covers `core-facts.md` (2026-10-28); the four files were then updated (see above).
+
+- **Audit 2026-10-29 — fixed:** staff never scam-actioned; log lines timestamped (`bot.js`); blog article numbering can't overwrite (`blogFileForUrl`); failed announcement checks retried; Telegram-only reports exclude Discord tickets; `!add-doc-text` uses the sync file name rule; Q&A learning only for real questions; dependencies updated (0 vulnerabilities; dotenv 18, jsdom 30, discord.js 14.27); test suite (`npm test`) and evals (`npm run eval`) added; RAG index rebuilt.
+- **Audit 2026-10-29 — also fixed:** EXCLUDE markers (sync re-applies them; unclosed marker hides to the end; 11 posts closed, 1 partial block restored, 35 chunks of outdated text left the index); login retries with backoff instead of a pm2 restart storm; watchdog now judged by heartbeat acknowledgements (10 min) with a 6 h no-event backstop; deleted questions get no answer (Discord `messageDelete`, and both platforms skip quietly when the reply target is gone); hand-added blog posts found in the sitemap are rewritten in their existing file; pm2 log rotation enabled.
+- **Scam review 2026-10-28 (all 538 actions, `scripts/scam-review/review-infractions.js`):** 422 scam · 16 not scam · 81 unsure · 19 API errors. Main false-positive pattern: messages that are only an X/Twitter link (sometimes with a mention or decorative divider); also "buying aged wallets" pitches (spam, not scam), a few safety alerts, a token address. Text alone can't settle the unsure ones (no images or thread were stored). Results with message text: `data/scam-review-2026-10-28.json` (local). Decision pending on how to treat bare X links.
+- **2026-10-29 later:** the intent classifier prompt (`INTENT_SYSTEM_PROMPT`) now carries the documented taxonomy rules it was missing — "Referral code please" is onboarding (was referral-sharing → ignored), "New here" is a greeting; search keeps the embedding cache in memory (reloads when the file changes). **Anthropic credit ran out** during the scam review (19 rows unreviewed; the live bot's Claude calls fail until topped up). Decision notes for the scam review: `data/scam-review-2026-10-28-summary.md` and the labelling sheet `data/scam-review-2026-10-28-to-check.csv` (local).
+- **Audit 2026-10-29 — still open:** prompt caching reads only 6% of writes (measure again with timestamped logs, then decide); ticket channels — the bot can read ticket *categories* but **0 of 23 open ticket channels and 0 of 44 collab channels** (each new channel gets its own permissions from the ticket tool), so ticket logging has never written anything; fix: add the bot's role with View + Read History to new tickets (Send stays off — the `.env` categories keep it from answering there); Anthropic SDK 1.x upgrade waiting for a live test; on Telegram the bot gets no delete events, so a reply sent *before* another bot deletes the spam stays in the chat.
 
 ### ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
 

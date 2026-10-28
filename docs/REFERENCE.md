@@ -1,4 +1,4 @@
-# Reference
+Chinese topic (optional)Telegram answersthe Telegram botthe Telegram botChinese channel (optional)scam alertscollab loggingticket logging`/report`— (default 5)staff commands and staff detectionexplanation embedsunprompted answerslogging, Q&A learning, reports, staff-ping replieslogging, Q&A learning, reportstweet captureannouncement capture— (default `voyage`)**start-up****start-up**# Reference
 
 Lookup tables for the running bot: settings, commands, events, scheduled jobs, timers and npm scripts. Each table is the one place that fact is written down; other docs link here.
 
@@ -8,29 +8,31 @@ For where each item lives in the code (exact lines), see `CODE_INDEX.md`.
 
 Read from `.env` in the project root (copy `.env.example` to start). Never commit `.env` — it holds secrets. "Current value" shows the live, non-secret IDs as of 2026-09; secrets are never written here.
 
-| Setting | Required | What it does | Current value |
+"Needed for" says what stops working without the setting; only the first three are needed for the bot to start.
+
+| Setting | Needed for | What it does | Current value |
 |---|---|---|---|
-| `DISCORD_TOKEN` | yes | Bot token from the Discord Developer Portal. | *(secret)* |
-| `ANTHROPIC_API_KEY` | yes | API key for Claude (Anthropic). | *(secret)* |
-| `VOYAGE_API_KEY` | yes | API key for Voyage AI (RAG embeddings). | *(secret)* |
-| `EMBEDDING_PROVIDER` | no | Embedding provider; only `voyage` is supported (the default). | `voyage` |
-| `ANNOUNCEMENTS_CHANNEL_ID` | yes | Messages here are saved to the knowledge base as raw announcements. | `1213030463040655410` |
-| `TWEETS_CHANNEL_ID` | yes | Messages here are saved to the knowledge base as raw tweets. | `1212717389104414750` |
-| `GENERAL_CHANNEL_ID` | yes | #general — logged for intent analysis and reports; Q&A pairs are learned from staff replies. | `1212717429319540790` |
-| `SUPPORT_CHANNEL_ID` | yes | #support — same as general; also the channel staff-ping replies point to. | `1212717485862944818` |
-| `BOT_ANSWER_CHANNEL_IDS` | yes | Comma-separated channels where the bot auto-answers unprompted (Scenario 3). @mentions work anywhere. | `1212717429319540790,1212717485862944818,1502041137119105054` |
-| `STAFF_EXPLANATION_CHANNEL_ID` | yes | Where staff explanation embeds are posted. | `1502041137119105054` |
-| `STAFF_ROLE_IDS` | yes | Comma-separated role IDs that count as staff. | `1212718739808845835` |
-| `STAFF_WAIT_MINUTES` | no | Minutes to wait for a staff reply before auto-answering (default 5). | `5` |
-| `REPORTS_CHANNEL_ID` | yes | Where `/report` posts community reports. | `1502056590004715530` |
-| `SUPPORT_TICKET_CATEGORY_IDS` | no | Comma-separated support-ticket category IDs. Ticket channels are created per ticket; non-staff messages are logged to `intent/ticket-log.jsonl`, never answered. | `1212753951578005644,1419608088297865286` |
-| `COLLAB_CATEGORY_IDS` | no | Comma-separated collab / business-inquiry category IDs. Logged to `intent/collab-log.jsonl`; not in reports yet. | *(empty)* |
-| `SCAM_LOG_CHANNEL_ID` | no | Where the scam blocker posts alert embeds. The bot needs Send Messages there. | `1212717191955480667` |
-| `CHINESE_DISCORD_CHANNEL_ID` | no | Chinese community channel — logged for reports and scam-checked, never answered. | *(empty)* |
-| `TELEGRAM_BOT_TOKEN` | no | Bot token from BotFather. Without it the Telegram bot is disabled. | *(secret)* |
-| `TELEGRAM_CHAT_ID` | with Telegram | Telegram group ID (a negative number). | `-1002060657220` |
-| `TELEGRAM_TOPIC_IDS` | with Telegram | Comma-separated topic IDs the bot answers in (1 = General, 62 = Support, 229775 = River). | `1,62,229775` |
-| `CHINESE_TELEGRAM_TOPIC_ID` | no | Chinese community topic — logged for reports, never answered. | *(empty)* |
+| `DISCORD_TOKEN` | **start-up** | Bot token from the Discord Developer Portal. | *(secret)* |
+| `ANTHROPIC_API_KEY` | **start-up** | API key for Claude (Anthropic). | *(secret)* |
+| `VOYAGE_API_KEY` | **start-up** | API key for Voyage AI (RAG embeddings). | *(secret)* |
+| `EMBEDDING_PROVIDER` | — (default `voyage`) | Embedding provider; only `voyage` is supported (the default). | `voyage` |
+| `ANNOUNCEMENTS_CHANNEL_ID` | announcement capture | Messages here are saved to the knowledge base as raw announcements. | `1213030463040655410` |
+| `TWEETS_CHANNEL_ID` | tweet capture | Messages here are saved to the knowledge base as raw tweets. | `1212717389104414750` |
+| `GENERAL_CHANNEL_ID` | logging, Q&A learning, reports | #general — logged for intent analysis and reports; Q&A pairs are learned from staff replies. | `1212717429319540790` |
+| `SUPPORT_CHANNEL_ID` | logging, Q&A learning, reports, staff-ping replies | #support — same as general; also the channel staff-ping replies point to. | `1212717485862944818` |
+| `BOT_ANSWER_CHANNEL_IDS` | unprompted answers | Comma-separated channels where the bot auto-answers unprompted (Scenario 3). @mentions and replies to the bot work in any channel. | `1212717429319540790,1212717485862944818,1502041137119105054` |
+| `STAFF_EXPLANATION_CHANNEL_ID` | explanation embeds | Where staff explanation embeds are posted. | `1502041137119105054` |
+| `STAFF_ROLE_IDS` | staff commands and staff detection | Comma-separated role IDs that count as staff. | `1212718739808845835` |
+| `STAFF_WAIT_MINUTES` | — (default 5) | Minutes to wait for a staff reply before auto-answering (default 5). | `5` |
+| `REPORTS_CHANNEL_ID` | `/report` | Where `/report` posts community reports. | `1502056590004715530` |
+| `SUPPORT_TICKET_CATEGORY_IDS` | ticket logging | Comma-separated support-ticket category IDs. Ticket channels are created per ticket; non-staff messages are logged to `intent/ticket-log.jsonl`, never answered. | `1212753951578005644,1419608088297865286` |
+| `COLLAB_CATEGORY_IDS` | collab logging | Comma-separated collab / business-inquiry category IDs. Logged to `intent/collab-log.jsonl`; not in reports yet. | *(empty)* |
+| `SCAM_LOG_CHANNEL_ID` | scam alerts | Where the scam blocker posts alert embeds. The bot needs Send Messages there. | `1212717191955480667` |
+| `CHINESE_DISCORD_CHANNEL_ID` | Chinese channel (optional) | Chinese community channel — logged for reports and scam-checked, never answered. | *(empty)* |
+| `TELEGRAM_BOT_TOKEN` | the Telegram bot | Bot token from BotFather. Without it the Telegram bot is disabled. | *(secret)* |
+| `TELEGRAM_CHAT_ID` | the Telegram bot | Telegram group ID (a negative number). | `-1002060657220` |
+| `TELEGRAM_TOPIC_IDS` | Telegram answers | Comma-separated topic IDs the bot answers in (1 = General, 62 = Support, 229775 = River). | `1,62,229775` |
+| `CHINESE_TELEGRAM_TOPIC_ID` | Chinese topic (optional) | Chinese community topic — logged for reports, never answered. | *(empty)* |
 
 ## Commands
 
@@ -38,7 +40,7 @@ Every command is staff-only (Discord: a role in `STAFF_ROLE_IDS`; Telegram: a gr
 
 | Command | Where | What it does |
 |---|---|---|
-| `/sync type:Knowledge` | Discord | Reloads `core-facts.md`, scans new announcements for facts (see CONTEXT.md § KB Monitor) and rebuilds the RAG index. |
+| `/sync type:Knowledge` | Discord | Reloads `core-facts.md`, scans new announcements for facts (see CONTEXT.md § KB Monitor), flags `core-facts.md` or corrections those facts may outdate (drafting proposed updates in the background), and rebuilds the RAG index. |
 | `/sync type:Blog` | Discord | Pulls new and changed posts from the blog sitemap (lastmod cross-checked), flags corrections the new posts may outdate, then drafts proposed updates in the background. |
 | `/sync type:Doc [force:true]` | Discord | Pulls new and removed pages from the docs sitemap; `force` re-scrapes every page (files with `<!-- EXCLUDE -->` markers are skipped). Same correction check as Blog. |
 | `/blog action:Add url:<url>` | Discord | Scrapes one post into `knowledge-base/blogs/<Month>_blog/articleN.md` and rebuilds the index. |
@@ -59,7 +61,7 @@ Every command is staff-only (Discord: a role in `STAFF_ROLE_IDS`; Telegram: a gr
 | `/start` | Telegram DM | Opens the staff panel (Community Report / Member Stats buttons). A persistent ≡ Menu button also opens it. |
 | `/tgwatch <userId> [reason]` | Telegram DM | Watch mode: the user stays; harmful messages (scam, abuse, FUD) are deleted and admins alerted. |
 | `/tgmute <userId> [reason]` | Telegram DM | Permanent mute — re-applied on every rejoin and after a captcha bot unlocks the user. |
-| `/tgkick <userId> [reason]` | Telegram DM | Kicks once (now, or on the next join if not in the group), then drops to watch mode. |
+| `/tgkick <userId> [reason]` | Telegram DM | Kicks once (now, or on the next join if not in the group), then drops to watch mode — a later rejoin is not kicked, only reported to admins. |
 | `/tgban <userId> [reason]` | Telegram DM | Banned now and on every rejoin attempt; messages revoked. |
 | `/tgunwatch <userId>` | Telegram DM | Removes a watched user from the list entirely. |
 | `/tgunmute <userId>` | Telegram DM | Lifts a permanent mute and drops to watch mode. |
@@ -79,6 +81,7 @@ Event listeners the bot registers. `receiver.event` matches the code (`discordCl
 | `discordClient.clientReady` | `bot.js` | Start-up: core facts, RAG index, staff name cache, Telegram adapter, slash commands, cron jobs. |
 | `discordClient.messageCreate` | `src/commands.js` | Every Discord message: logging, scam checks, staff text commands and answer routing. |
 | `discordClient.interactionCreate` | `bot.js` | Slash commands (handler from `createSlashHandler`). |
+| `discordClient.messageDelete` | `src/commands.js` | A deleted question is removed from its pending auto-answer (dropped when nothing is left). |
 | `discordClient.raw` | `bot.js` | Records gateway activity for the silence watchdog. |
 | `discordClient.error` | `bot.js` | Logs client errors. |
 | `discordClient.shardError` | `bot.js` | Logs shard errors. |
@@ -103,7 +106,9 @@ Event listeners the bot registers. `receiver.event` matches the code (`discordCl
 | `0 * * * *` (hourly) | `bot.js` | Drops expired conversation, timer and tracker entries (`pruneStaleEntries`). |
 | `0 0 */1 * *` (daily, midnight) | `bot.js` | Rebuilds the staff name cache for the spoof detector. |
 
-There is also a 5-minute watchdog in `bot.js`: after 30 minutes with no Discord gateway event it exits so pm2 restarts the bot (see `docs/DECISIONS.md`).
+There is also a 5-minute watchdog in `bot.js` (started after the first login): it exits so pm2 restarts the bot when Discord has not acknowledged the connection's heartbeat for 10 minutes, or no event at all has arrived for 6 hours (see `docs/DECISIONS.md`). If login fails, the bot retries by itself with growing waits (5 s up to 5 min) instead of exiting.
+
+pm2 log rotation (`pm2-logrotate`, shared by all pm2 apps on this machine): rotates daily or at 10 MB, compresses, keeps 14 days. It runs as a normal pm2 process named `pm2-logrotate`, because `pm2 install` fails on a user folder with a space in its name. Settings: `pm2 conf pm2-logrotate`.
 
 ## Timers
 
@@ -132,7 +137,8 @@ How the timers stack for one user after staff engagement:
 | Command | What it does |
 |---|---|
 | `npm start` | Runs the bot (`node bot.js`). In production pm2 runs `node bot.js` directly as `river-bot`. |
-| `npm test` | Placeholder — there are no tests; it prints an error and exits. |
+| `npm test` | Runs the offline test suite in `test/` (Node's built-in runner; fake Discord/Claude, sandbox copies — never touches real data). |
+| `npm run eval` | Answer-quality evals with the real models (`-- intent` or `-- answers` for one part). Costs a little; reads `.env`; never posts anywhere. |
 | `npm run index` | Rebuilds the generated Contents blocks, `CODE_INDEX.md` and doc section lists, then prints the drift report. |
 | `npm run index:check` | Changes nothing; exits 1 if a generated part is stale or the docs have drifted from the code. |
 | `npm run index:watch` | Rebuilds after every save. |

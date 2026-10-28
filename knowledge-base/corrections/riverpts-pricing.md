@@ -24,14 +24,14 @@ There are two ways to look at the value of River Pts:
 River Pts (RIVERPTS) trade as an ERC-20 token on BNB Chain DEXes. The current market price per token gives the immediate liquidation value. Check the live links above for the current rate.
 
 **2. Conversion value (via Conversion 3.0)**
-Under Conversion 3.0 (S6, active through ~Sep 30, 2026), the ideal rate is 0.01. This means:
+Under Conversion 3.0 (S7, October 1 – December 31, 2026), the ideal rate is 0.01 — the same as S5 and S6. This means:
 - 1M River Pts → up to 10,000 Staked RIVER (at ideal rate, 24-month staking epoch, 100% reshare)
 - 3-month epoch at ideal rate → 3,000 Staked RIVER (30% reshare)
 - The USD value of conversion output = RIVER received × current $RIVER market price
 
 The secondary market price (what you could sell RIVERPTS for immediately) and the conversion value (what you get by converting to staked RIVER) are different. Use the live $RIVER price link above to calculate current conversion value.
 
-Note: S5 ended June 30, 2026. Unclaimed or unconverted S5 River Pts remain claimable/convertible through Sep 30, 2026 (when S6 ends), after which they're forfeited.
+Note: S5 ended June 30, 2026 and S6 ended September 30, 2026. Claiming vs converting: River Pts must first be claimed. Claimed River Pts sit in the user's wallet and can be converted at any time, in any later Season. River Pts not claimed before that Season's claim window closes are forfeited. The S5 claim window closed September 30, 2026, so unclaimed S5 River Pts are forfeited; the S6 airdrop is claimable until S7 ends (December 31, 2026).
 
 ## Tone guidance
 

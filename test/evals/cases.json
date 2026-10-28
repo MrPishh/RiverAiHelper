@@ -1,0 +1,185 @@
+{
+  "_readme": "Labelled cases for `npm run eval`. Add a case whenever the bot gets something wrong in real use (the message, what it should have done, and why) — that turns every real mistake into a permanent check. intent: expected category (a list when the taxonomy allows either). answers: question → the reply type expected, phrases it must contain (any of each list) and phrases it must never contain.",
+  "intent": [
+    {
+      "message": "How does Conversion 3.0 work?",
+      "expect": [
+        "help-seeking",
+        "factual-question"
+      ],
+      "why": "either category is correct per the taxonomy"
+    },
+    {
+      "message": "Why are my River Pts not accruing?",
+      "expect": "help-seeking"
+    },
+    {
+      "message": "anyone received the Pizza day reward?",
+      "expect": "help-seeking",
+      "why": "'anyone' is a social softener"
+    },
+    {
+      "message": "the conversion is so poor, why do I get fewer tokens the longer I wait",
+      "expect": "help-seeking",
+      "why": "venting about a mechanic"
+    },
+    {
+      "message": "I staked 12 months and no points after 2 weeks",
+      "expect": [
+        "troubleshooting",
+        "help-seeking"
+      ],
+      "why": "either category is correct per the taxonomy"
+    },
+    {
+      "message": "Referral code please",
+      "expect": "onboarding",
+      "why": "a request, not a share"
+    },
+    {
+      "message": "What is the ideal rate for S7?",
+      "expect": "factual-question"
+    },
+    {
+      "message": "River going global! $RIVER community is everywhere 🌍",
+      "expect": "community-hype"
+    },
+    {
+      "message": "hoping for 4 dollars only",
+      "expect": "community-hype",
+      "why": "a wish, not a complaint"
+    },
+    {
+      "message": "⚠️ Fake River support accounts spotted on X — block and report",
+      "expect": "safety-alert"
+    },
+    {
+      "message": "Scammer",
+      "expect": "safety-alert",
+      "why": "bare accusation, no link or offer"
+    },
+    {
+      "message": "Share Your Questions/Issues to the team: https://x.com/fake-support 👋",
+      "expect": "scam-content",
+      "why": "broadcast redirect to an external 'support' link"
+    },
+    {
+      "message": "DM me, I'm an admin and can fix your wallet",
+      "expect": "scam-content"
+    },
+    {
+      "message": "My code: animeshlogs — use it to register",
+      "expect": "referral-sharing"
+    },
+    {
+      "message": "DAC 3.0 — best time to convert, early season or end? Drop your strategy 👇",
+      "expect": "community-discussion"
+    },
+    {
+      "message": "Pls help check my ticket 4255 @RiverAiBot",
+      "expect": "staff-ping"
+    },
+    {
+      "message": "Thats due to S1 staking, price recovers once it's done",
+      "expect": [
+        "community-help",
+        "community-discussion"
+      ],
+      "why": "informing, not asking; either category is correct per the taxonomy"
+    },
+    {
+      "message": "Good morning everyone",
+      "expect": "general-greeting"
+    },
+    {
+      "message": "New here",
+      "expect": "general-greeting",
+      "why": "no request made"
+    }
+  ],
+  "answers": [
+    {
+      "question": "What season is it now and when does it end?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "Season 7",
+          "S7"
+        ],
+        [
+          "December 31",
+          "Dec 31"
+        ]
+      ],
+      "mustNotInclude": [
+        "Season 5 is",
+        "S6 is the current"
+      ]
+    },
+    {
+      "question": "What is the conversion ideal rate right now?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "0.01"
+        ]
+      ],
+      "mustNotInclude": [
+        "0.03 is the current"
+      ]
+    },
+    {
+      "question": "Is there a testnet I can use?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "no longer",
+          "not active",
+          "mainnet"
+        ]
+      ],
+      "mustNotInclude": [
+        "testnet.river"
+      ]
+    },
+    {
+      "question": "Someone DMed me saying they are River support and asked for my seed phrase, is this real?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "scam"
+        ],
+        [
+          "never"
+        ]
+      ],
+      "mustNotInclude": []
+    },
+    {
+      "question": "What is the official website?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "riverai.inc"
+        ]
+      ],
+      "mustNotInclude": [
+        "https://river.inc",
+        "app.river.inc"
+      ]
+    },
+    {
+      "question": "I didn't claim my S5 points before September 30, can I still claim them?",
+      "expect": "ANSWER",
+      "mustInclude": [
+        [
+          "forfeit",
+          "no longer",
+          "cannot",
+          "can't"
+        ]
+      ],
+      "mustNotInclude": []
+    }
+  ]
+}

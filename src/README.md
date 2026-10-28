@@ -41,7 +41,7 @@ All bot logic. `bot.js` in the project root wires these modules together — non
 A factory, `registerMessageHandler`, receives the client, state, config and modules from `bot.js` — it never imports the Discord client or reads `.env`.
 
 - **Ticket/collab gate:** messages in `SUPPORT_TICKET_CATEGORY_IDS` or `COLLAB_CATEGORY_IDS` channels are logged to `intent/ticket-log.jsonl` / `collab-log.jsonl` and the handler returns — the bot never replies there.
-- **Scam blocker (`takeScamAction`):** called when any scam layer fires on a non-staff message. Deletes the message, times the member out (1 hour × infraction count, capped at 28 days) and posts an alert to `SCAM_LOG_CHANNEL_ID`. Each step fails on its own without stopping the others. Does nothing while the scam-blocker toggle is OFF. Needs the **Manage Messages** and **Moderate Members** permissions, and the bot's role above members' roles.
+- **Scam blocker (`takeScamAction`):** called when any scam layer fires on a non-staff message. Deletes the message, times the member out (1 hour × infraction count, capped at 28 days) and posts an alert to `SCAM_LOG_CHANNEL_ID`. Each step fails on its own without stopping the others. Does nothing while the scam-blocker toggle is OFF, and never acts on staff. Needs the **Manage Messages** and **Moderate Members** permissions, and the bot's role above members' roles.
 
 ### `slash-commands.js`
 
@@ -69,7 +69,7 @@ A factory, `createClaudeModule`, for everything Sonnet: the system prompt, retri
 
 ### `kb-monitor.js`
 
-A factory, `createMonitorModule`, for two health checks run during `/sync` (Haiku keeps them cheap): correction staleness detection, and the announcement fact scan. Details: `CONTEXT.md` § KB Monitor.
+A factory, `createMonitorModule`, for two health checks run during `/sync` (Haiku keeps them cheap): the announcement fact scan, and staleness detection — new blog/doc pages and new announcement facts are checked against every correction and `core-facts.md`. Details: `CONTEXT.md` § KB Monitor.
 
 ### `toggles.js`
 
@@ -86,9 +86,9 @@ A factory, `createMonitorModule`, for two health checks run during `/sync` (Haik
 1. **Chunks** every `.md` file in `knowledge-base/` and `channel-learning/` into ~1,500-character pieces with 150 characters of overlap.
 2. **Embeds** each chunk with Voyage AI — only chunks whose text changed since the last run.
 3. **Caches** the vectors in `knowledge-base/.embeddings-cache.json`, so a restart costs no API calls when nothing changed.
-4. **Searches** by embedding the question and returning the 8 most similar chunks (cosine similarity × source priority).
+4. **Searches** by embedding the question and returning the 8 most similar chunks (cosine similarity × source priority). The cache is kept in memory between questions and reloaded only when the file changes (any rebuild, from the bot or a separate script).
 
-Skipped: the raw `*_ann/` and `*_tweet/` folders, files starting with `_`, and `<!-- EXCLUDE -->` sections.
+Skipped: the raw `*_ann/` and `*_tweet/` folders, files and folders starting with `_` (so correction drafts never reach answers), `README.md` files, and `<!-- EXCLUDE -->` sections (an unclosed marker hides to the end of the file).
 
 ### `embedder.js`
 
