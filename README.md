@@ -8,9 +8,11 @@ A Discord support bot for River Protocol that uses Claude (Anthropic) to answer 
 
 - [Root Files](#root-files)
   - [CONTEXT.md](#contextmd)
-  - [usage-stats.json](#usage-statsjson)
   - [intent/](#intent)
   - [bot.js](#botjs)
+- [data/](#data)
+- [logs/](#logs)
+- [scripts/](#scripts)
 - [src/ — Core Modules](#src--core-modules)
   - [state.js](#statejs)
   - [commands.js](#commandsjs)
@@ -39,11 +41,6 @@ Full session context document. Read this at the start of any new Claude Code ses
 
 ---
 
-### `usage-stats.json`
-Persisted Claude API usage log. Auto-created on the first answer. Stores total call count, input/output tokens, and estimated cost since tracking began. View via `/usage-stats` in Discord.
-
----
-
 ### `intent/`
 Standalone folder for message intent logs, taxonomy, and supporting utilities. See `intent/README.md` for full details.
 
@@ -67,7 +64,7 @@ The main bot entry point — the only file that stays in root. Creates the Disco
 - **Scenario 0.5** — User replies to any regular bot answer (no @mention needed) → reconstructs the prior exchange as history and answers the follow-up in context
 - **Scenario 1** — User @mentions the bot directly → answers immediately
 - **Scenario 2** — User @mentions the bot as a reply to someone else's message → answers the original message
-- **Scenario 3** — User posts a question in a bot-answer channel with no mention → waits `STAFF_WAIT_MINUTES` for a staff reply, then auto-answers if none comes
+- **Scenario 3** — User posts a question in a bot-answer channel with no mention → waits `STAFF_WAIT_MINUTES` for a staff reply, then auto-answers if none comes. Extra messages from the same user posted while that wait is running are folded into the same batch and answered together as one reply, not answered separately.
 
 **Claude response types:**
 - `ANSWER:` — bot has a direct answer from the knowledge base
@@ -102,7 +99,7 @@ All bot logic lives here. `bot.js` in the root wires these together — none of 
 ### `state.js`
 Shared state — all Maps and timing constants exported as a single object so every module holds a reference to the same live state. Mutations in one module are immediately visible to all others.
 
-**Key exports:** All shared Maps (`pendingQuestions`, `conversationState`, `staffEngaged`, `recentCommunityDiscussion`, etc.) and all timing constants. Key timers:
+**Key exports:** All shared Maps (`pendingQuestions`, `pendingMsgIndex`, `conversationState`, `staffEngaged`, `recentCommunityDiscussion`, etc.) and all timing constants. Key timers:
 - `STAFF_WAIT_MS` (5 min) — how long the bot waits before auto-answering any new question
 - `STAFF_ENGAGED_WINDOW_MS` (3 min) — hard block after staff replies to a user
 - `POST_STAFF_WAIT_MS` (3 min) — shorter wait for the same user's next question after staffEngaged expires
@@ -117,17 +114,21 @@ Registers the `messageCreate` Discord event handler and all `!text` staff comman
 
 **Ticket/collab gate:** Messages in `SUPPORT_TICKET_CATEGORY_IDS` or `COLLAB_CATEGORY_IDS` channels are logged immediately to `ticket-log.jsonl` / `collab-log.jsonl` and the handler returns early — the bot never responds in ticket or collab channels.
 
-**Scam blocker (`takeScamAction`):** Called when any detection layer fires on a non-staff message. Actions: delete the message, issue a 1-hour timeout, post an alert embed to `SCAM_LOG_CHANNEL_ID`. Each action fails gracefully so the others still run. No-ops silently when the scam-blocker toggle is OFF. Required bot permissions: `Manage Messages` + `Moderate Members`; bot role must be above member roles in the server hierarchy.
+**Scam blocker (`takeScamAction`):** Called when any detection layer fires on a non-staff message. Actions: delete the message, issue an escalating timeout (1h × infraction count, capped at 28 days), post an alert embed to `SCAM_LOG_CHANNEL_ID`. Each action fails gracefully so the others still run. No-ops silently when the scam-blocker toggle is OFF. Required bot permissions: `Manage Messages` + `Moderate Members`; bot role must be above member roles in the server hierarchy.
 
 ---
 
 ### `slash-commands.js`
-Registers all `/slash` Discord commands and handles slash interactions. Same dependency-injection pattern as `commands.js`. All staff commands live here — the only text-command exceptions are `!add-blog-text` and `!add-doc-text` in `commands.js` (attachment-only, no slash equivalent).
+Registers all slash commands and handles slash interactions. Same dependency-injection pattern as `commands.js`. Commands: `/sync` (knowledge/blog dropdown), `/blog` (add/exclude/include subcommands), `/doc` (sync [force] / add subcommands), `/scam-record`, `/toggle`, `/report`, `/member-stats`, `/usage-stats`, `/add-correction`. Text-command exceptions (`!add-blog-text`, `!add-doc-text`) remain in `commands.js` — attachment-only, no slash equivalent.
 
 ---
 
 ### `intent.js`
 Factory (`createIntentModule`) for the message intent classification system. Classifies every incoming message into one of 15 categories using Claude Haiku. Only 4 categories trigger a bot response. See `intent/intent-taxonomy.md` for the full category rulebook.
+
+Contains two scammer-side detection layers that run before normal classification:
+- **Hard sync (`detectScamContentSync`)** — unambiguous patterns (t.me links, wa.me links, `visit/go to my bio`, etc.) return `scam-content` immediately with zero API cost.
+- **Soft sync + Haiku (`hasSoftScamSignal` + `detectScamContentLLM`)** — context-dependent patterns (`dm me`, `check my dashboard`, etc.) that regex alone cannot resolve. Regex flags the message; a focused Haiku YES/NO call reasons over reply context and recent thread to decide. Fails safe (returns false on API error).
 
 Also exports two write-time logging functions used directly by `commands.js` (not via the factory): `logToTicketFile(message)` and `logToCollabFile(message)`. These append a minimal JSON record synchronously — no classification, no state.
 
@@ -139,7 +140,11 @@ Factory (`createClaudeModule`) for all Claude Sonnet interactions — RAG search
 ---
 
 ### `kb-sync.js`
-All knowledge base sync functions — `syncBlog()`, `syncDocs()`, blog/doc index management, and usage tracking. Called by staff commands `/sync blog`, `/sync doc`, etc.
+All knowledge base sync functions — `syncBlog()`, `syncDocs()`, blog/doc index management, and usage tracking. Called by staff commands `/sync`, `/doc sync`, etc.
+
+**`<!-- EXCLUDE -->` marker preservation:** both sync functions read which filenames currently carry the marker *before* any delete/rewrite pass, and reinsert it on write — so a page that's deleted-and-recreated (e.g. its URL changed) doesn't silently lose a hand-applied exclusion.
+
+**Blog lastmod verification:** a sitemap `<lastmod>` change alone isn't trusted — `syncBlog` cross-checks it against `fetchPublishMeta()` (see `blog-scraper.js`) before treating a post as new or changed, since a site-wide redeploy can bump `lastmod` with zero content change. A candidate that only looks new because of that (true `published_time` still pre-`BLOG_SINCE_DATE`) is held out and reported in the `/sync type:Blog` reply for a human `/include-blog` decision, rather than silently added or dropped. `knowledge-base/blogs/_excluded-legacy.json` is a self-maintaining registry (title + true publish date, keyed by URL) of every post ever seen failing that floor — each URL is fetched once to seed it, then it's a free lookup.
 
 ---
 
@@ -154,7 +159,7 @@ Pure helper functions shared across modules — date/folder utilities (`getWeekR
 ---
 
 ### `toggles.js`
-Platform reply toggle — `isEnabled(platform)`, `toggle(platform)`, `getStatus()`. State persisted to `toggles.json` so ON/OFF survives restarts.
+Platform reply toggle — `isEnabled(platform)`, `toggle(platform)`, `getStatus()`. State persisted to `data/toggles.json` so ON/OFF survives restarts.
 
 | Toggle key | Command | Default | Controls |
 |---|---|---|---|
@@ -206,7 +211,41 @@ Scrapes web pages and converts them to clean Markdown for storage in the knowled
 
 **Fallback:** If a direct page fetch fails (e.g. Cloudflare block), automatically tries the site's RSS feed to extract the full article HTML.
 
-**Exports:** `scrapeSingleArticle(url)`, `htmlToMarkdown(html, url)`
+**Publish metadata (added 2026-09-04):** `fetchPublishMeta(url)` does a lightweight fetch (no Readability parse) and reads a post's own `article:published_time` / `article:modified_time` / `og:title` meta tags — the editorial dates, set once and untouched by a redeploy. `syncBlog` in `kb-sync.js` uses this to verify a sitemap `<lastmod>` change is a real content edit and not just a site-wide redeploy/migration artifact before trusting it. Only populated via the direct-fetch path — returns nulls when the RSS fallback is used (RSS only carries the article body, not the page `<head>`).
+
+**Exports:** `scrapeSingleArticle(url)`, `htmlToMarkdown(html, url)`, `fetchPublishMeta(url)`
+
+---
+
+## `data/`
+
+Runtime state files that persist across bot restarts. Gitignored — auto-created on first write. The `data/` folder itself is tracked via `.gitkeep` so the directory exists on a fresh clone.
+
+| File | Purpose |
+|---|---|
+| `toggles.json` | ON/OFF state for Discord replies, Telegram replies, and Scam Blocker. Written by `/toggle` commands. |
+| `usage-stats.json` | Cumulative Claude API call counts, token totals, and estimated cost since tracking began. Viewed via `/usage-stats`. |
+| `scammer-list.json` | Persistent scammer infraction log, keyed by Discord user ID. Updated on every scam-blocker action. Managed via `/scam-record`. |
+
+---
+
+## `logs/`
+
+Log files written outside of PM2's own log stream. Gitignored — the folder is tracked via `.gitkeep`.
+
+| File | Purpose |
+|---|---|
+| `bot-startup.log` | Startup output from an early PM2 configuration. No longer written to by bot code — kept for historical reference. |
+
+---
+
+## `scripts/`
+
+Standalone diagnostic and maintenance utilities. Not part of the bot runtime — run manually as needed.
+
+| File | How to run | Purpose |
+|---|---|---|
+| `check-perms.js` | `node scripts/check-perms.js` | Checks the bot's Discord permissions (View, Read History, Send, Embed Links) across every configured channel and reports any gaps. Reads channel IDs directly from `.env`. |
 
 ---
 
@@ -272,10 +311,10 @@ knowledge-base/
     _blogs-context.md            ← Curation notes: exclusion rules, overlap map, sync rules
     _index.json                  ← Tracks URL, slug, file, lastmod, lastScraped per post
     *.md                         ← Sitemap-synced blog posts, slug-named
-    May_blog/ etc.               ← Monthly folders for posts added via /add-blog
+    May_blog/ etc.               ← Monthly folders for posts added via /blog action:Add
   governance/
     _governance-context.md       ← Curation notes: 17 curated files, narrative order, excluded topic IDs
-    *.md                         ← First posts only from gov.river.inc/c/proposal-lab/5
+    *.md                         ← First posts only from gov.riverai.inc/c/proposal-lab/5
   announcements/
     _announcements-context.md    ← Curation notes: what's included, cross-reference status, sync rules
     exchanges-and-token.md       ← Token address, all exchange listings with dates, DEX integrations
@@ -301,6 +340,6 @@ channel-learning/
   support/qa-log.md              ← Q&A pairs learned from staff replies in #support
 ```
 
-**`<!-- EXCLUDE -->` markers:** Any section of a `.md` file wrapped in `<!-- EXCLUDE -->...<!-- /EXCLUDE -->` is stripped before indexing — never embedded, never retrieved. Use for outdated content you want to preserve in the file but remove from RAG. Files with these markers are protected from being overwritten by `/sync doc force:true`.
+**`<!-- EXCLUDE -->` markers:** Any section of a `.md` file wrapped in `<!-- EXCLUDE -->...<!-- /EXCLUDE -->` is stripped before indexing — never embedded, never retrieved. Use for outdated content you want to preserve in the file but remove from RAG. Files with these markers are protected from being overwritten by `/doc sync force:true`.
 
-To add a new core fact: edit `knowledge-base/core-facts.md`, then run `/sync-knowledge` in Discord.
+To add a new core fact: edit `knowledge-base/core-facts.md`, then run `/sync` in Discord.

@@ -25,3 +25,7 @@ Every user message that reaches the bot is classified into one of 15 intent cate
 ## Logs note
 
 `*.jsonl` files are excluded from git (`.gitignore`). They contain live community message data and grow continuously. Review them locally for intent analysis — never commit them.
+
+**Log rotation:** Implement monthly rotation when any `.jsonl` file hits ~5 MB. Check sizes: `ls -lh intent/*.jsonl`
+
+**Batch analysis reminder:** After 2–4 weeks of traffic, run both jsonl files through the Anthropic Batch API for 50% cost savings. See CONTEXT.md pending items for the full workflow.

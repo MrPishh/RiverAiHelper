@@ -7,7 +7,7 @@ All bot logic lives here. `bot.js` in the root wires these modules together — 
 ### Message Handling & Responses
 | File | Purpose |
 |---|---|
-| `commands.js` | `messageCreate` Discord event handler + `!add-blog-text` / `!add-doc-text` (attachment-only text commands). Includes ticket/collab early-return gate (logs to jsonl, never responds) and `takeScamAction` (delete + 1h timeout + alert embed when scam-blocker is ON). |
+| `commands.js` | `messageCreate` Discord event handler + `!add-blog-text` / `!add-doc-text` (attachment-only text commands). Includes ticket/collab early-return gate (logs to jsonl, never responds) and `takeScamAction` (delete + escalating timeout + alert embed when scam-blocker is ON). |
 | `slash-commands.js` | All `/slash` command definitions and interaction handler |
 | `claude.js` | Claude Sonnet calls — RAG search, prompt building, conversation state, scam detection |
 | `intent.js` | Intent classification via Claude Haiku — 15 categories, logs every message to `intent/` |
@@ -27,7 +27,9 @@ All bot logic lives here. `bot.js` in the root wires these modules together — 
 |---|---|
 | `state.js` | Shared Maps and timing constants — single object shared across all modules |
 | `utils.js` | Pure helpers — date ranges, Discord helpers, Q&A learning, folder utilities |
-| `toggles.js` | Bot feature toggles — Discord replies, Telegram replies, Scam Blocker. Persisted to `toggles.json`. Controlled via `/toggle platform:<key>`. |
+| `toggles.js` | Bot feature toggles — Discord replies, Telegram replies, Scam Blocker. Persisted to `data/toggles.json`. Controlled via `/toggle platform:<key>`. |
+| `scam-tracker.js` | Persistent scammer infraction log. Stored in `data/scammer-list.json`, keyed by Discord user ID. |
+| `price-fetcher.js` | Live RIVERPTS and $RIVER prices from Dexscreener (BSC). 5-min cache. `isPricingQuestion()` detects when to inject prices into the Claude prompt. |
 
 ## Path convention
 
@@ -52,6 +54,7 @@ bot.js (root)
   └── src/kb-sync.js        ← requires blog-scraper, utils
   └── src/kb-monitor.js
   └── src/claude.js         ← requires state
-  └── src/commands.js       ← requires toggles
+  └── src/scam-tracker.js   ← no local requires
+  └── src/commands.js       ← requires toggles, scam-tracker
   └── src/slash-commands.js ← requires toggles
 ```
