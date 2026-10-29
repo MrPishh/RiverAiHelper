@@ -32,6 +32,7 @@ All bot logic. `bot.js` in the project root wires these modules together — non
 | `utils.js` | Date, Discord and spoof-detection helpers; Q&A learning and announcement capture. |
 | `toggles.js` | Feature toggles, persisted to `data/toggles.json`. |
 | `scam-tracker.js` | Scammer infraction store, `data/scammer-list.json`. |
+| `tweet-check.js` | Reads the X/Twitter posts a message links to (FxTwitter public API) and judges them for the scam blocker. |
 | `price-fetcher.js` | Live RIVERPTS and $RIVER prices from Dexscreener. |
 
 ## How it works
@@ -41,7 +42,11 @@ All bot logic. `bot.js` in the project root wires these modules together — non
 A factory, `registerMessageHandler`, receives the client, state, config and modules from `bot.js` — it never imports the Discord client or reads `.env`.
 
 - **Ticket/collab gate:** messages in `SUPPORT_TICKET_CATEGORY_IDS` or `COLLAB_CATEGORY_IDS` channels are logged to `intent/ticket-log.jsonl` / `collab-log.jsonl` and the handler returns — the bot never replies there.
-- **Scam blocker (`takeScamAction`):** called when any scam layer fires on a non-staff message. Deletes the message, times the member out (1 hour × infraction count, capped at 28 days) and posts an alert to `SCAM_LOG_CHANNEL_ID`. Each step fails on its own without stopping the others. Does nothing while the scam-blocker toggle is OFF, and never acts on staff. Needs the **Manage Messages** and **Moderate Members** permissions, and the bot's role above members' roles.
+- **Scam evidence:** each infraction also stores what a later review needs beyond the text — the message it replied to, attachment names/types and Discord's link previews (`scamEvidence`).
+- **Temporary AutoMod miss report:** a Discord invite caught by the scam blocker is also posted to #ai for the owner's AutoMod tuning; so is a link to an unreadable tweet that was left up (see `CONTEXT.md`).
+- **Linked tweets:** a message with an X/Twitter link has the tweet read first (`tweet-check.js`); a fake help-desk or campaign tweet is acted on at once, and a message that is only a link to an ordinary tweet is spared by `takeScamAction`.
+- **Watched DM helpers (`watchDmHelper`):** a DM request left up and addressed to another member (not staff) is watched for 2 hours; if its sender deletes part of that conversation, `takeScamAction` runs with `alreadyDeleted`. A delete by a moderator (audit log, `moderatorWhoDeleted`; needs **View Audit Log**) is only noted in the scam log. Not in ticket/collab channels; lost on restart.
+- **Scam blocker (`takeScamAction`):** called when any scam layer fires on a non-staff message. Deletes the message, times the member out (1 hour × infraction count, capped at 28 days) and posts an alert to `SCAM_LOG_CHANNEL_ID`. Each step fails on its own without stopping the others. Does nothing while the scam-blocker toggle is OFF, and never acts on staff. Needs the **Manage Messages** and **Moderate Members** permissions (plus **View Audit Log** for the DM-helper watch), and the bot's role above members' roles.
 
 ### `slash-commands.js`
 
@@ -112,11 +117,11 @@ Legacy. The old whole-KB loader was replaced by `rag.js`; only `getSourceFiles()
 
 ```
 state.js, utils.js, toggles.js, embedder.js, knowledge-loader.js,
-blog-scraper.js, price-fetcher.js, scam-tracker.js, intent.js, kb-monitor.js   ← no project requires
+blog-scraper.js, price-fetcher.js, scam-tracker.js, tweet-check.js, intent.js, kb-monitor.js   ← no project requires
 rag.js            ← embedder
 kb-sync.js        ← blog-scraper, utils
 claude.js         ← price-fetcher
-commands.js       ← toggles
+commands.js       ← toggles, tweet-check
 slash-commands.js ← toggles
 ```
 

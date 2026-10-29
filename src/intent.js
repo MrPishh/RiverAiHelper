@@ -27,21 +27,21 @@
 // L122  Scammer-side tier-1 sync check
 // L127    SCAM_CONTENT_PATTERNS
 // L154    SCAM_SOFT_PATTERNS
-// L177    BARE_BOT_MENTION_PATTERN
-// L180    LEET_MAP_CONTENT
-// L183    normalizeScamContent()
-// L192    detectScamContentSync()
-// L198    hasSoftScamSignal()
-// L206    SCAM_DETECT_PROMPT
-// L228  Classifier factory
-// L231    createIntentModule()
-// L235      detectScamContentLLM()
-// L253      classifyMessageIntent()
-// L321      logMessageIntent()
-// L347      logIntentClassification()
-// L355      logTelegramMessage()
-// L377      logTelegramIntent()
-// L387      checkWatchedFUD()
+// L184    BARE_BOT_MENTION_PATTERN
+// L187    LEET_MAP_CONTENT
+// L190    normalizeScamContent()
+// L199    detectScamContentSync()
+// L205    hasSoftScamSignal()
+// L213    SCAM_DETECT_PROMPT
+// L237  Classifier factory
+// L240    createIntentModule()
+// L244      detectScamContentLLM()
+// L262      classifyMessageIntent()
+// L338      logMessageIntent()
+// L364      logIntentClassification()
+// L372      logTelegramMessage()
+// L394      logTelegramIntent()
+// L404      checkWatchedFUD()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -109,7 +109,7 @@ factual-question — specific question about token, staking, rates, epoch, contr
 DO NOT RESPOND (bot should stay silent):
 community-hype — celebration, milestone reaction, price hype, general project positivity. Includes stated hopes, wishes, or predictions about future price/token amounts with no confusion or complaint (e.g. "hoping for 4 dollars only", "$10 by S6 easy")
 safety-alert — legitimate community member posting a scam WARNING for public awareness (e.g. "⚠️ Fake accounts spotted — block and report", "Scammer" calling out a bad actor)
-scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. ALSO includes a non-staff sender directing a help-seeker to an external resource the sender owns — e.g. "check my dashboard and relay this", "check my page", "go to my link" — even when phrased in broken or informal English. The sender owning the resource ("my dashboard", "my page", "my link") combined with a help-seeker context is a strong scam signal regardless of which noun is used. ALSO includes an unprompted, standalone broadcast (not a reply to any specific victim, no help-seeker needed in the thread) that invites the whole channel to send questions/issues/concerns to "the team" or "support" via an external link — e.g. "Share Your Questions/Issues to the team: [link]", "Report your issue here: [link]", "Contact support: [link]" — River's official support is Discord tickets only, so any external link framed as official contact/support channels is scam-content regardless of who it's addressed to. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message — except for the broadcast form above, which needs no victim message at all. EXCEPTION: "go here" / "go to X" / "open a ticket" phrasing is NOT scam-content when the destination is a Discord channel mention (renders as <#123456789>) — either in this message or shared by the same sender in the immediately preceding thread context. A channel mention points inside this same server (e.g. the official ticket channel) and is never an external redirect, regardless of how the surrounding wording resembles a scam exemplar — classify as community-help instead
+scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. ALSO includes a non-staff sender directing a help-seeker to an external resource the sender owns — e.g. "check my dashboard and relay this", "check my page", "go to my link" — even when phrased in broken or informal English. The sender owning the resource ("my dashboard", "my page", "my link") combined with a help-seeker context is a strong scam signal regardless of which noun is used. ALSO includes an unprompted, standalone broadcast (not a reply to any specific victim, no help-seeker needed in the thread) that invites the whole channel to send questions/issues/concerns to "the team" or "support" via an external link — e.g. "Share Your Questions/Issues to the team: [link]", "Report your issue here: [link]", "Contact support: [link]" — River's official support is Discord tickets only, so any external link framed as official contact/support channels is scam-content regardless of who it's addressed to. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message — except for the broadcast form above, which needs no victim message at all. EXCEPTION: "go here" / "go to X" / "open a ticket" phrasing is NOT scam-content when the destination is a Discord channel mention (renders as <#123456789>) — either in this message or shared by the same sender in the immediately preceding thread context. A channel mention points inside this same server (e.g. the official ticket channel) and is never an external redirect, regardless of how the surrounding wording resembles a scam exemplar — classify as community-help instead. ALWAYS scam-content: asking someone who asked for help or reported a problem (the replied-to or mentioned person) to check their DMs/inbox, send a DM, or ping the sender — "check dm", "send pm", "ping me", "check your inbox", in any spelling. ALSO ALWAYS scam-content: a bare DM/inbox request with no conversation before it ("check pm", "check inbox", "support sent to your inbox"), and claiming to have contacted someone privately ("you have been contacted on how to go about it", "I sent you a fix", "check the message I sent you") — staff are exempt elsewhere, so any sender you see making this claim is not staff. But when the replied-to person was NOT asking for help or reporting a problem and the two are clearly already talking to each other (plans, a shared topic, something they sent each other), a DM request is ordinary — classify as community-discussion. The same goes for someone who offered help within the conversation, was accepted by the person seeking help, and then moves to DMs ("I know the fix, want me to explain in your inbox?" → "yes please" → "check inbox") — classify as community-help; the bot watches such senders separately. NOT scam-content on its own: a bare token/contract or wallet address, a bare @mention, or a bare email address with no offer, redirect or help-seeker being targeted — classify as community-discussion
 content-promotion — user sharing their own content (articles, threads, videos)
 referral-sharing — user sharing their own referral code for others to use (a code appears in the message, e.g. "My code: X"). A user ASKING for a code is onboarding, not this
 community-discussion — opinion poll or strategy question directed at the community, not the bot (e.g. "drop your strategy below", "what do you think", "best time to convert?"). Does NOT include "anyone received X?" style messages about personal reward or airdrop receipt — those are help-seeking. Does NOT include frustration about protocol mechanics — use help-seeking instead.
@@ -156,6 +156,13 @@ const SCAM_SOFT_PATTERNS = [
     // scam when a stranger offers it as "help" to someone who just posted a problem
     /\b(dm|pm)\s+(me|you|us)\b/i,
     /\binbox\s*(me|you|us)\b/i,
+    // Other ways of moving someone to DMs, as seen in real scam-blocker cases (2026-10 review):
+    // "check dm", "check your dm", "send a dm", "send pm", "plz msag dm", "dm <@id>", "ping me",
+    // "plng me", "check direct", "give me a d irect messag".
+    /\b(check|see|send|open)\s+(ur|your|you|my|a|me\s+a)?\s*(dms?|pm|d\/m|inbox|direct)\b/i,
+    /\b(ping|plng|msg|msag|message|text)\s+(me|dm)\b/i,
+    /^\s*(dm|pm)\b/i,
+    /\bd\s?irect\s+messag/i,
     // "check/see/look at my X" — ambiguous verb: could be help-seeker describing own account
     // or scammer directing victim to an external resource they own
     /\b(check|see|look\s+at)\s+(my\s+)?(bio|profile|page|dashboard|link|feed|channel|group|site)\b/i,
@@ -211,6 +218,8 @@ Answer YES if the sender appears to be doing any of the following to someone who
 - Asking them to accept a friend request in order to receive private "support" — a common attack where the scammer gains DM access by posing as staff or a helper
 - Opening with an unsolicited offer to help ("How can I help you?", "How can we assist?") — a common scammer opening line when posing as staff or support
 
+Always answer YES when the message asks someone to move to private messages ("check dm", "check your inbox", "send a dm", "send pm", "ping me", "dm me") and the person it replies to or mentions has asked for help or reported a problem — the replied-to message or that person's latest message is given below. Asking someone who is seeking help to check their DMs or inbox is a scam, whatever the wording — unless that person has already agreed, in this conversation, to get the help in private (e.g. they replied "yes please, explain it in inbox"); then answer NO (the bot watches such senders separately).
+
 Also answer YES if the message is nothing but a bare mention of an external bot account (e.g. just "@SomeExchangeBot") with no other content — a known Telegram spam/redirect pattern, regardless of reply context.
 
 Also answer YES if a name-spoof warning is included in the sender info — this means the sender's display name was already determined by a deterministic check to closely resemble a known staff member's name (via leet substitution and edit-distance matching). Combined with any redirect or contact offer, treat this as a strong scam signal regardless of how innocent the message wording seems.
@@ -260,9 +269,11 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         if (message?.reference?.messageId) {
             try {
                 const ref = await message.channel.messages.fetch(message.reference.messageId);
+                // What the replied-to person wrote matters: "check dm" to someone asking for help is a scam,
+                // between two people already chatting it may not be.
                 replyContext = ref.author.bot
                     ? 'Reply to the support bot.'
-                    : `Reply to another community member (${ref.author.username}).`;
+                    : `Reply to another community member (${ref.author.username}), who wrote: "${(ref.content || '').slice(0, 200)}"`;
             } catch {
                 replyContext = 'Reply to another message.';
             }
@@ -271,11 +282,17 @@ function createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage = null }
         let threadContext = '';
         if (message) {
             try {
-                const recent = await message.channel.messages.fetch({ limit: 3, before: message.id });
-                const lines = [...recent.values()].reverse()
+                const recent = [...(await message.channel.messages.fetch({ limit: 15, before: message.id })).values()];
+                const lines = recent.slice(0, 3).reverse()
                     .map(m => `  ${m.author.bot ? '[Bot]' : m.author.username}: ${m.content.slice(0, 120)}`)
                     .join('\n');
                 if (lines) threadContext = `\nRecent messages in channel:\n${lines}`;
+                // Not a reply but aimed at someone ("check dm <@id>"): what did that person last say here?
+                if (!message.reference?.messageId) {
+                    const target = [...(message.mentions?.users?.values?.() ?? [])].find(u => !u.bot && u.id !== message.author?.id);
+                    const last   = target && recent.find(m => m.author.id === target.id);
+                    if (last) threadContext += `\nThe message mentions ${target.username}, whose latest message here was: "${last.content.slice(0, 200)}"`;
+                }
             } catch {}
         }
 
@@ -416,7 +433,7 @@ Reply with ONLY: YES or NO`,
         }
     }
 
-    return { classifyMessageIntent, checkWatchedFUD, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS, logToTicketFile, logToCollabFile };
+    return { classifyMessageIntent, checkWatchedFUD, logMessageIntent, logIntentClassification, logTelegramMessage, logTelegramIntent, RESPOND_INTENTS, logToTicketFile, logToCollabFile, hasSoftScamSignal };
 }
 
 module.exports = {

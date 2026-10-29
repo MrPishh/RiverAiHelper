@@ -615,7 +615,7 @@ function analyzeCode(file, text) {
             : [m[1]];
         for (const name of names) requires.push({ name, from: m[2], line: lineOf(m.index), start: m.index, end: m.index + m[0].length });
     }
-    const exportsMatch = b.match(/module\.exports\s*=\s*\{([\s\S]*?)\}/);
+    const exportsMatch = b.match(/^module\.exports\s*=\s*\{([\s\S]*?)\}/m);   // line start, so a string in a test fixture isn't read as this file's exports
     const exported = new Set(exportsMatch ? exportsMatch[1].split(',').map(s => s.split(':')[0].trim()).filter(Boolean) : []);
 
     return { file, meta, lines, scan, unit, headers, fileHeader, insertAfter, defs, settings, events, jobs, commands, requires, exported, codeLines };

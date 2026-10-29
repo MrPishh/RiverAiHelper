@@ -27,7 +27,7 @@ A Discord message in an answer channel (Telegram follows the same path in `teleg
 
 1. **`messageCreate`** (`src/commands.js`) ignores bots. Ticket and collab channels are logged and dropped.
 2. The message is logged to `intent/dc-intent-log.jsonl` (general, support and the Chinese channel).
-3. **Name-spoof check** (Layer 3): a non-staff sender whose name resembles staff, offering private help → `takeScamAction`.
+3. **Name-spoof check** (Layer 3): a non-staff sender whose name resembles staff, offering private help → `takeScamAction`. Then **linked tweets**: a non-staff message with an X/Twitter link has the tweet read first (`src/tweet-check.js`, FxTwitter); a fake help-desk or known campaign tweet → `takeScamAction` at once, and a message that is only a link to an ordinary tweet is later spared by `takeScamAction`.
 4. The Chinese channel stops here after a scam check. Staff text commands, the explanation embed, knowledge capture (announcements, tweets) and Q&A learning are handled next.
 5. **Routing** picks a scenario:
    - **0** — a reply to the bot's clarifying question → continue the conversation.
@@ -37,7 +37,7 @@ A Discord message in an answer channel (Telegram follows the same path in `teleg
    - **3** — no mention → classify; a "respond" intent waits `STAFF_WAIT_MS` for staff, then auto-answers. Messages arriving meanwhile join the same batch.
 6. **`answerQuestion`** (`src/claude.js`): escalate after 2 answers in 2 hours; otherwise check for scam concern, search the KB (`searchKB`), re-rank with Haiku, add live prices if asked, call Sonnet, send the reply (split under 2,000 characters) and store the conversation for follow-ups.
 
-Any scenario that classifies `scam-content` calls `takeScamAction` (delete, escalating timeout, alert) when the scam blocker is ON.
+Any scenario that classifies `scam-content` calls `takeScamAction` (delete, escalating timeout, alert) when the scam blocker is ON. After the message is handled, a DM request that was left up and is addressed to another member starts a 2-hour watch (`watchDmHelper`): if its sender then deletes part of that conversation, `takeScamAction` runs on it.
 
 Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `knowledge-base/`, the announcement scan appends facts to curated files, new pages and facts are checked against the corrections and `core-facts.md` (proposed updates go to `corrections/_drafts/` for review), and `buildIndex()` re-embeds only changed chunks into `knowledge-base/.embeddings-cache.json`.
 
@@ -51,6 +51,7 @@ Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `
 | Anthropic — Haiku | Intent, scam checks, re-ranking, staleness flags, announcement scan, default reports | `src/intent.js`, `src/claude.js`, `src/kb-monitor.js`, `weekly-report/` |
 | Voyage AI | Embeddings for RAG | `src/embedder.js` |
 | Dexscreener | Live token prices | `src/price-fetcher.js` |
+| FxTwitter (public API, no key) | Reading linked X/Twitter posts for the scam blocker | `src/tweet-check.js` |
 | `docs.riverai.inc`, `blog.riverai.inc` | Sitemap sync and scraping (needs WARP) | `src/kb-sync.js`, `src/blog-scraper.js` |
 
 ## Data on disk

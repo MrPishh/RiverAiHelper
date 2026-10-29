@@ -45,6 +45,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | `src/knowledge-loader.js` | Legacy: `getSourceFiles()` for the explanation embed. |
 | `src/price-fetcher.js` | Live RIVERPTS / $RIVER prices (Dexscreener). |
 | `src/scam-tracker.js` | Scammer infraction store (`data/scammer-list.json`). |
+| `src/tweet-check.js` | Reads linked X/Twitter posts (FxTwitter) and judges them for the scam blocker. |
 | `src/toggles.js` | Discord / Telegram / Scam Blocker toggles (`data/toggles.json`). |
 | `src/utils.js` | Date, Discord and spoof-detection helpers; Q&A learning and announcement capture writers. |
 | `telegram/telegram-adapter.js` | The Telegram bot: routing, staff DM panel, moderation, join/leave. |
@@ -82,7 +83,8 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | Start-up, wiring, cron | `bot.js` | `buildStaffNameCache` |
 | Shared state, timers, referral codes | `src/state.js` | `STAFF_WAIT_MS`, `REFERRAL_CODES` |
 | Discord routing (Scenarios 0–3), batching | `src/commands.js` | `registerMessageHandler`, `scheduleAutoAnswer`, `fireAutoAnswer`, `cancelPendingBatch` |
-| Scam blocker action and timeouts | `src/commands.js` | `takeScamAction`, `escalatedTimeoutMs` |
+| Scam blocker action and timeouts | `src/commands.js` | `takeScamAction`, `escalatedTimeoutMs`, `scamEvidence` |
+| Linked-tweet check (fake help desks, ordinary tweets) | `src/tweet-check.js`, `src/commands.js` | `createTweetChecker`, `isLinkOnly`, `campaignCounts` |
 | Slash commands | `src/slash-commands.js` | `COMMANDS`, `registerSlashCommands`, `createSlashHandler` |
 | Intent classification and logs | `src/intent.js` | `classifyMessageIntent`, `RESPOND_INTENTS`, `logMessageIntent` |
 | Scammer-side detection (layers 1–2) | `src/intent.js` | `detectScamContentSync`, `hasSoftScamSignal`, `detectScamContentLLM` |
@@ -108,7 +110,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 ## Key flows (details in docs/ARCHITECTURE.md)
 
 - **A message:** `messageCreate` → logging → spoof check → routing (Scenario 0 / 0.5 / 1 / 2 / 3) → `classifyMessageIntent` → `answerQuestion` → `searchKB` + `rerankChunks` → `askClaude`.
-- **Scam:** layers 1–3 → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
+- **Scam:** layers 1–3 and the linked-tweet check → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
 - **Knowledge:** `/sync` → `syncBlog` / `syncDocs` or `scanAnnouncementsForNewFacts` → `checkCorrectionStaleness` (corrections + `core-facts.md`) → `buildIndex`.
 
 ## Generated parts and checks

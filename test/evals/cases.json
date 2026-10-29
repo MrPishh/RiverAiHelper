@@ -1,5 +1,5 @@
 {
-  "_readme": "Labelled cases for `npm run eval`. Add a case whenever the bot gets something wrong in real use (the message, what it should have done, and why) — that turns every real mistake into a permanent check. intent: expected category (a list when the taxonomy allows either). answers: question → the reply type expected, phrases it must contain (any of each list) and phrases it must never contain.",
+  "_readme": "Labelled cases for `npm run eval`. Add a case whenever the bot gets something wrong in real use (the message, what it should have done, and why) — that turns every real mistake into a permanent check. intent: expected category (a list when the taxonomy allows either); optional replyTo: the text of the message it replies to. answers: question → the reply type expected, phrases it must contain (any of each list) and phrases it must never contain.",
   "intent": [
     {
       "message": "How does Conversion 3.0 work?",
@@ -95,6 +95,100 @@
       "message": "New here",
       "expect": "general-greeting",
       "why": "no request made"
+    },
+    {
+      "message": "Check my BI-O for assistance",
+      "expect": "scam-content",
+      "why": "misspelled bio redirect (real scam-blocker case, 3 accounts)"
+    },
+    {
+      "message": "plng me i can help you review this",
+      "expect": "scam-content",
+      "why": "misspelled \"ping me\" helper offer (real case)"
+    },
+    {
+      "message": "Relay this throught the guide on my Dash board",
+      "expect": "scam-content",
+      "why": "\"dashboard\" redirect script (real case)"
+    },
+    {
+      "message": "Hello everyone\nLooking to buy aged WALLETS with NFTs/ tokens and real transaction history for my collection. Must be verifiable on-chain. DM with proof",
+      "expect": "scam-content",
+      "why": "owner decision 2026-10-29: wallet-buying pitches are deleted and punished"
+    },
+    {
+      "message": "this project is shit, team keeps dumping on us",
+      "expect": [
+        "community-discussion",
+        "community-hype",
+        "help-seeking"
+      ],
+      "why": "harsh criticism is not scam (owner case: a genuine \"Shit project !\" tweet was wrongly deleted)"
+    },
+    {
+      "message": "CFPkPq1eYPR8GLzEo59wUbbMioX4bshaTQiSGzTSpump",
+      "expect": [
+        "community-discussion",
+        "general-greeting",
+        "content-promotion",
+        "community-hype"
+      ],
+      "why": "bare token address — owner labelled fine (2026-10-29 review)"
+    },
+    {
+      "message": "gabriella_v817100975@ro.ru",
+      "expect": [
+        "community-discussion",
+        "general-greeting",
+        "content-promotion"
+      ],
+      "why": "bare email address — owner labelled fine"
+    },
+    {
+      "message": "You have been contacted on how to go bout it",
+      "expect": "scam-content",
+      "why": "owner: a non-staff claim of private contact is scam"
+    },
+    {
+      "message": "Give me a d irect messag",
+      "expect": "scam-content",
+      "why": "misspelled DM request — owner labelled scam"
+    },
+    {
+      "message": "check dm mate",
+      "replyTo": "I can't claim my S6 airdrop, can someone help?",
+      "expect": "scam-content",
+      "why": "owner rule: telling a help-seeker to check DMs is always scam"
+    },
+    {
+      "message": "check dm mate",
+      "replyTo": "bro did you see what I sent you about the meetup on saturday?",
+      "expect": [
+        "general-greeting",
+        "community-discussion",
+        "community-help"
+      ],
+      "why": "two people already talking — not a scam"
+    },
+    {
+      "message": "check pm, support sent to your inbox",
+      "expect": "scam-content",
+      "why": "owner: bare inbox redirect is scam"
+    },
+    {
+      "message": "I sent you fix",
+      "expect": "scam-content",
+      "why": "owner: claim of private contact by non-staff is scam"
+    },
+    {
+      "message": "ok check inbox, I sent the steps",
+      "replyTo": "yes please, can you explain it to me in inbox? thanks",
+      "expect": [
+        "community-help",
+        "community-discussion",
+        "general-greeting"
+      ],
+      "why": "owner edge case: help-seeker agreed to private help — left up, sender watched for deletions"
     }
   ],
   "answers": [

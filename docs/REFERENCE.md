@@ -1,4 +1,4 @@
-Chinese topic (optional)Telegram answersthe Telegram botthe Telegram botChinese channel (optional)scam alertscollab loggingticket logging`/report`— (default 5)staff commands and staff detectionexplanation embedsunprompted answerslogging, Q&A learning, reports, staff-ping replieslogging, Q&A learning, reportstweet captureannouncement capture— (default `voyage`)**start-up****start-up**# Reference
+# Reference
 
 Lookup tables for the running bot: settings, commands, events, scheduled jobs, timers and npm scripts. Each table is the one place that fact is written down; other docs link here.
 
@@ -26,7 +26,7 @@ Read from `.env` in the project root (copy `.env.example` to start). Never commi
 | `STAFF_WAIT_MINUTES` | — (default 5) | Minutes to wait for a staff reply before auto-answering (default 5). | `5` |
 | `REPORTS_CHANNEL_ID` | `/report` | Where `/report` posts community reports. | `1502056590004715530` |
 | `SUPPORT_TICKET_CATEGORY_IDS` | ticket logging | Comma-separated support-ticket category IDs. Ticket channels are created per ticket; non-staff messages are logged to `intent/ticket-log.jsonl`, never answered. | `1212753951578005644,1419608088297865286` |
-| `COLLAB_CATEGORY_IDS` | collab logging | Comma-separated collab / business-inquiry category IDs. Logged to `intent/collab-log.jsonl`; not in reports yet. | *(empty)* |
+| `COLLAB_CATEGORY_IDS` | collab logging | Comma-separated collab / business-inquiry category IDs. Logged to `intent/collab-log.jsonl`; not in reports yet. | `1212754205731987546,1419607913705640017` |
 | `SCAM_LOG_CHANNEL_ID` | scam alerts | Where the scam blocker posts alert embeds. The bot needs Send Messages there. | `1212717191955480667` |
 | `CHINESE_DISCORD_CHANNEL_ID` | Chinese channel (optional) | Chinese community channel — logged for reports and scam-checked, never answered. | *(empty)* |
 | `TELEGRAM_BOT_TOKEN` | the Telegram bot | Bot token from BotFather. Without it the Telegram bot is disabled. | *(secret)* |
@@ -81,7 +81,7 @@ Event listeners the bot registers. `receiver.event` matches the code (`discordCl
 | `discordClient.clientReady` | `bot.js` | Start-up: core facts, RAG index, staff name cache, Telegram adapter, slash commands, cron jobs. |
 | `discordClient.messageCreate` | `src/commands.js` | Every Discord message: logging, scam checks, staff text commands and answer routing. |
 | `discordClient.interactionCreate` | `bot.js` | Slash commands (handler from `createSlashHandler`). |
-| `discordClient.messageDelete` | `src/commands.js` | A deleted question is removed from its pending auto-answer (dropped when nothing is left). |
+| `discordClient.messageDelete` | `src/commands.js` | Two listeners: a deleted question is removed from its pending auto-answer (dropped when nothing is left); a watched DM helper deleting part of their conversation is treated as scam (`watchDmHelper`). |
 | `discordClient.raw` | `bot.js` | Records gateway activity for the silence watchdog. |
 | `discordClient.error` | `bot.js` | Logs client errors. |
 | `discordClient.shardError` | `bot.js` | Logs shard errors. |
@@ -124,6 +124,8 @@ All timers are defined in `src/state.js` (only `STAFF_WAIT_MS` comes from `.env`
 | `REPHRASE_WINDOW_MS` | 2 hours | `claude.js` | Window for counting answers to one user before escalating to a ticket. |
 | `MAX_BOT_ANSWERS_BEFORE_TICKET` | 2 | `claude.js` | Complete answers (ANSWER or ESCALATE) before the bot sends the user to a ticket. |
 | `COMMUNITY_DISC_WINDOW_MS` | 30 min | `commands.js`, `telegram-adapter.js` | How long a community-discussion message is kept as context. |
+
+The scam blocker's own timers live next to their code: a DM helper is watched for 2 hours (`DM_WATCH_MS`, `src/commands.js`); a read tweet is reused for 1 hour (`CACHE_MS`, `src/tweet-check.js`, fetch timeout 6 s); a message's tweet check is kept 5 minutes and the bot's own deletions are remembered 1 hour (`src/commands.js`).
 
 How the timers stack for one user after staff engagement:
 

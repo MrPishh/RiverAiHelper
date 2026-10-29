@@ -16,8 +16,8 @@
 // L28    ROOT
 // L38  Runners
 // L41    runIntent()
-// L60    runAnswers()
-// L82  Main
+// L69    runAnswers()
+// L91  Main
 // ----- end of contents -----
 
 const path = require('path');
@@ -42,12 +42,21 @@ async function runIntent(intent) {
     let pass = 0, behaviour = 0;
     console.log('\n── Intent classification ── (⚠ = wrong category AND the bot would answer/ignore wrongly)');
     for (const c of cases.intent) {
-        const got = await intent.classifyMessageIntent(c.message, null);
+        // `replyTo` (optional): the text of the message this one replies to, so context-dependent
+        // rules ("check dm" to someone asking for help) can be checked.
+        const fakeMessage = c.replyTo == null ? null : {
+            channelId: 'general', reference: { messageId: 'replied-to' },
+            author: { id: 'sender', username: 'sender' }, member: null, mentions: { users: new Map() },
+            channel: { messages: { fetch: async (q) => (typeof q === 'string'
+                ? { author: { id: 'asker', username: 'asker', bot: false }, content: c.replyTo }
+                : new Map()) } },
+        };
+        const got = await intent.classifyMessageIntent(c.message, fakeMessage);
         // `expect` is one category, or a list when the taxonomy allows either.
         const expected = [].concat(c.expect);
         const ok = expected.includes(got);
         // What matters most: does the bot answer when it should, and stay silent when it should?
-        const sameAction = intent.RESPOND_INTENTS.has(got) === intent.RESPOND_INTENTS.has(expected[0]);
+        const sameAction = ok || intent.RESPOND_INTENTS.has(got) === intent.RESPOND_INTENTS.has(expected[0]);
         if (ok) pass++;
         if (sameAction) behaviour++;
         console.log(`${ok ? '✓' : sameAction ? '✗' : '⚠'} ${expected.join('|').padEnd(22)} ${ok ? '' : `got ${got.padEnd(20)}`} "${c.message.slice(0, 70)}"${!ok && c.why ? `  (${c.why})` : ''}`);

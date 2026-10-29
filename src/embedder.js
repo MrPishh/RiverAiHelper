@@ -13,7 +13,7 @@
 // L31    embedVoyage()
 // ----- end of contents -----
 
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), quiet: true });
 
 // Which embedding provider to use (from .env; default voyage).
 const PROVIDER = (process.env.EMBEDDING_PROVIDER || 'voyage').toLowerCase();

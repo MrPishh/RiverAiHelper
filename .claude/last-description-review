@@ -1,4 +1,6 @@
-Last description review: 2026-10-28 (full).
+Last description review: 2026-10-29 (changed scope: the scam-blocker work of 2026-10-29 — linked-tweet check,
+DM-helper watch, scam evidence, temporary #ai reports — checked against docs/ARCHITECTURE.md, docs/REFERENCE.md,
+docs/DECISIONS.md, CONTEXT.md, CLAUDE.md, src/README.md, scripts/README.md, intent/intent-taxonomy.md; previous full review 2026-10-28).
 It covers the project up to and including the commit that last changed this file:
   git log -1 --format=%h -- .claude/last-description-review
 The next review only needs to look at what changed after that commit:
