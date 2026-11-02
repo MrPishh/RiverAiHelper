@@ -11,11 +11,11 @@
 // L25   Fixture
 // L28     BOT
 // L32     setup()
-// L68       done()
-// L77     msg()
-// L92   Channel gate
-// L123  Scam blocker
-// L293  Q&A learning
+// L70       done()
+// L79     msg()
+// L99   Channel gate
+// L130  Scam blocker
+// L552  Q&A learning
 // ----- end of contents -----
 
 const test   = require('node:test');
@@ -29,16 +29,16 @@ const BOT = 'bot1', ANSWER_CH = 'general', OTHER_CH = 'other', STAFF_ROLE = 'sta
 
 // Builds the handler in a sandbox; `intent` decides what the fake classifier returns, and `tweets`
 // (status ID → tweet, or null for "can't be read") stands in for FxTwitter.
-function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {} } = {}) {
+function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {}, bareLinkIsSite = false } = {}) {
     const box = makeSandbox(['src/commands.js', 'src/toggles.js', 'src/state.js', 'src/utils.js', 'src/tweet-check.js'], {
         'data/toggles.json': JSON.stringify({ discord: true, telegram: true, 'scam-blocker': scamBlocker }),
     });
     const state = require(box.path('src/state.js'));
     const utils = require(box.path('src/utils.js'));
     const { registerMessageHandler } = require(box.path('src/commands.js'));
-    const seen = { answered: [], learned: [], infractions: 0, deleted: 0, records: [], forwarded: [] };
+    const seen = { answered: [], learned: [], infractions: 0, deleted: 0, records: [], forwarded: [], removedFromAi: [], bareLinkChecks: [], bareLinkInputs: [] };
     const handlers = {};
-    const client = { on: (ev, fn) => { (handlers[ev] ??= []).push(fn); }, user: { id: BOT }, channels: { cache: new Map(), fetch: async (id) => (id === '1502041137119105054' ? { send: async (m) => seen.forwarded.push(m) } : null) } };
+    const client = { on: (ev, fn) => { (handlers[ev] ??= []).push(fn); }, user: { id: BOT }, channels: { cache: new Map(), fetch: async (id) => (id === '1502041137119105054' ? { send: async (m) => { seen.forwarded.push(m); return { delete: async () => seen.removedFromAi.push(m) }; } } : null) } };
     registerMessageHandler(client, state, {
         BOT_ANSWER_CHANNEL_IDS: [ANSWER_CH], STAFF_ROLE_IDS: [STAFF_ROLE], GENERAL_CHANNEL_ID: ANSWER_CH, SUPPORT_CHANNEL_ID: 'support',
         SUPPORT_TICKET_CATEGORY_IDS: new Set(['ticketCat']), COLLAB_CATEGORY_IDS: new Set(),
@@ -49,6 +49,7 @@ function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {} } = {}
             RESPOND_INTENTS: new Set(['help-seeking', 'troubleshooting', 'onboarding', 'factual-question']),
             logToTicketFile: () => {}, logToCollabFile: () => {},
             hasSoftScamSignal: (t) => /\b(inbox|dm)\b/i.test(t),
+            detectBareLinkLLM: async (text, links, seconds, above) => { seen.bareLinkChecks.push(links); seen.bareLinkInputs.push({ text, above }); return bareLinkIsSite; },
         },
         kbSync: {},
         utils: { ...utils, saveQAPair: (ch, q, a) => seen.learned.push({ q, a }), appendToMonthlyWeeklyFile: () => {} },
@@ -62,6 +63,7 @@ function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {} } = {}
         },
         tweetChecker: require(box.path('src/tweet-check.js')).createTweetChecker({
             fetchTweet: async (id) => (tweets[id] ?? { error: 'NOT_FOUND' }),
+            retryDelaysMs: [],
         }),
     });
     // Clears pending auto-answer timers (or the test process would wait for them) and deletes the sandbox.
@@ -86,6 +88,11 @@ function msg(channelId, content, { replyTo = null, staff = false, mentionBot = f
         reference: replyTo ? { messageId: replyTo.id } : null, attachments: new Map(),
         channel: { parentId: null, name: channelId, messages: { cache: new Map(), fetch: async () => ref } },
         reply: async () => ({ id: 'r1' }), delete: async function () { this.deleted = true; },
+        // A real forward fails once the original is gone.
+        forward: async function (ch) {
+            if (this.deleted) throw new Error('Unknown Message');
+            return ch.send({ realForwardOf: this.id, content: this.content });
+        },
     };
 }
 
@@ -144,10 +151,7 @@ test('scam blocker keeps evidence: the replied-to message, attachments and link 
         m.embeds = [{ url: 'https://x.com/a/status/1', author: { name: 'Support Desk' }, description: 'Create a ticket https://discord.gg/x' }];
         await t.handler(m);
         await new Promise(r => setImmediate(r));   // the replied-to message is fetched in the background
-        assert.strictEqual(t.seen.forwarded.length, 2, 'the Discord invite in the link preview is reported as an AutoMod miss');
-        assert.match(t.seen.forwarded[0].content, /discord\.gg\/x/);
-        assert.strictEqual(t.seen.forwarded[1].content, 'check dm', 'followed by the original message, exactly as written');
-        assert.deepStrictEqual(t.seen.forwarded[0].allowedMentions, { parse: [] }, 'nobody is pinged');
+        assert.strictEqual(t.seen.forwarded.length, 0, 'an invite only in the link preview is not an AutoMod miss');
         const ev = t.seen.records[0].evidence;
         assert.deepStrictEqual(ev.attachments, [{ name: 'shot.png', type: 'image/png' }]);
         assert.strictEqual(ev.previews[0].author, 'Support Desk');
@@ -157,7 +161,264 @@ test('scam blocker keeps evidence: the replied-to message, attachments and link 
     } finally { t.done(); }
 });
 
-test('linked tweets: a fake help desk is blocked at once, an ordinary tweet is spared, an unreadable one is deleted unpunished', async () => {
+test('#ai report: links in the message text, including bare ones, but not X/Twitter or official links', async () => {
+    const t = setup({
+        intent: 'scam-content',
+        tweets: { '111': { name: 'CREATE A TICKET', handle: 'createticket_x', text: 'Create a ticket 👉 https://discord.gg/abc' } },
+    });
+    const reported = async (text) => {
+        t.seen.forwarded.length = 0;
+        const m = msg(ANSWER_CH, text);
+        await t.handler(m);
+        assert.strictEqual(m.deleted, true, `caught: ${text}`);
+        await new Promise(r => setImmediate(r));   // the report is sent in the background
+        return t.seen.forwarded.map(f => f.content);
+    };
+    try {
+        const sample = 'Please use the designated hub for your inquiry. :point_down:\n\n:point_right: ::discord.co/invite/hQ82RUCQD\n\n\nNote: Remove the :: on the invite and paste the rest into your browser.';
+        const [header, original] = await reported(sample);
+        assert.match(header, /AutoMod miss/);
+        assert.match(header, /link\(s\): discord\.co\/invite\/hQ82RUCQD\n/, 'the disguised invite is named');
+        assert.strictEqual(original, sample, 'followed by the original message, exactly as written');
+        assert.ok(t.seen.forwarded[1].realForwardOf, 'as a real Discord forward, sent before the message was deleted');
+        assert.deepStrictEqual(t.seen.forwarded[0].allowedMentions, { parse: [] }, 'nobody is pinged');
+
+        assert.match((await reported('join discord . gg/abc now'))[0], /link\(s\): discord \. gg\/abc/, 'spaces around the dot');
+        assert.match((await reported('join discord[.]gg/abc now'))[0], /link\(s\): discord\[\.\]gg\/abc/, 'bracketed dot');
+        assert.match((await reported('join discord dot gg/abc now'))[0], /link\(s\): discord dot gg\/abc/, 'the word dot');
+        assert.match((await reported('open https://disc0rd.gg/abc'))[0], /link\(s\): disc0rd\.gg\/abc/, 'lookalike spelling');
+        assert.match((await reported('open https://discord-verify.xyz/abc'))[0], /link\(s\): discord-verify\.xyz\/abc/, 'lookalike domain');
+        assert.match((await reported('open https://discord.gg/abc'))[0], /link\(s\): discord\.gg\/abc/, 'a plain invite');
+        assert.match((await reported('go here https://x.com/a/status/9 or join dsc.gg/abc'))[0], /link\(s\): dsc\.gg\/abc\n/, 'beside an X link: still reported');
+
+        const check = /^\*\*Link in a caught message — please check\*\*/;
+        for (const [text, link] of [
+            ['Check yours 👇\nghosts-wallet.xyz/apps', 'ghosts-wallet.xyz/apps'],
+            ['who has more than me?\nghostwallet.pages.dev', 'ghostwallet.pages.dev'],
+            ['Have you check ✅\n\n a2zphone5.online\n\n for get phone token airdrop', 'a2zphone5.online'],
+            ['ask them at t.me/fakehelp now', 't.me/fakehelp'],
+            ['claim here https://ghost-wallet.xyz/claim', 'https://ghost-wallet.xyz/claim'],
+        ]) {
+            const [head, original] = await reported(text);
+            assert.match(head, check, `reported: ${text}`);
+            assert.ok(head.includes(`link(s): ${link}\n`), `names ${link}: ${head}`);
+            assert.strictEqual(original, text, 'followed by the message as written');
+        }
+        assert.deepStrictEqual(await reported('A.dd me up for a gu1de regarding this known issue'), [], 'altered word, not a link');
+        assert.deepStrictEqual(await reported('Visit the live sup-port desk using the li.nk on my pro-file'), [], 'altered word, not a link');
+        assert.deepStrictEqual(await reported('reach out to the team for assistance.re currently ongoing'), [], 'altered word, not a link');
+        assert.deepStrictEqual(await reported('dm me or see Riverai.inc and https://docs.riverai.inc/x'), [], "River's own links");
+        assert.deepStrictEqual(await reported('https://x.com/createticket_x/status/111'), [], 'invite only inside the tweet');
+        assert.deepStrictEqual(await reported('ask here https://twitter.com/createticket_x/status/111 thanks'), [], 'twitter.com link');
+        assert.deepStrictEqual(await reported('see https://discord.com/channels/1/2 for the fix'), [], "a message link is not an invite");
+        assert.deepStrictEqual(await reported('you were contacted on discord, check your dm'), [], 'the word Discord alone');
+    } finally { t.done(); }
+});
+
+test('AutoMod miss report: when the forward fails, the text is still posted', async () => {
+    const t = setup({ intent: 'scam-content' });
+    try {
+        const m = msg(ANSWER_CH, 'join discord.gg/abc now');
+        m.forward = async () => { throw new Error('Missing Permissions'); };
+        await t.handler(m);
+        assert.strictEqual(t.seen.forwarded[1].content, 'join discord.gg/abc now');
+        assert.deepStrictEqual(t.seen.forwarded[1].allowedMentions, { parse: [] }, 'nobody is pinged');
+    } finally { t.done(); }
+});
+
+test('unreadable tweet: forwarded, and once it can be read the forward is removed and the tweet is judged', async () => {
+    const tweets = {};
+    const t = setup({ intent: 'scam-content', tweets });
+    t.state.TWEET_RECHECK_MS = [1, 1, 1];
+    const settle = () => new Promise(r => setTimeout(r, 30));
+    const post = async (id, status) => {
+        const m = msg(ANSWER_CH, `https://x.com/i/status/${status}`, { id });
+        m.channel.messages.fetch = async () => (m.removed ? null : m);
+        await t.handler(m);
+        return m;
+    };
+    try {
+        const scam = await post('s1', '701');
+        assert.strictEqual(t.seen.forwarded.length, 2, 'forwarded for review');
+        assert.ok(t.seen.forwarded[1].realForwardOf, 'as a real Discord forward');
+        tweets['701'] = { name: 'Bob', handle: 'bob', text: 'open a ticket https://discord.gg/abc' };
+        await settle();
+        assert.strictEqual(t.seen.removedFromAi.length, 2, 'read later: header and forward removed from #ai');
+        assert.strictEqual(scam.deleted, true, 'a fake help desk: deleted');
+        assert.strictEqual(t.seen.infractions, 1, 'and punished');
+
+        const fine = await post('o1', '702');
+        tweets['702'] = { name: 'Fan', handle: 'fan', text: 'great project' };
+        await settle();
+        assert.strictEqual(t.seen.removedFromAi.length, 4, 'an ordinary tweet: forward removed too');
+        assert.strictEqual(fine.deleted, undefined, 'and the message stays');
+        assert.strictEqual(t.seen.infractions, 1, 'no offence');
+
+        const gone = await post('g1', '703');
+        gone.removed = true;
+        tweets['703'] = { name: 'Bob', handle: 'bob', text: 'open a ticket https://discord.gg/abc' };
+        await settle();
+        assert.strictEqual(t.seen.removedFromAi.length, 6, 'forward removed');
+        assert.strictEqual(t.seen.infractions, 1, 'a message already removed by someone is not punished');
+
+        const never = await post('n1', '704');
+        await settle();
+        assert.strictEqual(t.seen.removedFromAi.length, 6, 'never readable: the forward stays for review');
+        assert.strictEqual(never.deleted, undefined);
+    } finally { t.done(); }
+});
+
+test('new-member link: when the AI says website it is blocked and forwarded; http, X links and old members go to the other rules', async () => {
+    const t = setup({
+        intent: 'community-hype',   // what the classifier called the real case
+        bareLinkIsSite: true,
+        tweets: { '801': { name: 'Fan', handle: 'fan', text: 'great project' } },
+    });
+    try {
+        const now = Date.now();
+        // A message from a member who joined `secondsAgo` before posting.
+        const post = async (text, secondsAgo = 18, opts = {}) => {
+            const m = msg(OTHER_CH, text, opts);
+            m.createdTimestamp = now;
+            m.member.joinedTimestamp = now - secondsAgo * 1000;
+            await t.handler(m);
+            return m;
+        };
+
+        // The real miss (2026-11-02): reads as hype, posted 18 seconds after joining.
+        const real = await post('im #33 on ghost leaderboard not bad\nghost-analytics.xyz/apps');
+        assert.strictEqual(real.deleted, true, 'deleted');
+        assert.match(t.seen.records[0].reason, /^new-member link: posted 18s after joining/);
+        assert.match(t.seen.forwarded[0].content, /ghost-analytics\.xyz\/apps/, 'reported to #ai with the link');
+        assert.ok(t.seen.forwarded[1].realForwardOf, 'and forwarded before the deletion');
+
+        // Other ways of writing a link count too.
+        for (const link of ['ghost.xyz', 'ghostwallet.pages.dev', 'ghost.wtf', 'ghost.ru', 'discord.gg/abc']) {
+            assert.strictEqual((await post(`look ${link}`)).deleted, true, `${link}: deleted`);
+        }
+        // The window's edge: just inside is caught, just outside is not.
+        assert.strictEqual((await post('look evil.xyz/apps', 60)).deleted, true, 'exactly at 1 minute: deleted');
+        assert.strictEqual((await post('look evil.xyz/apps', 61)).deleted, undefined, 'past 1 minute: not this rule');
+
+        // Never reach the AI, even though it would say yes here: http is AutoMod's job, the rest aren't offences.
+        const infractions = t.seen.infractions;
+        t.seen.bareLinkChecks.length = 0;
+        for (const text of [
+            'https://tenor.com/view/happy-gif-123', 'https://giphy.com/gifs/abc', 'tenor.com/view/happy-gif-123',
+            'https://other-site.com/x', 'gm everyone',
+            'see https://riverai.inc/docs and app.riverai.inc', 'discord.com/channels/1/2/3',
+        ]) {
+            assert.strictEqual((await post(text)).deleted, undefined, `${text}: left alone`);
+        }
+        assert.strictEqual(t.seen.infractions, infractions, 'no offences recorded for those');
+        assert.deepStrictEqual(t.seen.bareLinkChecks, [], 'and no AI call');
+
+        // X links go to the tweet rules: an ordinary tweet is left up...
+        assert.strictEqual((await post('https://x.com/fan/status/801')).deleted, undefined, 'ordinary tweet: left alone');
+        // ...but it can't shield another link in the same message.
+        assert.strictEqual((await post('https://x.com/fan/status/801 evil.xyz/apps')).deleted, true, 'other link: deleted');
+
+        // Staff are exempt, and a sender whose join time is unknown isn't judged by this rule.
+        const staffPost = await post('look evil.xyz/apps', 18, { staff: true });
+        assert.strictEqual(staffPost.deleted, undefined, 'staff: left alone');
+        const unknown = msg(OTHER_CH, 'look evil.xyz/apps');
+        await t.handler(unknown);
+        assert.strictEqual(unknown.deleted, undefined, 'unknown join time: left alone');
+    } finally { t.done(); }
+
+    // With the scam blocker off, nothing is deleted.
+    const off = setup({ intent: 'community-hype', scamBlocker: false, bareLinkIsSite: true });
+    try {
+        const m = msg(OTHER_CH, 'look evil.xyz/apps');
+        m.createdTimestamp = Date.now();
+        m.member.joinedTimestamp = m.createdTimestamp - 18000;
+        await off.handler(m);
+        assert.strictEqual(m.deleted, undefined, 'scam blocker off: left alone');
+    } finally { off.done(); }
+});
+
+test("new-member bare link: the AI reads the whole message and only the sender's own previous message", async () => {
+    const t = setup({ intent: 'community-hype', bareLinkIsSite: false });
+    try {
+        const fresh = (text, opts) => {
+            const m = msg(OTHER_CH, text, opts);
+            m.createdTimestamp = Date.now();
+            m.member.joinedTimestamp = m.createdTimestamp - 18000;
+            return m;
+        };
+        const whole = 'first line of the message\nhello.anyone here\nlast line of the message';
+        const plain = fresh(whole);
+        // Newest first, as Discord returns them: someone else just above, then the sender's own, then an older own.
+        plain.channel.messages.fetch = async () => new Map([
+            ['3', { author: { id: 'someone' }, content: 'anyone know a good tracker?' }],
+            ['2', { author: { id: 'user1' }, content: 'my previous message' }],
+            ['1', { author: { id: 'user1' }, content: 'my older message' }],
+        ]);
+        await t.handler(plain);
+        assert.strictEqual(t.seen.bareLinkInputs[0].text, whole, 'the whole message, every line');
+        assert.strictEqual(t.seen.bareLinkInputs[0].above, 'my previous message', "the sender's latest, not someone else's");
+
+        // Nothing earlier from the sender: a reply's target or another person's message is not used.
+        const reply = fresh('hello.anyone here', { replyTo: { id: 'r9', authorId: 'someone' } });
+        reply.channel.messages.fetch = async () => new Map([['3', { author: { id: 'someone' }, content: 'not theirs' }]]);
+        await t.handler(reply);
+        assert.strictEqual(t.seen.bareLinkInputs[1].above, '', 'no context rather than someone else\'s');
+
+        // The context can't be read: the check still runs, on the message alone.
+        const noContext = fresh('hello.anyone here');
+        noContext.channel.messages.fetch = async () => { throw new Error('Missing Access'); };
+        await t.handler(noContext);
+        assert.strictEqual(t.seen.bareLinkInputs[2].above, '');
+    } finally { t.done(); }
+});
+
+test('new-member bare link: the AI decides every link, and only for new members', async () => {
+    // A message from a member who joined `secondsAgo` before posting.
+    const fresh = (text, secondsAgo = 18, opts = {}) => {
+        const m = msg(OTHER_CH, text, opts);
+        m.createdTimestamp = Date.now();
+        m.member.joinedTimestamp = m.createdTimestamp - secondsAgo * 1000;
+        return m;
+    };
+
+    // The AI says it is a website: treated like any other new-member link, and always forwarded to #ai.
+    const site = setup({ intent: 'community-hype', bareLinkIsSite: true });
+    try {
+        for (const [text, link] of [['im #33 on the leaderboard ghost.wtf', 'ghost.wtf'], ['try ghost.bz', 'ghost.bz']]) {
+            site.seen.forwarded.length = 0;
+            const m = fresh(text);
+            await site.handler(m);
+            assert.strictEqual(m.deleted, true, `${link}: deleted`);
+            assert.match(site.seen.records.at(-1).reason, new RegExp(`AI check: ${link.replace('.', '\\.')}`));
+            assert.ok(site.seen.forwarded[0].content.includes(link), `${link}: named in the #ai report`);
+            assert.ok(site.seen.forwarded[1].realForwardOf, `${link}: forwarded before the deletion`);
+        }
+    } finally { site.done(); }
+
+    // The AI says no: left up, however clear the link looks. Older members and staff never reach the AI.
+    const typo = setup({ intent: 'community-hype', bareLinkIsSite: false });
+    try {
+        const m = fresh('hello.anyone here');
+        await typo.handler(m);
+        assert.strictEqual(m.deleted, undefined, 'typo: left alone');
+        assert.deepStrictEqual(typo.seen.bareLinkChecks, [['hello.anyone']], 'asked once, about that word');
+
+        typo.seen.bareLinkChecks.length = 0;
+        const asking = fresh('is ghost.xyz/apps legit?');
+        await typo.handler(asking);
+        assert.strictEqual(asking.deleted, undefined, 'clear link the AI says no to: left alone');
+        assert.deepStrictEqual(typo.seen.bareLinkChecks, [['ghost.xyz/apps']], 'the AI judged it');
+
+        typo.seen.bareLinkChecks.length = 0;
+        await typo.handler(fresh('hello.anyone here', 61));
+        await typo.handler(fresh('hello.anyone here', 18, { staff: true }));
+        await typo.handler(fresh('gm everyone, is 1.5 the rate'));
+        await typo.handler(fresh('https://tenor.com/view/happy.gif'));
+        assert.deepStrictEqual(typo.seen.bareLinkChecks, [], 'no AI call for any of those');
+    } finally { typo.done(); }
+});
+
+test('linked tweets: a fake help desk is blocked at once, an ordinary tweet is spared, an unreadable one is left up for review', async () => {
     const t = setup({
         intent: 'scam-content',   // the classifier calls every bare link scam — the tweet check must overrule it
         tweets: {
@@ -171,9 +432,7 @@ test('linked tweets: a fake help desk is blocked at once, an ordinary tweet is s
         assert.strictEqual(desk.deleted, true, 'fake help-desk tweet: deleted');
         assert.match(t.seen.records[0].reason, /^scam-tweet: fake help-desk tweet/);
         assert.strictEqual(t.seen.records[0].evidence.tweets[0].text, 'Create a ticket 👉 https://discord.gg/abc');
-        assert.strictEqual(t.seen.forwarded.length, 2, 'reposted to #ai: a header, then the message itself');
-        assert.match(t.seen.forwarded[0].content, /invite is inside the linked tweet/);
-        assert.strictEqual(t.seen.forwarded[1].content, 'https://x.com/createticket_x/status/111', 'the original message, exactly as written');
+        assert.strictEqual(t.seen.forwarded.length, 0, 'not posted to #ai: AutoMod excludes X links on purpose');
 
         const genuine = msg(ANSWER_CH, 'https://x.com/langtusg0308/status/222');
         await t.handler(genuine);
@@ -184,15 +443,15 @@ test('linked tweets: a fake help desk is blocked at once, an ordinary tweet is s
         const plain = msg(ANSWER_CH, 'https://x.com/i/status/333');
         await t.handler(plain);
         assert.strictEqual(plain.deleted, undefined, 'no second sign: left up');
-        assert.match(t.seen.forwarded[2].content, /no other scam sign — left up, please review/, 'and forwarded to #ai');
-        assert.strictEqual(t.seen.forwarded[3].content, 'https://x.com/i/status/333', 'followed by the message exactly as written');
+        assert.match(t.seen.forwarded[0].content, /no other scam sign — left up, please review/, 'and forwarded to #ai');
+        assert.strictEqual(t.seen.forwarded[1].content, 'https://x.com/i/status/333', 'followed by the message exactly as written');
 
         const deskLink = msg(ANSWER_CH, 'https://x.com/supportdesk578/status/555');
         await t.handler(deskLink);
         assert.strictEqual(deskLink.deleted, true, 'the link names a fake help desk: deleted');
         assert.strictEqual(t.seen.infractions, 2, 'and treated as scam: offence recorded (so timeout)');
         assert.match(t.seen.records[1].reason, /linked tweet unreadable, link names @supportdesk578/);
-        assert.strictEqual(t.seen.forwarded.length, 4, 'scam log only — not to #ai');
+        assert.strictEqual(t.seen.forwarded.length, 2, 'scam log only — not to #ai');
     } finally { t.done(); }
 });
 
@@ -212,7 +471,7 @@ test('DM request left up in a conversation: the helper is flagged only if they l
         assert.strictEqual(t.seen.infractions, 1, 'the helper deleting the conversation is treated as scam');
         assert.match(t.seen.records[0].reason, /dm-helper deleted/);
         assert.match(t.seen.records[0].content, /check inbox/, 'the deleted text is kept as evidence');
-        assert.strictEqual(t.seen.forwarded.length, 0, 'not posted to #ai (that channel is only for Discord invites)');
+        assert.strictEqual(t.seen.forwarded.length, 0, 'not posted to #ai (no link for AutoMod to have caught)');
         await t.deleted({ id: 'offer1' });
         assert.strictEqual(t.seen.infractions, 1, 'flagged once, not per deletion');
     } finally { t.done(); }

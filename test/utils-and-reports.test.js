@@ -81,7 +81,7 @@ test('tweet check: fake help desks, known campaigns, tweets with links, ordinary
         6: { name: 'River', handle: 'RiverdotInc', text: 'Join our community https://discord.com/invite/river-inc' },
         7: { name: 'Fan', handle: 'fan', text: 'Official server: https://discord.com/invite/river-inc' },
     };
-    const checker = createTweetChecker({ fetchTweet: async (id) => tweets[id] ?? { error: 'NOT_FOUND' } });
+    const checker = createTweetChecker({ fetchTweet: async (id) => tweets[id] ?? { error: 'NOT_FOUND' }, retryDelaysMs: [] });
     const verdict = async (text, campaign) => (await checker.check(text, campaign))?.verdict ?? null;
     assert.strictEqual(await verdict('https://x.com/supportdesk578/status/1'), 'scam', 'support/ticket account name');
     assert.strictEqual(await verdict('https://x.com/i/status/2'), 'scam', 'Discord invite in the tweet');
@@ -92,10 +92,68 @@ test('tweet check: fake help desks, known campaigns, tweets with links, ordinary
     assert.strictEqual(await verdict('https://x.com/bob/status/3'), 'has-link', 'other links are left to the classifier');
     assert.strictEqual(await verdict('https://x.com/langtusg0308/status/4'), 'ordinary', "the tweet's own image link doesn't count");
     assert.strictEqual(await verdict('https://twitter.com/muha30316/status/5?s=46'), 'ordinary');
-    assert.strictEqual(await verdict('https://x.com/RiverdotInc/status/6'), 'has-link', "River's own account sharing its own server is not a fake help desk");
-    assert.strictEqual(await verdict('https://x.com/fan/status/7'), 'has-link', "River's official invite is not a fake help-desk invite");
+    assert.strictEqual(await verdict('https://x.com/RiverdotInc/status/6'), 'ordinary', "River's own account sharing its own server is an ordinary post");
+    assert.strictEqual(await verdict('https://x.com/RiverdotInc/status/6', new Map([['6', 5]])), 'ordinary', "River's own tweet is never a known campaign, even after wrong actions");
+    assert.strictEqual(await verdict('https://x.com/fan/status/7'), 'ordinary', "River's official invite is not a fake help-desk invite or an outside link");
     assert.strictEqual(await verdict('no tweet here'), null);
     assert.strictEqual(isLinkOnly('https://x.com/i/status/1 ─ ✦ ─ <@123>'), true);
     assert.strictEqual(isLinkOnly('River https://x.com/i/status/1'), true);
     assert.strictEqual(isLinkOnly('**Please move this discussion to the appropriate board.** https://x.com/i/status/1'), false);
+});
+
+test('official links: River\'s own links are recognised exactly, and never trigger the hard scam rules', () => {
+    const { stripOfficialLinks } = require('../src/utils');
+    const { detectScamContentSync } = require('../src/intent');
+    const official = (link) => !stripOfficialLinks(link).trim();
+    for (const link of ['Riverai.inc', 'https://riverai.inc/', 'https://docs.riverai.inc/outro/official-links', 'gov.riverai.inc', 'https://t.me/river_inc', 'https://discord.com/invite/river-inc', 'https://x.com/riverdotinc', 'https://github.com/Satoshi-Protocol']) {
+        assert.ok(official(link), `official: ${link}`);
+    }
+    for (const link of ['https://riverai.inc.help-desk.xyz/ticket', 'fakeriverai.inc', 'riverai-inc.com', 'https://riverai.incs.com', 't.me/river_inc_support', 'discord.gg/river-inc2', 'x.com/riverdotinc_help', 'https://github.com/Satoshi-Protocol-fake']) {
+        assert.ok(!official(link), `not official: ${link}`);
+    }
+    assert.strictEqual(detectScamContentSync('Join us at https://t.me/river_inc'), false);
+    assert.strictEqual(detectScamContentSync('report your issue to the team https://riverai.inc'), false);
+    assert.strictEqual(detectScamContentSync('Join us at https://t.me/river_inc_help'), true, 'a lookalike is still caught');
+    assert.strictEqual(detectScamContentSync('report your issue to the team https://riverai.inc.help-desk.xyz'), true, 'a lookalike domain is still caught');
+    assert.strictEqual(detectScamContentSync('see riverai.inc or join t.me/fakehelp'), true, 'an official link beside a scam link changes nothing');
+});
+
+test('Telegram: deleted messages are dropped from a batch before it is answered', async () => {
+    const { existingMessages } = require('../telegram/telegram-adapter');
+    const answers = {
+        1: new Error('400: Bad Request: REACTION_EMPTY'),                    // what an existing message answers
+        2: new Error('400: Bad Request: message to react not found'),        // what a deleted message answers
+        3: null,                                                             // success: also still there
+        4: new Error('network down'),                                        // unknown: never drop a question over this
+    };
+    const seen = [];
+    const telegram = { setMessageReaction: async (chat, id, reaction) => { seen.push([chat, id, reaction]); if (answers[id]) throw answers[id]; return true; } };
+    const batch = [1, 2, 3, 4].map(n => ({ id: `tg_${n}`, content: `q${n}` }));
+    assert.deepStrictEqual((await existingMessages(telegram, -100, batch)).map(m => m.id), ['tg_1', 'tg_3', 'tg_4']);
+    assert.deepStrictEqual(seen[0], [-100, 1, []], 'the check only clears the bot\'s own reaction');
+    assert.deepStrictEqual(await existingMessages(telegram, -100, [batch[1]]), [], 'nothing left: the batch is skipped');
+});
+
+test('tweet check: a failed read is retried, and a failure is never remembered', async () => {
+    const { createTweetChecker } = require('../src/tweet-check');
+    const good = { name: 'Support Desk', handle: 'desk', text: 'Create a ticket https://discord.gg/abc' };
+    const answers = [{ error: 'HTTP 500' }, new Error('timeout'), good];
+    let calls = 0;
+    const flaky = createTweetChecker({
+        fetchTweet: async () => { const a = answers[calls++]; if (a instanceof Error) throw a; return a; },
+        retryDelaysMs: [0, 0],
+    });
+    assert.strictEqual((await flaky.check('https://x.com/i/status/1')).verdict, 'scam', 'the third attempt reads the tweet');
+    assert.strictEqual(calls, 3);
+    await flaky.check('https://x.com/i/status/1');
+    assert.strictEqual(calls, 3, 'a tweet that was read is reused');
+
+    let failing = 0;
+    const down = createTweetChecker({
+        fetchTweet: async () => (++failing > 3 ? good : { error: 'HTTP 503' }),
+        retryDelaysMs: [0, 0],
+    });
+    assert.strictEqual((await down.check('https://x.com/i/status/2')).verdict, 'unavailable', 'every attempt failed');
+    assert.strictEqual(failing, 3, 'three attempts');
+    assert.strictEqual((await down.check('https://x.com/i/status/2')).verdict, 'scam', 'the next message reads it again');
 });

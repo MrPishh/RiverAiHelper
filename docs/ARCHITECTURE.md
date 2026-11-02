@@ -27,7 +27,7 @@ A Discord message in an answer channel (Telegram follows the same path in `teleg
 
 1. **`messageCreate`** (`src/commands.js`) ignores bots. Ticket and collab channels are logged and dropped.
 2. The message is logged to `intent/dc-intent-log.jsonl` (general, support and the Chinese channel).
-3. **Name-spoof check** (Layer 3): a non-staff sender whose name resembles staff, offering private help → `takeScamAction`. Then **linked tweets**: a non-staff message with an X/Twitter link has the tweet read first (`src/tweet-check.js`, FxTwitter); a fake help-desk or known campaign tweet → `takeScamAction` at once, and a message that is only a link to an ordinary tweet is later spared by `takeScamAction`.
+3. **Name-spoof check** (Layer 3): a non-staff sender whose name resembles staff, offering private help → `takeScamAction`. Then **linked tweets**: a non-staff message with an X/Twitter link has the tweet read first (`src/tweet-check.js`, FxTwitter); a fake help-desk or known campaign tweet → `takeScamAction` at once, and a message that is only a link to an ordinary tweet is later spared by `takeScamAction`. Then the **new-member link rule**: a non-staff message with a non-X link typed without http, posted within `NEW_MEMBER_LINK_MS` of joining, goes to `detectBareLinkLLM` (Haiku, given the whole message and the sender's own previous message) → `takeScamAction` if it says they are sharing a website, otherwise on to routing.
 4. The Chinese channel stops here after a scam check. Staff text commands, the explanation embed, knowledge capture (announcements, tweets) and Q&A learning are handled next.
 5. **Routing** picks a scenario:
    - **0** — a reply to the bot's clarifying question → continue the conversation.
@@ -86,7 +86,7 @@ Knowledge flows in separately: `/sync` scrapes the docs and blog sitemaps into `
 | Self-resolution | The asker says it's sorted ("ok", "fixed"); cancels their pending auto-answer. |
 | ANSWER / CLARIFY / ESCALATE | The tag Claude starts each reply with: answered, asking one question, or sending to a ticket. |
 | Scam layers 1–5 | 1–2 check a scammer's message (regex, then Haiku); 3 is the name-spoof detector; 4–5 check a worried user's question (regex, then Haiku) to add the safety message. |
-| Scam blocker | The toggle that lets layers 1–3 delete the message and time the sender out. |
+| Scam blocker | The toggle that lets layers 1–3, the linked-tweet check and the new-member link rule delete the message and time the sender out. |
 | Infraction | One recorded scam-blocker action against a user (`data/scammer-list.json`). |
 | Watch / mute / kick / ban | Telegram moderation modes, re-applied on rejoin. |
 | Staff panel | The Telegram DM menu (`/start`) for reports and member stats. |

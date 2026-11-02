@@ -1,5 +1,5 @@
 {
-  "_readme": "Labelled cases for `npm run eval`. Add a case whenever the bot gets something wrong in real use (the message, what it should have done, and why) — that turns every real mistake into a permanent check. intent: expected category (a list when the taxonomy allows either); optional replyTo: the text of the message it replies to. answers: question → the reply type expected, phrases it must contain (any of each list) and phrases it must never contain.",
+  "_readme": "Labelled cases for `npm run eval`. Add a case whenever the bot gets something wrong in real use (the message, what it should have done, and why) — that turns every real mistake into a permanent check. intent: expected category (a list when the taxonomy allows either); optional replyTo: the text of the message it replies to. answers: question → the reply type expected, phrases it must contain (any of each list) and phrases it must never contain. bareLinks: a new member's message, the possible address in it and optionally `previous` (the sender's own previous message) → true when they are sharing a website, false for a typo, an amount, or a question or problem report about the address.",
   "intent": [
     {
       "message": "How does Conversion 3.0 work?",
@@ -189,6 +189,42 @@
         "general-greeting"
       ],
       "why": "owner edge case: help-seeker agreed to private help — left up, sender watched for deletions"
+    },
+    {
+      "message": "不是节点问题哦，网站迁移到新的了\n\n你可以试试 Riverai.inc",
+      "expect": [
+        "community-help",
+        "help-seeking",
+        "factual-question"
+      ],
+      "why": "real wrong punishment 2026-09-11: a member pointing to River's own site was deleted as scam (owner: official links must not cause problems)"
+    },
+    {
+      "message": "the guide is here https://docs.riverai.inc/outro/official-links",
+      "expect": [
+        "community-help",
+        "community-announcement"
+      ],
+      "why": "official docs link is not an external redirect (either way: not scam, not answered)"
+    },
+    {
+      "message": "report your issue to the team https://riverai.inc",
+      "expect": [
+        "community-help",
+        "help-seeking"
+      ],
+      "why": "must get past the hard 'report ... team + link' rule: the link is official"
+    },
+    {
+      "message": "open your ticket here https://riverai.inc.help-desk.xyz/ticket",
+      "expect": "scam-content",
+      "why": "lookalike of the official domain"
+    },
+    {
+      "message": "see riverai.inc for the steps, or just dm me and I will fix it",
+      "replyTo": "my conversion is stuck, can anyone help?",
+      "expect": "scam-content",
+      "why": "an official link beside a DM redirect is still scam"
     }
   ],
   "answers": [
@@ -274,6 +310,159 @@
         ]
       ],
       "mustNotInclude": []
+    }
+  ],
+  "bareLinks": [
+    {
+      "message": "im #33 on ghost leaderboard not bad\nghost.wtf",
+      "links": [
+        "ghost.wtf"
+      ],
+      "expect": true
+    },
+    {
+      "message": "ghost.wtf",
+      "links": [
+        "ghost.wtf"
+      ],
+      "expect": true
+    },
+    {
+      "message": "wow would be much richer if i just didnt touch anything i bought hah\nghostwallets.bz",
+      "links": [
+        "ghostwallets.bz"
+      ],
+      "expect": true
+    },
+    {
+      "message": "Ever wondered what your wallet was worth at its peak? check yours at wallet-peak.me",
+      "links": [
+        "wallet-peak.me"
+      ],
+      "expect": true
+    },
+    {
+      "message": "found a cool tool for tracking points, try pointstracker.in",
+      "links": [
+        "pointstracker.in"
+      ],
+      "expect": true
+    },
+    {
+      "message": "b.coz its 3rd class project",
+      "links": [
+        "b.coz"
+      ],
+      "expect": false
+    },
+    {
+      "message": "hello.anyone here",
+      "links": [
+        "hello.anyone"
+      ],
+      "expect": false
+    },
+    {
+      "message": "thanks.how do i stake my river",
+      "links": [
+        "thanks.how"
+      ],
+      "expect": false
+    },
+    {
+      "message": "ok.so when does the next season start",
+      "links": [
+        "ok.so"
+      ],
+      "expect": false
+    },
+    {
+      "message": "the marketcap hit $1.2bn last year",
+      "links": [
+        "1.2bn"
+      ],
+      "expect": false
+    },
+    {
+      "message": "is ghost.wtf legit? someone sent it to me",
+      "links": [
+        "ghost.wtf"
+      ],
+      "expect": false
+    },
+    {
+      "message": "river.inc won't load for me, is it down",
+      "links": [
+        "river.inc"
+      ],
+      "expect": false
+    },
+    {
+      "message": "ghost.wtf",
+      "links": [
+        "ghost.wtf"
+      ],
+      "expect": true,
+      "previous": "found a good wallet tracker"
+    },
+    {
+      "message": "same here.anyone know why",
+      "links": [
+        "here.anyone"
+      ],
+      "expect": false,
+      "previous": "the site keeps giving me an error"
+    },
+    {
+      "message": "been holding since the start\nlook what my bags peaked at\nghost.wtf\nnot bad right",
+      "links": [
+        "ghost.wtf"
+      ],
+      "expect": true
+    },
+    {
+      "message": "hi all, just joined\nthanks.how do i check my points\nwhere do i find them",
+      "links": [
+        "thanks.how"
+      ],
+      "expect": false
+    },
+    {
+      "message": "im #33 on ghost leaderboard not bad\nghost-analytics.xyz/apps",
+      "links": [
+        "ghost-analytics.xyz/apps"
+      ],
+      "expect": true,
+      "why": "real miss 2026-11-02: the classifier called it community-hype"
+    },
+    {
+      "message": "wow would be much richer if i just didnt touch anything i bought hah\nghostswallets.xyz/try",
+      "links": [
+        "ghostswallets.xyz/try"
+      ],
+      "expect": true,
+      "why": "real miss 2026-10-21"
+    },
+    {
+      "message": "Ever wondered what your wallet was worth at its peak?\n\nPaste your wallet address or ENS and discover your ATH.\n\nCheck yours\nghost-holdings.xyz/apps",
+      "links": [
+        "ghost-holdings.xyz/apps"
+      ],
+      "expect": true
+    },
+    {
+      "message": "is ghost-analytics.xyz/apps legit? someone sent it to me",
+      "links": [
+        "ghost-analytics.xyz/apps"
+      ],
+      "expect": false
+    },
+    {
+      "message": "ghost.xyz/apps is not loading for me",
+      "links": [
+        "ghost.xyz/apps"
+      ],
+      "expect": false
     }
   ]
 }

@@ -49,8 +49,8 @@ const ROOT_DIR           = path.join(__dirname, '..');
 const USAGE_PATH         = path.join(ROOT_DIR, 'data', 'usage-stats.json');
 const PRICE_INPUT        = 3.00;   // per 1M tokens, claude-sonnet-4-6
 const PRICE_OUTPUT       = 15.00;
-const PRICE_HAIKU_INPUT  = 0.80;   // per 1M tokens, claude-haiku-4-5
-const PRICE_HAIKU_OUTPUT = 4.00;
+const PRICE_HAIKU_INPUT  = 1.00;   // per 1M tokens, claude-haiku-4-5
+const PRICE_HAIKU_OUTPUT = 5.00;
 
 // A zeroed usage counter.
 function emptyBucket() {

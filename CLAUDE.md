@@ -85,6 +85,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | Discord routing (Scenarios 0–3), batching | `src/commands.js` | `registerMessageHandler`, `scheduleAutoAnswer`, `fireAutoAnswer`, `cancelPendingBatch` |
 | Scam blocker action and timeouts | `src/commands.js` | `takeScamAction`, `escalatedTimeoutMs`, `scamEvidence` |
 | Linked-tweet check (fake help desks, ordinary tweets) | `src/tweet-check.js`, `src/commands.js` | `createTweetChecker`, `isLinkOnly`, `campaignCounts` |
+| New-member link rule | `src/commands.js`, `src/intent.js`, `src/state.js` | `newMemberLinks`, `secondsSinceJoining`, `detectBareLinkLLM`, `NEW_MEMBER_LINK_MS` |
 | Slash commands | `src/slash-commands.js` | `COMMANDS`, `registerSlashCommands`, `createSlashHandler` |
 | Intent classification and logs | `src/intent.js` | `classifyMessageIntent`, `RESPOND_INTENTS`, `logMessageIntent` |
 | Scammer-side detection (layers 1–2) | `src/intent.js` | `detectScamContentSync`, `hasSoftScamSignal`, `detectScamContentLLM` |
@@ -110,7 +111,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 ## Key flows (details in docs/ARCHITECTURE.md)
 
 - **A message:** `messageCreate` → logging → spoof check → routing (Scenario 0 / 0.5 / 1 / 2 / 3) → `classifyMessageIntent` → `answerQuestion` → `searchKB` + `rerankChunks` → `askClaude`.
-- **Scam:** layers 1–3 and the linked-tweet check → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
+- **Scam:** layers 1–3, the linked-tweet check and the new-member link rule → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
 - **Knowledge:** `/sync` → `syncBlog` / `syncDocs` or `scanAnnouncementsForNewFacts` → `checkCorrectionStaleness` (corrections + `core-facts.md`) → `buildIndex`.
 
 ## Generated parts and checks
