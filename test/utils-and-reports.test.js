@@ -105,13 +105,14 @@ test('official links: River\'s own links are recognised exactly, and never trigg
     const { stripOfficialLinks } = require('../src/utils');
     const { detectScamContentSync } = require('../src/intent');
     const official = (link) => !stripOfficialLinks(link).trim();
-    for (const link of ['Riverai.inc', 'https://riverai.inc/', 'https://docs.riverai.inc/outro/official-links', 'gov.riverai.inc', 'https://t.me/river_inc', 'https://discord.com/invite/river-inc', 'https://x.com/riverdotinc', 'https://github.com/Satoshi-Protocol']) {
+    for (const link of ['Riverai.inc', 'https://riverai.inc/', 'https://docs.riverai.inc/outro/official-links', 'gov.riverai.inc', 'https://t.me/river_inc', 'https://t.me/river_inc/1/', 't.me/river_inc/12345', 'https://discord.com/invite/river-inc', 'https://x.com/riverdotinc', 'https://github.com/Satoshi-Protocol']) {
         assert.ok(official(link), `official: ${link}`);
     }
     for (const link of ['https://riverai.inc.help-desk.xyz/ticket', 'fakeriverai.inc', 'riverai-inc.com', 'https://riverai.incs.com', 't.me/river_inc_support', 'discord.gg/river-inc2', 'x.com/riverdotinc_help', 'https://github.com/Satoshi-Protocol-fake']) {
         assert.ok(!official(link), `not official: ${link}`);
     }
     assert.strictEqual(detectScamContentSync('Join us at https://t.me/river_inc'), false);
+    assert.strictEqual(detectScamContentSync('ask in the topic https://t.me/river_inc/1/'), false, 'a topic in the official group');
     assert.strictEqual(detectScamContentSync('report your issue to the team https://riverai.inc'), false);
     assert.strictEqual(detectScamContentSync('Join us at https://t.me/river_inc_help'), true, 'a lookalike is still caught');
     assert.strictEqual(detectScamContentSync('report your issue to the team https://riverai.inc.help-desk.xyz'), true, 'a lookalike domain is still caught');
