@@ -201,7 +201,7 @@ function looksLikeSpoofedName(senderDisplayName, staffNameCache) {
 }
 
 // Phrases that offer private help or a DM — the second half of the impersonation pattern.
-const HELPER_OFFER_RE = /\b(dm\s*me|message\s*me|contact\s*me(\s+privately)?|reach\s*me|send\s*me\s*a\s*[dp]m|i\s+can\s+help|how\s+can\s+i\s+help|i('ll|'d|\s+will|\s+would)\s+help|i\s+can\s+assist|let\s+me\s+help|help\s+you(\s+out)?\s+privately|outside\s+(the\s+)?channel|in\s+(private|my\s+dms?|direct)|inbox\s*(me|us)|check\s+(your\s+)?(inbox|requests?|dms?)|sent?\s+(you\s+)?(a\s+)?(?:friend\s+)?request)\b/i;
+const HELPER_OFFER_RE = /\b(dm\s*me|message\s*me|contact\s*me(\s+privately)?|reach\s*me|send\s*me\s*a\s*[dp]m|i\s+can\s+help|how\s+can\s+i\s+help|i('ll|'d|\s+will|\s+would)\s+help|i\s+can\s+assist|let\s+me\s+help|help\s+you(\s+out)?\s+privately|outside\s+(the\s+)?channel|in\s+(private|my\s+dms?|direct)|(through|via|over|by)\s+(a\s+)?(direct\s+messages?|dms?|pms?)|inbox\s*(me|us)|check\s+(your\s+)?(inbox|requests?|dms?)|sent?\s+(you\s+)?(a\s+)?(?:friend\s+)?request)\b/i;
 
 // True when the message offers private help or a DM.
 function looksLikeHelperOffer(content) {

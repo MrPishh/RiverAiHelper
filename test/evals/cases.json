@@ -161,6 +161,20 @@
       "why": "owner rule: telling a help-seeker to check DMs is always scam"
     },
     {
+      "message": "please check dm, I sent you the details of my issue",
+      "replyTo": "If you still have a problem, please open a ticket in the support channel.",
+      "replyToStaff": true,
+      "expect": ["staff-ping", "troubleshooting", "help-seeking"],
+      "why": "owner decision 2026-11-06: a member asking a mod/admin to check DMs is not punished"
+    },
+    {
+      "message": "admin check my dm pls",
+      "replyTo": "gm everyone, S6 details are in announcements",
+      "replyToStaff": true,
+      "expect": ["staff-ping", "help-seeking"],
+      "why": "owner decision 2026-11-06: asking staff to check DMs is not a scam"
+    },
+    {
       "message": "check dm mate",
       "replyTo": "bro did you see what I sent you about the meetup on saturday?",
       "expect": [

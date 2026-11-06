@@ -157,3 +157,32 @@ test('tweet check: a failed read is retried, and a failure is never remembered',
     assert.strictEqual(failing, 3, 'three attempts');
     assert.strictEqual((await down.check('https://x.com/i/status/2')).verdict, 'scam', 'the next message reads it again');
 });
+
+test('scam check: asking staff to check DMs is let through, even with a member alongside; asking only members follows the DM rules', async () => {
+    const { createIntentModule } = require('../src/intent');
+    // The focused scam check always says YES; the classifier says staff-ping.
+    const anthropic = fakeAnthropic((req) => (String(req.system).startsWith('You are a scam detection') ? 'YES' : 'staff-ping'));
+    const intent = createIntentModule(anthropic, {
+        SUPPORT_CHANNEL_ID: 'support', isStaffUser: async (_guild, id) => id.startsWith('staff'),
+    });
+    const user = (id) => ({ id, username: id, bot: false });
+    const msg = ({ replyTo = null, mentions = [] } = {}) => ({
+        id: 'm1', channelId: 'general', guild: {}, member: null, author: user('sender'),
+        reference: replyTo ? { messageId: 'r1' } : null,
+        mentions: { users: new Map(mentions.map(id => [id, user(id)])) },
+        channel: { messages: { fetch: async (q) => (typeof q === 'string' ? { author: user(replyTo), content: 'hi' } : new Map()) } },
+    });
+    const scamChecks = () => anthropic.calls.filter(c => String(c.system).startsWith('You are a scam detection')).length;
+
+    assert.strictEqual(await intent.classifyMessageIntent('mod please check dm', msg({ replyTo: 'staff1' })), 'staff-ping', 'reply to a mod');
+    assert.strictEqual(await intent.classifyMessageIntent('<@staff1> check my dm', msg({ mentions: ['staff1'] })), 'staff-ping', 'tagging a mod');
+    assert.strictEqual(scamChecks(), 0, 'no scam check for a request aimed at staff');
+    assert.match(anthropic.calls.at(-1).messages[0].content, /STAFF member/, 'the classifier is told the person is staff');
+
+    assert.strictEqual(await intent.classifyMessageIntent('check dm', msg({ replyTo: 'member1' })), 'scam-content', 'reply to a member');
+    assert.strictEqual(await intent.classifyMessageIntent('check dm <@member1>', msg({ mentions: ['member1'] })), 'scam-content', 'tagging a member');
+    assert.strictEqual(await intent.classifyMessageIntent('check dm <@staff1> <@member1>', msg({ mentions: ['staff1', 'member1'] })), 'staff-ping', 'a mod tagged alongside a member');
+    assert.strictEqual(await intent.classifyMessageIntent('check dm', msg({ replyTo: 'member1', mentions: ['staff1'] })), 'staff-ping', 'reply to a member, tagging a mod');
+    assert.strictEqual(await intent.classifyMessageIntent('check dm', msg({ replyTo: 'staff1' }), null, { matched: true, staffName: 'Mati' }), 'scam-content', 'a staff-like name still gets the check');
+    assert.strictEqual(await intent.classifyMessageIntent('mod check dm t.me/fakehelp', msg({ replyTo: 'staff1' })), 'scam-content', 'hard rules still apply');
+});

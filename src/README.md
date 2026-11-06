@@ -58,7 +58,7 @@ Same dependency-injection pattern. `COMMANDS` is sent to Discord on every start-
 A factory, `createIntentModule`. Classifies messages into 15 categories with Haiku; only 4 trigger an answer (see `intent/intent-taxonomy.md`). Two scammer-side layers run first:
 
 - **Layer 1 — hard patterns (`detectScamContentSync`):** unambiguous patterns (t.me / wa.me links, "visit my bio", "share your issue with the team: <link>"…) return `scam-content` with no API call.
-- **Layer 2 — soft patterns + Haiku (`hasSoftScamSignal` + `detectScamContentLLM`):** context-dependent phrases ("dm me", "check my dashboard"…) trigger a focused Haiku YES/NO check over the reply and thread context. Fails safe (not scam) on an API error.
+- **Layer 2 — soft patterns + Haiku (`hasSoftScamSignal` + `detectScamContentLLM`):** context-dependent phrases ("dm me", "check my dashboard"…) trigger a focused Haiku YES/NO check over the reply and thread context. Fails safe (not scam) on an API error. Skipped when the message replies to or mentions a mod/admin, even alongside a member (`addressesStaff`) — members asking staff to check their DMs are not punished.
 
 `logToTicketFile` and `logToCollabFile` are module-level write-time loggers used directly by `commands.js` — no classification, no state.
 

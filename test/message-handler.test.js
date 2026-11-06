@@ -11,11 +11,11 @@
 // L25   Fixture
 // L28     BOT
 // L32     setup()
-// L70       done()
-// L79     msg()
-// L99   Channel gate
-// L130  Scam blocker
-// L552  Q&A learning
+// L71       done()
+// L80     msg()
+// L100  Channel gate
+// L131  Scam blocker
+// L609  Q&A learning
 // ----- end of contents -----
 
 const test   = require('node:test');
@@ -29,12 +29,13 @@ const BOT = 'bot1', ANSWER_CH = 'general', OTHER_CH = 'other', STAFF_ROLE = 'sta
 
 // Builds the handler in a sandbox; `intent` decides what the fake classifier returns, and `tweets`
 // (status ID → tweet, or null for "can't be read") stands in for FxTwitter.
-function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {}, bareLinkIsSite = false } = {}) {
+function setup({ intent = 'help-seeking', scamBlocker = true, tweets = {}, bareLinkIsSite = false, breakLinkReview = false } = {}) {
     const box = makeSandbox(['src/commands.js', 'src/toggles.js', 'src/state.js', 'src/utils.js', 'src/tweet-check.js'], {
         'data/toggles.json': JSON.stringify({ discord: true, telegram: true, 'scam-blocker': scamBlocker }),
     });
     const state = require(box.path('src/state.js'));
     const utils = require(box.path('src/utils.js'));
+    if (breakLinkReview) utils.stripOfficialLinks = () => { throw new Error('link review broken'); };
     const { registerMessageHandler } = require(box.path('src/commands.js'));
     const seen = { answered: [], learned: [], infractions: 0, deleted: 0, records: [], forwarded: [], removedFromAi: [], bareLinkChecks: [], bareLinkInputs: [] };
     const handlers = {};
@@ -128,6 +129,62 @@ test('a question deleted while waiting for its auto-answer is dropped', async ()
 });
 
 // ─── Scam blocker ─────────────────────────────────────────────────────────────
+
+// The fixture hands the handler all of utils; bot.js hands over a written-out list. A name the handler
+// expects that bot.js leaves out is undefined only in the real bot, where it crashed the scam blocker
+// before it could delete anything (2026-11-03).
+test('bot.js passes the message handler every helper it expects', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const read = (f) => fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+    const group = (text, name) => (text.match(new RegExp(`\\b${name}:\\s*\\{([^}]*)\\}`))?.[1] ?? '').split(',').map(s => s.trim()).filter(Boolean);
+    const handler = read('src/commands.js');
+    const wiring = read('bot.js').slice(read('bot.js').indexOf('registerMessageHandler(discordClient'));
+    for (const name of ['kbSync', 'utils']) {
+        const expected = group(handler, name);
+        assert.ok(expected.length > 0, `found the ${name} list in commands.js`);
+        const passed = group(wiring, name);
+        assert.deepStrictEqual(expected.filter(n => !passed.includes(n)), [], `${name} helpers missing from bot.js`);
+    }
+});
+
+test('helper offer: "through direct message" counts, ordinary mentions of DMs do not', () => {
+    const { looksLikeHelperOffer } = require('../src/utils');
+    assert.ok(looksLikeHelperOffer('could you please elaborate more on the issue you’re encountering through direct message'));
+    assert.ok(looksLikeHelperOffer('explain it via dm please'));
+    assert.ok(!looksLikeHelperOffer('someone tried to scam me in my direct messages yesterday'));
+    assert.ok(!looksLikeHelperOffer('I got a weird direct message, is it fake?'));
+});
+
+test('staff-like name: never acted on alone; name plus a DM offer is', async () => {
+    const t = setup({ intent: 'community-discussion' });
+    try {
+        t.state.staffNameCache.set('mrfish', 'MrFish | River');
+        const nameOnly = msg(ANSWER_CH, 'hello everyone');
+        nameOnly.member.displayName = 'MrFish River';
+        await t.handler(nameOnly);
+        assert.strictEqual(nameOnly.deleted, undefined, 'name alone: left up');
+        assert.strictEqual(t.seen.infractions, 0);
+        const offer = msg(ANSWER_CH, 'please explain the issue through direct message');
+        offer.member.displayName = 'MrFish River';
+        await t.handler(offer);
+        assert.strictEqual(offer.deleted, true, 'name + DM offer: deleted');
+        assert.match(t.seen.records[0].reason, /name-spoof/);
+    } finally { t.done(); }
+});
+
+test('a failed AutoMod miss report does not stop the delete and timeout', async () => {
+    const t = setup({ intent: 'scam-content', breakLinkReview: true });
+    try {
+        const m = msg(ANSWER_CH, 'dm me for help', { mentionBot: true });
+        let timedOut = false;
+        m.member.timeout = async () => { timedOut = true; };
+        await t.handler(m);
+        assert.strictEqual(t.seen.infractions, 1, 'infraction recorded');
+        assert.strictEqual(m.deleted, true, 'message still deleted');
+        assert.strictEqual(timedOut, true, 'member still timed out');
+    } finally { t.done(); }
+});
 
 test('scam blocker never acts on staff, but does act on non-staff', async () => {
     const t = setup({ intent: 'scam-content' });

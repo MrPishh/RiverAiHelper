@@ -5,51 +5,51 @@ L59   Quick Reference — Read This Section Only at Session Start
 L63     Active State
 L70     Where things are
 L75     Top Pending Items
-L85   What This Bot Does
-L91   Answer Flow (How the Bot Responds)
-L105    Conversation context guards (added 2026-05-12)
-L125  Intent Classification System
-L127    How it works
-L144    Where classification runs
-L156    `scam-content` vs `safety-alert`
-L165    `help-seeking` covers frustrated complaints (updated 2026-05-15)
-L169    `help-seeking` also covers "anyone received X?" phrasing (updated 2026-06-01)
-L173    Why `looksLikeQuestion()` was replaced
-L181  Sitemaps
-L207  Corrections System
-L209    `knowledge-base/corrections/` folder
-L212    Workflow
-L221    `<!- EXCLUDE ->` markers
-L224    Dynamic blog effective date
-L230    Blog URL exclusion list
-L237    Docs has no exclusion mechanism
-L242  KB Monitor
-L246    1. Correction Staleness Check
-L267    2. Announcement Auto-Scan
-L298  Backfilling Missed Announcements
-L302    How to backfill
-L339    Preventing future gaps
-L351  Core Facts Design
-L353    What `core-facts.md` is for
-L358    How it works
-L364    The original problem that created this
-L380  Multi-Turn Conversation Design
-L382    The problem
-L387    How it works now
-L404    Why ANSWER / CLARIFY / ESCALATE tags
-L409  RAG Source Attribution
-L423    Chunk Re-ranking (inside `buildInitialHistory`)
-L436  Referral Code Rotation
-L458  System Prompt Features (getSystemPrompt)
-L472    Prompt Caching (added 2026-05-15)
-L482    Scam Detection — All Layers (updated 2026-06-13)
-L552  Known Issues and Fixed Bugs
-L554    Gotchas
-L564    Fixed bugs (history)
-L596  RAG Index State
-L606  Pending / Discussed But Not Done
-L629    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
-L637    💡 Improvements discussed but deferred
+L84   What This Bot Does
+L90   Answer Flow (How the Bot Responds)
+L104    Conversation context guards (added 2026-05-12)
+L124  Intent Classification System
+L126    How it works
+L143    Where classification runs
+L155    `scam-content` vs `safety-alert`
+L164    `help-seeking` covers frustrated complaints (updated 2026-05-15)
+L168    `help-seeking` also covers "anyone received X?" phrasing (updated 2026-06-01)
+L172    Why `looksLikeQuestion()` was replaced
+L180  Sitemaps
+L206  Corrections System
+L208    `knowledge-base/corrections/` folder
+L211    Workflow
+L220    `<!- EXCLUDE ->` markers
+L223    Dynamic blog effective date
+L229    Blog URL exclusion list
+L236    Docs has no exclusion mechanism
+L241  KB Monitor
+L245    1. Correction Staleness Check
+L266    2. Announcement Auto-Scan
+L297  Backfilling Missed Announcements
+L301    How to backfill
+L338    Preventing future gaps
+L350  Core Facts Design
+L352    What `core-facts.md` is for
+L357    How it works
+L363    The original problem that created this
+L379  Multi-Turn Conversation Design
+L381    The problem
+L386    How it works now
+L403    Why ANSWER / CLARIFY / ESCALATE tags
+L408  RAG Source Attribution
+L422    Chunk Re-ranking (inside `buildInitialHistory`)
+L435  Referral Code Rotation
+L457  System Prompt Features (getSystemPrompt)
+L471    Prompt Caching (added 2026-05-15)
+L481    Scam Detection — All Layers (updated 2026-06-13)
+L553  Known Issues and Fixed Bugs
+L555    Gotchas
+L565    Fixed bugs (history)
+L597  RAG Index State
+L607  Pending / Discussed But Not Done
+L630    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
+L638    💡 Improvements discussed but deferred
 -->
 
 This file exists so any new Claude Code session can read it and immediately understand the full state of the project without needing conversation history.
@@ -75,8 +75,7 @@ This file exists so any new Claude Code session can read it and immediately unde
 ### Top Pending Items
 - **Batch intent log analysis** — done 2026-08-18 (`msgbatch_01PzBGupfcCBv6nBYyawno9f`, Sonnet reviewer): 4 taxonomy gaps fixed plus a follow-up scan (see `intent/intent-taxonomy.md` § Status); follow-up review items remain — see "Time-based reminders" below
 - **Prompt cache stats** — check after ~1 week (`cache_read_input_tokens` vs `cache_creation_input_tokens` ratio) — especially relevant now: 2026-08-18 fixed a regression that had silently dropped the cross-conversation cache breakpoint
-- **Log rotation** — implement when any intent log hits ~5 MB
-- **Telegram proactive scam-blocking** — Discord has `takeScamAction` (delete + timeout + alert) wired into every scenario that classifies intent; Telegram only moderates already-`watchedUsers`-flagged accounts reactively, with no equivalent action for a first-time offender's live message. Flagged 2026-08-18, not yet decided/built.
+- **Future features** — all in one list: see "Improvements discussed but deferred" under "Pending / Discussed But Not Done"
 
 > The generated section list at the top of this file gives every section's line — jump straight to it.
 
@@ -517,6 +516,8 @@ Soft patterns:
 
 **`detectScamContentLLM` flow:** Receives the message content + reply context + recent thread (same context built for normal classification). Asks Haiku: *"Is this sender redirecting another user toward an external resource they own, or inviting them into a private conversation as a way of offering unsolicited help?"* YES → `'scam-content'`; NO → falls through to normal classification. Fails safe: returns `false` on API error (never false-positives due to a network issue). Haiku max_tokens: 5.
 
+**Requests aimed at staff skip this layer (owner decision 2026-11-06):** when the message replies to or mentions at least one mod/admin (`addressesStaff`), even alongside a member, the Haiku YES/NO check is skipped and the classifier is told a target is staff (→ `staff-ping`). With no staff among the targets the normal DM rules apply (a scammer tagging a mod alongside a victim gets past this — accepted); a staff-like sender name or a hard-rule match is still acted on. Discord only (Telegram passes no message context).
+
 **Real example caught by this layer (2026-06-11):** "Check my dashboard and relay this" — Layer 1 missed it (`check` is an ambiguous verb), Haiku correctly identified it as a non-staff sender directing a help-seeker to an external resource. Previously misclassified as `troubleshooting` by normal intent classification.
 
 #### Layer 3 — Display name spoof detector (in `src/commands.js`)
@@ -527,7 +528,7 @@ Flow:
 2. Skip if `staffNameCache` is empty (startup race)
 3. Normalise sender display name: lowercase → leet substitution (`0→o 1→i 3→e 4→a 5→s 6→g 7→t @→a`) → strip padding words (`official real support admin mod helper team river`) → strip non-alpha
 4. Compare against every entry in `staffNameCache`: exact match, sender contains staff name as substring, or Levenshtein distance ≤ 1
-5. If name matches AND message contains a DM/helper-offer phrase → log `scam-content` and call `takeScamAction`. If only the name matches, the match is passed to the classifier as a warning for Layer 2.
+5. If name matches AND message contains a DM/helper-offer phrase → log `scam-content` and call `takeScamAction`. If only the name matches, the match is passed to the classifier as a warning for Layer 2; a staff-like name alone is never acted on (owner decision, 2026-11-03).
 
 **Staff name cache** (`state.staffNameCache`) — `Map<normalizedName → originalDisplayName>`. Built at startup in `buildStaffNameCache()` in `bot.js`, refreshed every 24 hrs via cron. Only stores names ≥ 4 chars after normalisation to avoid short-name false positives.
 
@@ -610,7 +611,7 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 - **~~src/ reorganisation~~** — completed 2026-06-01. All 13 modules moved from root into `src/`. Each `src/` file uses `const ROOT_DIR = path.join(__dirname, '..')` for paths pointing back to root-level folders.
 - **~~PM2 setup~~** — complete. Bot runs under PM2 (`river-bot`). Windows Task Scheduler handles auto-resurrect on login.
 - **~~Weekly report cache~~** — implemented 2026-06-03. `report-cache.json` keyed by `platform::model::fromDate::toDate`. Haiku and Sonnet cached separately. 14-day TTL. Extended to daily reports 2026-08-18 (previously weekly-only); `force: true` bypasses the cache on either.
-- **Support ticket + collab logging** — fully implemented. Non-staff messages from `SUPPORT_TICKET_CATEGORY_IDS` logged to `intent/ticket-log.jsonl`, `COLLAB_CATEGORY_IDS` logged to `intent/collab-log.jsonl`. Classification is write-time dumb (file = category); full thread classification happens at report time when the whole conversation is available. Tickets included in community reports as "Discord — Support Tickets" section. **Business Proposals section** deferred — when added, classify collab threads concurrently at report time using `Promise.all` (one Haiku call per thread). See `readCollabMessages` in `community-report.js` for the hook comment.
+- **Support ticket + collab logging** — fully implemented. Non-staff messages from `SUPPORT_TICKET_CATEGORY_IDS` logged to `intent/ticket-log.jsonl`, `COLLAB_CATEGORY_IDS` logged to `intent/collab-log.jsonl`. Classification is write-time dumb (file = category); full thread classification happens at report time when the whole conversation is available. Tickets included in community reports as "Discord — Support Tickets" section. The Business Proposals section is in the deferred list below.
 - **~~Chinese channel logging (Discord)~~** — implemented 2026-06-06. Messages from `CHINESE_DISCORD_CHANNEL_ID` are logged to `dc-intent-log.jsonl` then the handler returns early — no bot response. (Since 2026-09-01 messages there are also scam-classified and blocked like any other channel; they are still never answered.) Historical backfill from 2026-06-01 (129 messages) completed via `intent/backfill-chinese.js`. Batch intent classification deferred.
 - **~~Telegram DM persistent menu button~~** — implemented 2026-06-06. `setChatMenuButton` + `setMyCommands` called at bot startup in `telegram/telegram-adapter.js`. `/start` in a private DM opens the staff panel inline keyboard (Report / Stats). The "≡ Menu" button is persistent across sessions — user does not need to type `/start` each time.
 
@@ -636,9 +637,75 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 
 ### 💡 Improvements discussed but deferred
 
+Future features are listed here. Build one only when the owner asks; "Raise when" says when to bring it up. Crossed-out entries further down are finished.
+
+**Scam blocking**
+
+- **Scam checks on edited messages** — put off by the owner on 2026-11-04 (only a handful of cases so far); built on 2026-11-03 and removed the next day. Today an edited message is not checked on either platform, so a post edited into a scam stays up until someone spots it.
+  - Discord: listen to `messageUpdate` and skip events with no `editedTimestamp` (link previews, pins) or unchanged text; run the scam checks only, never answer; skip staff and ticket/collab channels; run the classifier only where a new message would be classified; make sure one message can't count as two infractions.
+  - Telegram: add `edited_message` to `allowedUpdates` in `launch` or edits are never delivered; decide whether to cover only watched users or everyone.
+  - First confirm on a real edit that the event arrives: the first version logged no edit checks at all in its 6 hours live, which is unexplained.
+  - Raise when: the owner reports more edit scams.
+
+- **Telegram scam blocking for first-time offenders** — flagged 2026-08-18, not yet decided. On Discord, a `scam-content` result always leads to `takeScamAction`. On Telegram it is only skipped as "don't answer": nothing is deleted, nobody is muted, nobody is alerted. Telegram only acts on users already on the watchlist (`handleWatchedMessage`, added by `/tgwatch` or from the perma-ban store), because its moderation was built around known accounts.
+  - To build: wire delete (`deleteMessage`) and a mute into the path that already classifies intent. This is a real feature, not a small fix, so it needs the owner's go-ahead.
+  - Raise when: the owner asks about scam coverage between platforms, or a Telegram scam gets through that Discord would have caught.
+
+- **Bracket-role tags in display names** — seen 2026-06-10: a scammer used `[DCL]` in their name to look official, then ran a soft sell with a DM redirect. The spoof check only compares against real staff names, so this gets past it.
+  - To build: add `looksLikeBracketRole(displayName)` to `src/utils.js` with `/\[(?:mod|admin|staff|support|official|team|helper|dcl|cl|lead|manager|core|community)\]/i`, and a check after the spoof check in `src/commands.js`: non-staff, bracket role and a DM offer → `scam-content` and `takeScamAction`. Never act on the tag alone; it could be a real community tag.
+  - Raise when: bracket-tag scams increase, or the community adopts official tags that can be allowed.
+
+- **Scams spread over several messages** — seen 2026-06-10: "check dashboard now" → "did you get it?" → "inbox me / check request / see instructions", with no single message obviously a scam. The owner wants more real examples before anything is hardwired, because a wrong call would time out a real member.
+  - Design: a per-user buffer (`suspectMsgBuffer` in `src/state.js`, keyed `userId::channelId`, 10-minute window, at most 8 messages). When a soft-signal word appears and the buffer has at least 2 messages, call `detectMultiMessageScamLLM` (Haiku, yes/no). On yes, send staff a review alert only (orange embed, no automatic timeout).
+  - Soft-signal words, from the owner's MEE6 observation: resources, direct message, bio, request, message me, inbox, DM, PM, profile, guide, private message, instruction.
+  - Still to settle: minimum buffer length, which words count, and whether it should ever act automatically.
+  - Raise when: the owner shares more examples of this pattern.
+
+- **Auto-answering a member who stepped in** — seen 2026-06-10: a member replied "Did you get it" to someone's pending question. The pending timer was rightly kept, but the reply was also classified as help-seeking, so the bot answered the replier 5 minutes later. One intent drives two decisions: cancel the asker's timer, and queue an answer for the replier.
+  - Possible fix: when a reply to someone else's pending question comes from a different person, don't queue an answer for them. The cost is that "same issue here, anyone know the fix?" would go unanswered too.
+  - Put off because that reply happened to interrupt a scam, and it needs data on how often this fires in normal conversation.
+
+**Tickets and reports**
+
+- **Ticket and collab content in community reports** — logging and the tickets section are built (`logToTicketFile`, `logToCollabFile`, `readTicketMessages`), but both logs are empty because the bot can't read the channels: 0 of 23 open ticket and 0 of 44 collab channels (see "Audit 2026-10-29 — still open"). Fix that first: add the bot's role with View + Read History to new tickets, Send stays off.
+  - Remaining work is the **Business Proposals / Cooperation section**, shown only when collab messages exist. `readCollabMessages` in `community-report.js` is the hook, with the steps in its comment. Classify collab threads at report time with `Promise.all` (one Haiku call per thread).
+  - People misfile tickets, so classify by content, never by channel: support questions go into the normal report sections and real business enquiries go into Business Proposals, whichever category they were opened in. Log non-staff messages only.
+
+- **Bot answering in ticket channels** — today the bot logs ticket and collab messages and returns without answering. It needs the same channel access as the entry above.
+  - In `src/commands.js`, split the ticket/collab gate: collab still logs and returns; a ticket logs and then falls through to normal classification and answering, only if its category is in a new setting `BOT_TICKET_ANSWER_CATEGORY_IDS` (read in `bot.js` next to `SUPPORT_TICKET_CATEGORY_IDS`, so it can be enabled per category).
+  - Let those channels past the `BOT_ANSWER_CHANNEL_IDS` check.
+  - Decide the wait: `STAFF_WAIT_MS` (default 5 minutes) may be wrong where staff are assigned, so use a shorter `TICKET_STAFF_WAIT_MS` or none, since a ticket already is a support request.
+  - Decide whether to call `logMessageIntent` for ticket messages as well. Classifier and conversation follow-ups need no change.
+  - The gate returns before the early scam checks, so they don't run in tickets today; falling through would start them, which needs a deliberate decision.
+  - Raise when: the owner brings up ticket response time or automatic first responses.
+
+**Knowledge base and answers**
+
+- **Hierarchical RAG** — search chunks in two steps, so a staking question doesn't pull chunks from a wallet-setup section. Worth it for `docs/` and `corrections/`, not for blogs, which are narrative and fine with flat chunks.
+  - At index time, parse each file's H1–H3 headings and write a section summary per file (Haiku, once), stored under a `sections` key in `.embeddings-cache.json`. Split chunks by H2/H3 before applying `CHUNK_SIZE`.
+  - At query time, match the question against the summaries, shortlist 2–3 files, then run cosine search only within those. All in `src/rag.js`.
+  - Raise when: answers pull irrelevant chunks, or the docs index grows a lot.
+
 - **Structured output migration** — `askClaude()` currently parses ANSWER/CLARIFY/ESCALATE tags from free text. Could be migrated to Claude tool use (typed JSON response) for more robust parsing. Low priority — current approach is stable.
 
-- **Supabase / pgvector** — if `knowledge-base/.embeddings-cache.json` grows large (slow startup, memory pressure), migrate the embedding cache to Supabase with pgvector. Current flat-file cache is fine up to ~5,000 chunks. Flag: check file size periodically with `/sync type:Knowledge` output (total chunks).
+- **Supabase / pgvector** — replace the file-based embedding cache in `src/rag.js` with hosted Postgres and pgvector. No API cost benefit, only memory, speed and disk. The whole cache sits in memory (reloaded when the file changes) and every search is a brute-force cosine loop. Fine up to about 5,000 chunks; 439 chunks and 3.3 MB on 2026-11-04.
+  - Raise when: the cache grows a lot (total chunks show in `/sync type:Knowledge`), or startup or search slows down.
+
+**Telegram formatting**
+
+- **Telegram rich tables** — researched 2026-08-18, waiting on the owner's approval; re-check the API before building. Bot API 10.1 (June 2026) added `sendRichMessage(chat_id, rich_message: InputRichMessage, …)` with the same optional parameters as `sendMessage` and no cost. There is also `sendRichMessageDraft` (a 30-second live preview), and `editMessageText` gained `rich_message`.
+  - `InputRichMessage` takes exactly one of `blocks`, `html` or `markdown`. Markdown mode supports standard tables, `**bold**` (what Claude already writes), headings, lists, quotes, spoilers, footnotes and code blocks, so `sanitizeForTelegram`'s bold conversion may not be needed. The Discord-style `<url>` and `<#channelId>` unwrapping still would be.
+  - Limits: 32,768 characters per message (4,096 on `sendMessage`, so reports may not need `splitMessage`), 500 blocks, 16 nesting levels, 20 table columns, 50 media attachments.
+  - Unknowns: Telegraf 4.16 has no wrapper, so it needs `ctx.telegram.callApi('sendRichMessage', {...})`, untested with this method; real rendering, older clients and the report's actual layout are also untested.
+  - Start with the "Generate report" callback in `telegram/telegram-adapter.js`, do a live test send, then consider `makeTgTarget` for answers. Good uses for real tables: the report's per-source message counts and member stats.
+  - Docs tip: summarised fetches of the Bot API page truncate; download the raw HTML and search it.
+
+**Logs**
+
+- **Monthly log rotation** — logs grow forever; monthly files let old data be deleted cleanly and reports open only the months they need. Name files like `dc-intent-log-YYYY-MM.jsonl`, write to the current month's file, and have `readDiscordMessages` and `readTelegramMessages` open only the files covering the date range (one, or two across a month boundary). The ticket and collab logs follow the same pattern.
+  - Raise when: any file in `intent/` passes about 5 MB (largest on 2026-11-04: `dc-intent-log.jsonl` at 1.85 MB), or reports slow down.
+
+**Finished**
 
 - **~~Scam moderation~~** — implemented 2026-06-09. All three detection signals (tier-1 regex, spoof detector, Haiku `scam-content`) now call `takeScamAction`: delete message + timeout (1h at the time; escalating since 2026-08-18) + alert embed to `SCAM_LOG_CHANNEL_ID`. Toggle: `/toggle platform:scam-blocker` (default OFF). Required Discord permissions: `Manage Messages` + `Moderate Members`. Bot role must be above member roles in server hierarchy.
 

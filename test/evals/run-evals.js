@@ -45,12 +45,12 @@ async function runIntent(intent) {
     console.log('\n── Intent classification ── (⚠ = wrong category AND the bot would answer/ignore wrongly)');
     for (const c of cases.intent) {
         // `replyTo` (optional): the text of the message this one replies to, so context-dependent
-        // rules ("check dm" to someone asking for help) can be checked.
+        // rules ("check dm" to someone asking for help) can be checked. `replyToStaff`: that person is staff.
         const fakeMessage = c.replyTo == null ? null : {
-            channelId: 'general', reference: { messageId: 'replied-to' },
+            channelId: 'general', reference: { messageId: 'replied-to' }, guild: {},
             author: { id: 'sender', username: 'sender' }, member: null, mentions: { users: new Map() },
             channel: { messages: { fetch: async (q) => (typeof q === 'string'
-                ? { author: { id: 'asker', username: 'asker', bot: false }, content: c.replyTo }
+                ? { author: { id: c.replyToStaff ? 'staff' : 'asker', username: c.replyToStaff ? 'RiverMod' : 'asker', bot: false }, content: c.replyTo }
                 : new Map()) } },
         };
         const got = await intent.classifyMessageIntent(c.message, fakeMessage);
@@ -118,7 +118,7 @@ async function runAnswers(claude) {
     const noUsage = () => {};
     const results = [];
     if (which === 'all' || which === 'intent') {
-        results.push(['intent', ...(await runIntent(createIntentModule(anthropic, { SUPPORT_CHANNEL_ID: 'support', trackUsage: noUsage })))]);
+        results.push(['intent', ...(await runIntent(createIntentModule(anthropic, { SUPPORT_CHANNEL_ID: 'support', trackUsage: noUsage, isStaffUser: async (_g, id) => id === 'staff' })))]);
     }
     if (which === 'all' || which === 'links') {
         results.push(['bare links', ...(await runBareLinks(createIntentModule(anthropic, { SUPPORT_CHANNEL_ID: 'support', trackUsage: noUsage })))]);

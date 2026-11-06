@@ -123,7 +123,7 @@ const discordClient = new Client({
 
 // Factory modules: each binds the shared clients and config once and returns its functions.
 const claudeModule  = createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackUsage });
-const intentModule  = createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage });
+const intentModule  = createIntentModule(anthropic, { SUPPORT_CHANNEL_ID, trackUsage, isStaffUser: async (guild, id) => isStaff(await guild.members.fetch(id).catch(() => null), STAFF_ROLE_IDS) });
 const monitorModule = createMonitorModule(anthropic, { trackUsage });
 
 registerMessageHandler(discordClient, state, {
