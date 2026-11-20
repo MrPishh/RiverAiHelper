@@ -8,7 +8,7 @@ A Discord and Telegram support bot for River Protocol. It answers community ques
 2. **Find the code**: use the task table below, then look the name up in `CODE_INDEX.md` for its exact `file:line`, and read just that part with a small `limit`.
 3. **Inside a code file**: the top of the file holds a header and a generated Contents block (sections and definitions with line numbers).
 4. **Long docs** (`CONTEXT.md`, `README.md`, …) start with a generated section list — read it, then jump to the section.
-5. **How it fits together / why it is this way**: `docs/ARCHITECTURE.md` (parts, message flow, glossary, "when you add…") and `docs/DECISIONS.md` (deliberate choices). Settings, commands, events and timers: `docs/REFERENCE.md`.
+5. **How it fits together / why it is this way**: `docs/ARCHITECTURE.md` (parts, message flow, glossary, the feature map for extracting answering / Discord scam blocking / Telegram moderation / reports, "when you add…") and `docs/DECISIONS.md` (deliberate choices). Settings, commands, events and timers: `docs/REFERENCE.md`.
 
 Do not read whole files or scan `src/` when the index can point you to the line.
 
@@ -46,6 +46,8 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | `src/price-fetcher.js` | Live RIVERPTS / $RIVER prices (Dexscreener). |
 | `src/scam-tracker.js` | Scammer infraction store (`data/scammer-list.json`). |
 | `src/tweet-check.js` | Reads linked X/Twitter posts (FxTwitter) and judges them for the scam blocker. |
+| `src/image-fingerprints.js` | Fingerprinted scam images: perceptual hashes, matching, the store and image copies (`data/scam-images/`). |
+| `src/image-fingerprint-commands.js` | Staff controls for them: right-click → Fingerprint scam images, `/scam-images`, the role check. |
 | `src/toggles.js` | Discord / Telegram / Scam Blocker toggles (`data/toggles.json`). |
 | `src/utils.js` | Date, Discord and spoof-detection helpers; Q&A learning and announcement capture writers. |
 | `telegram/telegram-adapter.js` | The Telegram bot: routing, staff DM panel, moderation, join/leave. |
@@ -65,6 +67,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | `test/message-handler.test.js` | Tests: channel gate, scam blocker vs staff, Q&A learning. |
 | `test/knowledge.test.js` | Tests: RAG index contents, EXCLUDE, blog numbering, announcement-scan retry, staleness check. |
 | `test/utils-and-reports.test.js` | Tests: small helpers and community-report rules. |
+| `test/image-fingerprints.test.js` | Tests: fingerprint matching, the image store, the staff screens. |
 | `test/evals/run-evals.js` | Answer-quality evals against the real models (`npm run eval`); cases in `test/evals/cases.json`. |
 | `CODE_INDEX.md` | Generated: every definition, setting, command, event and job with its line. |
 | `.claude/settings.json` | The two hooks above (shared). `.claude/settings.local.json` is personal — never edit or commit it. |
@@ -85,6 +88,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 | Discord routing (Scenarios 0–3), batching | `src/commands.js` | `registerMessageHandler`, `scheduleAutoAnswer`, `fireAutoAnswer`, `cancelPendingBatch` |
 | Scam blocker action and timeouts | `src/commands.js` | `takeScamAction`, `escalatedTimeoutMs`, `scamEvidence` |
 | Linked-tweet check (fake help desks, ordinary tweets) | `src/tweet-check.js`, `src/commands.js` | `createTweetChecker`, `isLinkOnly`, `campaignCounts` |
+| Fingerprinted scam images | `src/image-fingerprints.js`, `src/image-fingerprint-commands.js`, `src/commands.js` | `fingerprint`, `findMatch`, `addSet`, `createImageFingerprintHandler`, `checkFingerprintedImages` |
 | New-member link rule | `src/commands.js`, `src/intent.js`, `src/state.js` | `newMemberLinks`, `secondsSinceJoining`, `detectBareLinkLLM`, `NEW_MEMBER_LINK_MS` |
 | Slash commands | `src/slash-commands.js` | `COMMANDS`, `registerSlashCommands`, `createSlashHandler` |
 | Intent classification and logs | `src/intent.js` | `classifyMessageIntent`, `RESPOND_INTENTS`, `logMessageIntent` |
@@ -111,7 +115,7 @@ Do not read whole files or scan `src/` when the index can point you to the line.
 ## Key flows (details in docs/ARCHITECTURE.md)
 
 - **A message:** `messageCreate` → logging → spoof check → routing (Scenario 0 / 0.5 / 1 / 2 / 3) → `classifyMessageIntent` → `answerQuestion` → `searchKB` + `rerankChunks` → `askClaude`.
-- **Scam:** layers 1–3, the linked-tweet check and the new-member link rule → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
+- **Scam:** fingerprinted scam images, layers 1–3, the linked-tweet check and the new-member link rule → `takeScamAction` (when the scam blocker is ON); layers 4–5 → safety message in the answer.
 - **Knowledge:** `/sync` → `syncBlog` / `syncDocs` or `scanAnnouncementsForNewFacts` → `checkCorrectionStaleness` (corrections + `core-facts.md`) → `buildIndex`.
 
 ## Generated parts and checks

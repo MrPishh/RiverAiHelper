@@ -27,24 +27,24 @@
 // L126  Scammer-side tier-1 sync check
 // L131    SCAM_CONTENT_PATTERNS
 // L158    SCAM_SOFT_PATTERNS
-// L188    BARE_BOT_MENTION_PATTERN
-// L191    LEET_MAP_CONTENT
-// L194    normalizeScamContent()
-// L204    detectScamContentSync()
-// L210    hasSoftScamSignal()
-// L218    SCAM_DETECT_PROMPT
-// L243    BARE_LINK_PROMPT
-// L253  Classifier factory
-// L257    createIntentModule()
-// L260      addressesStaff()
-// L274      detectScamContentLLM()
-// L292      detectBareLinkLLM()
-// L310      classifyMessageIntent()
-// L393      logMessageIntent()
-// L419      logIntentClassification()
-// L427      logTelegramMessage()
-// L449      logTelegramIntent()
-// L459      checkWatchedFUD()
+// L197    BARE_BOT_MENTION_PATTERN
+// L200    LEET_MAP_CONTENT
+// L203    normalizeScamContent()
+// L213    detectScamContentSync()
+// L219    hasSoftScamSignal()
+// L227    SCAM_DETECT_PROMPT
+// L254    BARE_LINK_PROMPT
+// L264  Classifier factory
+// L268    createIntentModule()
+// L271      addressesStaff()
+// L285      detectScamContentLLM()
+// L303      detectBareLinkLLM()
+// L321      classifyMessageIntent()
+// L404      logMessageIntent()
+// L430      logIntentClassification()
+// L438      logTelegramMessage()
+// L460      logTelegramIntent()
+// L470      checkWatchedFUD()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -113,8 +113,8 @@ factual-question — specific question about token, staking, rates, epoch, contr
 DO NOT RESPOND (bot should stay silent):
 community-hype — celebration, milestone reaction, price hype, general project positivity. Includes stated hopes, wishes, or predictions about future price/token amounts with no confusion or complaint (e.g. "hoping for 4 dollars only", "$10 by S6 easy")
 safety-alert — legitimate community member posting a scam WARNING for public awareness (e.g. "⚠️ Fake accounts spotted — block and report", "Scammer" calling out a bad actor)
-scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. ALSO includes a non-staff sender directing a help-seeker to an external resource the sender owns — e.g. "check my dashboard and relay this", "check my page", "go to my link" — even when phrased in broken or informal English. The sender owning the resource ("my dashboard", "my page", "my link") combined with a help-seeker context is a strong scam signal regardless of which noun is used. ALSO includes an unprompted, standalone broadcast (not a reply to any specific victim, no help-seeker needed in the thread) that invites the whole channel to send questions/issues/concerns to "the team" or "support" via an external link — e.g. "Share Your Questions/Issues to the team: [link]", "Report your issue here: [link]", "Contact support: [link]" — River's official support is Discord tickets only, so any external link framed as official contact/support channels is scam-content regardless of who it's addressed to. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message — except for the broadcast form above, which needs no victim message at all. EXCEPTION: River's official links are not external links, so pointing someone to them is NOT scam-content in any language, however the message is worded — classify as community-help. They are exactly: riverai.inc and its subdomains (app., docs., blog., gov.), x.com/riverdotinc, t.me/river_inc, discord.com/invite/river-inc and github.com/Satoshi-Protocol. A different domain that merely contains these words (riverai.inc.help-desk.xyz, riverai-support.com) is not official, and a message that also redirects to DMs or another link is still scam-content. EXCEPTION: "go here" / "go to X" / "open a ticket" phrasing is NOT scam-content when the destination is a Discord channel mention (renders as <#123456789>) — either in this message or shared by the same sender in the immediately preceding thread context. A channel mention points inside this same server (e.g. the official ticket channel) and is never an external redirect, regardless of how the surrounding wording resembles a scam exemplar — classify as community-help instead. ALWAYS scam-content: asking someone who asked for help or reported a problem (the replied-to or mentioned person) to check their DMs/inbox, send a DM, or ping the sender — "check dm", "send pm", "ping me", "check your inbox", in any spelling. ALSO ALWAYS scam-content: a bare DM/inbox request with no conversation before it ("check pm", "check inbox", "support sent to your inbox"), and claiming to have contacted someone privately ("you have been contacted on how to go about it", "I sent you a fix", "check the message I sent you") — staff are exempt elsewhere, so any sender you see making this claim is not staff. But when the replied-to person was NOT asking for help or reporting a problem and the two are clearly already talking to each other (plans, a shared topic, something they sent each other), a DM request is ordinary — classify as community-discussion. The same goes for someone who offered help within the conversation, was accepted by the person seeking help, and then moves to DMs ("I know the fix, want me to explain in your inbox?" → "yes please" → "check inbox") — classify as community-help; the bot watches such senders separately. EXCEPTION: when the reply context says the message replies to or mentions a STAFF member, a request to check DMs/inbox ("mod please check my dm", "@admin check dm") is a member trying to reach staff — classify as staff-ping, never scam-content (unless it also carries an external link or another scam element above). NOT scam-content on its own: a bare token/contract or wallet address, a bare @mention, or a bare email address with no offer, redirect or help-seeker being targeted — classify as community-discussion
-content-promotion — user sharing their own content (articles, threads, videos)
+scam-content — active phishing or social engineering BY a scammer disguised as help: unsolicited external links, "FOR HELP GO TO X", "use this app to restore your wallet", "DM me, I'm an admin", third-party wallet tools posted as replies to users reporting problems. ALSO includes a non-staff sender directing a help-seeker to an external resource the sender owns — e.g. "check my dashboard and relay this", "check my page", "go to my link" — even when phrased in broken or informal English. The sender owning the resource ("my dashboard", "my page", "my link") combined with a help-seeker context is a strong scam signal regardless of which noun is used. ALSO includes an unprompted, standalone broadcast (not a reply to any specific victim, no help-seeker needed in the thread) that invites the whole channel to send questions/issues/concerns to "the team" or "support" via an external link — e.g. "Share Your Questions/Issues to the team: [link]", "Report your issue here: [link]", "Contact support: [link]" — River's official support is Discord tickets only, so any external link framed as official contact/support channels is scam-content regardless of who it's addressed to. Distinguished from safety-alert (warning) and community-help (genuine advice): scam-content redirects users away from the channel to external sites or DMs, often within seconds of a victim's message — except for the broadcast form above, which needs no victim message at all. EXCEPTION: River's official links are not external links, so pointing someone to them is NOT scam-content in any language, however the message is worded — classify as community-help. They are exactly: riverai.inc and its subdomains (app., docs., blog., gov.), x.com/riverdotinc, t.me/river_inc, discord.com/invite/river-inc and github.com/Satoshi-Protocol. A different domain that merely contains these words (riverai.inc.help-desk.xyz, riverai-support.com) is not official, and a message that also redirects to DMs or another link is still scam-content. EXCEPTION: "go here" / "go to X" / "open a ticket" phrasing is NOT scam-content when the destination is a Discord channel mention (renders as <#123456789>) — either in this message or shared by the same sender in the immediately preceding thread context. A channel mention points inside this same server (e.g. the official ticket channel) and is never an external redirect, regardless of how the surrounding wording resembles a scam exemplar — classify as community-help instead. ALWAYS scam-content: asking someone who asked for help or reported a problem (the replied-to or mentioned person) to check their DMs/inbox, send a DM, or ping the sender — "check dm", "send pm", "ping me", "check your inbox", in any spelling. ALSO ALWAYS scam-content: a bare DM/inbox request with no conversation before it ("check pm", "check inbox", "support sent to your inbox"), and claiming to have contacted someone privately ("you have been contacted on how to go about it", "I sent you a fix", "check the message I sent you") — staff are exempt elsewhere, so any sender you see making this claim is not staff. But when the replied-to person was NOT asking for help or reporting a problem and the two are clearly already talking to each other (plans, a shared topic, something they sent each other), a DM request is ordinary — classify as community-discussion. The same goes for someone who offered help within the conversation, was accepted by the person seeking help, and then moves to DMs ("I know the fix, want me to explain in your inbox?" → "yes please" → "check inbox") — classify as community-help; the bot watches such senders separately. EXCEPTION: when the reply context says the message replies to or mentions a STAFF member, a request to check DMs/inbox ("mod please check my dm", "@admin check dm") is a member trying to reach staff — classify as staff-ping, never scam-content (unless it also carries an external link or another scam element above). ALSO ALWAYS scam-content: an offer to buy, sell or rent crypto wallets, seed phrases, private keys or online accounts, however the contact is worded ("chat me", "hit me up", "DM with proof") — e.g. "looking to buy aged wallets with trading history, 1 year old = 5 SOL", "buying used Phantom wallets", "anyone want to buy premium accounts (Prime Video, ChatGPT…)". Not this: a member asking how to buy a token or which wallet to use ("how do I buy RIVER with my wallet?", "which wallet should I buy RIVER with?") — that is help-seeking or factual-question. NOT scam-content on its own: a bare token/contract or wallet address, a bare @mention, or a bare email address with no offer, redirect or help-seeker being targeted — classify as community-discussion
+content-promotion — user sharing their own content (articles, threads, videos). NOT an offer to buy or sell wallets or accounts — that is scam-content.
 referral-sharing — user sharing their own referral code for others to use (a code appears in the message, e.g. "My code: X"). A user ASKING for a code is onboarding, not this
 community-discussion — opinion poll or strategy question directed at the community, not the bot (e.g. "drop your strategy below", "what do you think", "best time to convert?"). Does NOT include "anyone received X?" style messages about personal reward or airdrop receipt — those are help-seeking. Does NOT include frustration about protocol mechanics — use help-seeking instead.
 community-announcement — user sharing information or news for the community
@@ -178,6 +178,15 @@ const SCAM_SOFT_PATTERNS = [
     // posing as staff, ~20% genuine community member phrasing it oddly per real samples).
     // Haiku reasons over reply/thread context to tell the two apart.
     /\bhow\s+(can|may)\s+(i|we)\s+help\s+(you|u)\b/i,
+    // Contact wording beyond "dm me": "chat me", "contact me", "hit me up" (2026-11-12: a
+    // wallet-buying ad ending "Chat me if you have any!" matched nothing and was let through).
+    /\b(chat|contact|hmu)\s+(me|us)\b/i,
+    /\bhit\s+(me|us)\s+up\b/i,
+    // Buying/selling wallets or accounts ("buy aged WALLETS", "buy used Phantom wallets",
+    // "buy premium account") — plural "wallets"/"accounts" or aged/used/premium keeps ordinary
+    // questions like "buy RIVER with my wallet" out. Haiku decides.
+    /\b(buy|buying|sell|selling|purchas\w*)\s+(\S+\s+){0,4}?(wallets|accounts)\b/i,
+    /\b(buy|buying|sell|selling|purchas\w*)\s+(\S+\s+){0,3}?(aged|used|old|premium)\s+(\S+\s+){0,2}?(wallet|account)s?\b/i,
 ];
 
 // Bare mention of a bot account with no other message content — Telegram requires every
@@ -226,6 +235,8 @@ Answer YES if the sender appears to be doing any of the following to someone who
 Always answer YES when the message asks someone to move to private messages ("check dm", "check your inbox", "send a dm", "send pm", "ping me", "dm me") and the person it replies to or mentions has asked for help or reported a problem — the replied-to message or that person's latest message is given below. Asking someone who is seeking help to check their DMs or inbox is a scam, whatever the wording — unless that person has already agreed, in this conversation, to get the help in private (e.g. they replied "yes please, explain it in inbox"); then answer NO (the bot watches such senders separately).
 
 Also answer YES if the message is nothing but a bare mention of an external bot account (e.g. just "@SomeExchangeBot") with no other content — a known Telegram spam/redirect pattern, regardless of reply context.
+
+Always answer YES, with or without anyone seeking help, when the message offers to buy, sell or rent crypto wallets, seed phrases, private keys or online accounts (e.g. "looking to buy aged wallets with transaction history", "buying used Phantom wallets, 1 year old = 5 SOL", "selling premium accounts, inbox me"). Answer NO when a member is only asking how to buy a token or which wallet to use.
 
 Also answer YES if a name-spoof warning is included in the sender info — this means the sender's display name was already determined by a deterministic check to closely resemble a known staff member's name (via leet substitution and edit-distance matching). Combined with any redirect or contact offer, treat this as a strong scam signal regardless of how innocent the message wording seems.
 

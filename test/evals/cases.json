@@ -239,6 +239,38 @@
       "replyTo": "my conversion is stuck, can anyone help?",
       "expect": "scam-content",
       "why": "an official link beside a DM redirect is still scam"
+    },
+    {
+      "message": "I'm looking forward to buy used Phantom wallets with trading history or many worthless tokens in it \n\n1-2 month old - 0.6SOL\n4_8 months old - 2 SOL\n1 year & above for  5 SOL \n And higher, depending on the amount of transactions or month old is the wallet\n\nChat me if you have any!",
+      "expect": "scam-content",
+      "why": "Real miss 2026-11-12 (Discord #general): wallet-buying ad with \"Chat me\" instead of \"DM me\" was classified content-promotion and not removed"
+    },
+    {
+      "message": "\"Hello everyone\nLooking to buy aged WALLETS with NFTs/ tokens and real transaction history for my collection. Must be verifiable on-chain. DM with proof. Paying fair rates 2SOL AND ABOVE.",
+      "expect": "scam-content",
+      "why": "Same ad posted 4 times in October 2026; caught then only because of \"DM\""
+    },
+    {
+      "message": "Anyone want to buy premium account inbox me Like prime video,chatgpt,canva,YouTube and many others Reseller welcome",
+      "expect": "scam-content",
+      "why": "Account reselling ad (Telegram, 2026-10-26)"
+    },
+    {
+      "message": "Can I buy RIVER using two different wallets?",
+      "expect": [
+        "help-seeking",
+        "factual-question",
+        "onboarding"
+      ],
+      "why": "Look-alike of the wallet-buying ads that a genuine member would ask; must never be treated as a scam"
+    },
+    {
+      "message": "Is selling RIVER from multiple accounts allowed?",
+      "expect": [
+        "help-seeking",
+        "factual-question"
+      ],
+      "why": "Look-alike of account-selling ads; a genuine rules question"
     }
   ],
   "answers": [
@@ -324,6 +356,25 @@
         ]
       ],
       "mustNotInclude": []
+    },
+    {
+      "question": "It started so promising and now nothing",
+      "expect": "ANSWER",
+      "mustInclude": [],
+      "mustNotInclude": [
+        "coordinated",
+        "attack",
+        "rivers-actions-and-follow-up",
+        "buyback"
+      ],
+      "why": "Real 2026-11-12 Telegram reply recounted the Nov 2025 market attack as recent news to a general vent; user replied \"This article is 1 year old\"."
+    },
+    {
+      "question": "What happened with the River Pts price crash and the attack?",
+      "expect": "ANSWER",
+      "mustInclude": [["2025"]],
+      "mustNotInclude": ["recent market event", "past few days"],
+      "why": "Counterpart to the vent case: asked directly, the bot still explains the November 2025 attack, dated, not as recent news."
     }
   ],
   "bareLinks": [

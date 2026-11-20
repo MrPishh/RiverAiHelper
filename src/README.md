@@ -33,6 +33,8 @@ All bot logic. `bot.js` in the project root wires these modules together — non
 | `toggles.js` | Feature toggles, persisted to `data/toggles.json`. |
 | `scam-tracker.js` | Scammer infraction store, `data/scammer-list.json`. |
 | `tweet-check.js` | Reads the X/Twitter posts a message links to (FxTwitter public API) and judges them for the scam blocker. |
+| `image-fingerprints.js` | Fingerprinted scam images: perceptual hash + colour grid of each image, matching, and the store in `data/scam-images/` (a copy of each image kept). |
+| `image-fingerprint-commands.js` | Staff controls for them: right-click → Apps → Fingerprint scam images, `/scam-images`, the `IMAGE_FINGERPRINT_ROLE_IDS` check. |
 | `price-fetcher.js` | Live RIVERPTS and $RIVER prices from Dexscreener. |
 
 ## How it works
@@ -47,6 +49,7 @@ A factory, `registerMessageHandler`, receives the client, state, config and modu
 - **Linked tweets:** a message with an X/Twitter link has the tweet read first (`tweet-check.js`); a fake help-desk or campaign tweet is acted on at once, and a message that is only a link to an ordinary tweet is spared by `takeScamAction`.
 - **New-member links (`newMemberLinks`):** a link without http posted within `NEW_MEMBER_LINK_MS` of joining goes to `detectBareLinkLLM` (`intent.js`), which reads the whole message and the sender's own previous message, if any. If they are sharing a website (not a typo like `b.coz`, or a question about the site), it is acted on and forwarded to #ai so the owner can put a wrong call right. Links with http stay with AutoMod, X/Twitter links with the tweet rules; River's own links and GIF sites don't count.
 - **Watched DM helpers (`watchDmHelper`):** a DM request left up and addressed to another member (not staff) is watched for 2 hours; if its sender deletes part of that conversation, `takeScamAction` runs with `alreadyDeleted`. A delete by a moderator (audit log, `moderatorWhoDeleted`; needs **View Audit Log**) is only noted in the scam log. Not in ticket/collab channels; lost on restart.
+- **Fingerprinted scam images (`checkFingerprintedImages`):** a non-staff message carrying (or forwarding) an image staff marked as scam (an exact or near copy, see `image-fingerprints.js`) is forwarded to #ai, then handed to `takeScamAction`. No AI call.
 - **Scam blocker (`takeScamAction`):** called when any scam layer fires on a non-staff message. Deletes the message, times the member out (1 hour × infraction count, capped at 28 days) and posts an alert to `SCAM_LOG_CHANNEL_ID`. Each step fails on its own without stopping the others. Does nothing while the scam-blocker toggle is OFF, and never acts on staff. Needs the **Manage Messages** and **Moderate Members** permissions (plus **View Audit Log** for the DM-helper watch), and the bot's role above members' roles.
 
 ### `slash-commands.js`
@@ -118,12 +121,13 @@ Legacy. The old whole-KB loader was replaced by `rag.js`; only `getSourceFiles()
 
 ```
 state.js, utils.js, toggles.js, embedder.js, knowledge-loader.js,
-blog-scraper.js, price-fetcher.js, scam-tracker.js, tweet-check.js, intent.js, kb-monitor.js   ← no project requires
+blog-scraper.js, price-fetcher.js, scam-tracker.js, tweet-check.js, intent.js, kb-monitor.js,
+image-fingerprints.js, image-fingerprint-commands.js   ← no project requires
 rag.js            ← embedder
 kb-sync.js        ← blog-scraper, utils
 claude.js         ← price-fetcher
 commands.js       ← toggles, tweet-check
-slash-commands.js ← toggles
+slash-commands.js ← toggles, image-fingerprint-commands
 ```
 
 Outside `src/`: `telegram/telegram-adapter.js` requires `toggles`, `utils` and the Telegram member-stats module; `community-report.js` requires `intent`, `utils` and `kb-sync`; `discord-member-stats.js` requires `utils`.

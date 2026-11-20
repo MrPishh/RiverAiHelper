@@ -33,8 +33,8 @@
 // L257    BLOG_SITEMAP_URL
 // L258    BLOG_SINCE_DATE
 // L262    syncBlog()
-// L475    blogFileForUrl()
-// L497    registerBlogInIndex()
+// L478    blogFileForUrl()
+// L500    registerBlogInIndex()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -414,6 +414,7 @@ async function syncBlog() {
         if (changed && meta.modifiedTime && existing.modifiedTime && meta.modifiedTime === existing.modifiedTime) {
             console.log(`[SyncBlog] ${url} — sitemap lastmod changed (${existing.lastmod} -> ${lastmod}) but article:modified_time is unchanged (${meta.modifiedTime}). Redeploy artifact, not a real edit — skipping rescrape.`);
             existing.lastmod = lastmod;
+            existing.publishedTime = existing.publishedTime || meta.publishedTime || undefined;
             skipped++; filtered++;
             continue;
         }
@@ -434,11 +435,13 @@ async function syncBlog() {
             fs.writeFileSync(fp, `# Blog: ${slug}\nSource: ${url}\nScraped: ${new Date().toISOString()}\n\n---\n\n${body}`, 'utf8');
             processedFiles.push({ filePath: fp, content: pageText });
             if (isNew) {
-                index.pages.push({ url, slug, file, lastmod, modifiedTime: meta.modifiedTime, lastScraped: new Date().toISOString() });
+                index.pages.push({ url, slug, file, lastmod, publishedTime: meta.publishedTime || undefined, modifiedTime: meta.modifiedTime, lastScraped: new Date().toISOString() });
                 added++;
             } else {
                 existing.lastmod      = lastmod;
                 existing.modifiedTime = meta.modifiedTime || existing.modifiedTime;
+                // Kept with the post so answers can tell the model how old it is (see searchKB).
+                existing.publishedTime = meta.publishedTime || existing.publishedTime;
                 existing.lastScraped  = new Date().toISOString();
                 updated++;
             }

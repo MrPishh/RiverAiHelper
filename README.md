@@ -55,6 +55,7 @@ Runtime state that survives restarts. Not in git — created on first write; `da
 | `toggles.json` | ON/OFF for Discord replies, Telegram replies and the scam blocker (`/toggle`). |
 | `usage-stats.json` | Claude API calls, tokens and estimated cost (`/usage-stats`). |
 | `scammer-list.json` | Scam-blocker infractions, keyed by Discord user ID (`/scam-record`). |
+| `scam-images/` | Fingerprinted scam images: `fingerprints.json` and a copy of each image in `set-N/` (right-click → Fingerprint scam images, `/scam-images`). |
 | `tg-perma-ban.json` | Telegram moderation list: watch / mute / kick / ban modes. |
 | `tg-alert-admins.json` | Telegram admins subscribed to moderation alerts. |
 | `tg-watch-log.jsonl` | Evidence log of deleted messages from watched Telegram users. |

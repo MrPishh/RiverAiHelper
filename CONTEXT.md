@@ -16,40 +16,40 @@ L164    `help-seeking` covers frustrated complaints (updated 2026-05-15)
 L168    `help-seeking` also covers "anyone received X?" phrasing (updated 2026-06-01)
 L172    Why `looksLikeQuestion()` was replaced
 L180  Sitemaps
-L206  Corrections System
-L208    `knowledge-base/corrections/` folder
-L211    Workflow
-L220    `<!- EXCLUDE ->` markers
-L223    Dynamic blog effective date
-L229    Blog URL exclusion list
-L236    Docs has no exclusion mechanism
-L241  KB Monitor
-L245    1. Correction Staleness Check
-L266    2. Announcement Auto-Scan
-L297  Backfilling Missed Announcements
-L301    How to backfill
-L338    Preventing future gaps
-L350  Core Facts Design
-L352    What `core-facts.md` is for
-L357    How it works
-L363    The original problem that created this
-L379  Multi-Turn Conversation Design
-L381    The problem
-L386    How it works now
-L403    Why ANSWER / CLARIFY / ESCALATE tags
-L408  RAG Source Attribution
-L422    Chunk Re-ranking (inside `buildInitialHistory`)
-L435  Referral Code Rotation
-L457  System Prompt Features (getSystemPrompt)
-L471    Prompt Caching (added 2026-05-15)
-L481    Scam Detection — All Layers (updated 2026-06-13)
-L553  Known Issues and Fixed Bugs
-L555    Gotchas
-L565    Fixed bugs (history)
-L597  RAG Index State
-L607  Pending / Discussed But Not Done
-L630    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
-L638    💡 Improvements discussed but deferred
+L207  Corrections System
+L209    `knowledge-base/corrections/` folder
+L212    Workflow
+L221    `<!- EXCLUDE ->` markers
+L224    Dynamic blog effective date
+L230    Blog URL exclusion list
+L237    Docs has no exclusion mechanism
+L242  KB Monitor
+L246    1. Correction Staleness Check
+L267    2. Announcement Auto-Scan
+L298  Backfilling Missed Announcements
+L302    How to backfill
+L339    Preventing future gaps
+L351  Core Facts Design
+L353    What `core-facts.md` is for
+L358    How it works
+L364    The original problem that created this
+L380  Multi-Turn Conversation Design
+L382    The problem
+L387    How it works now
+L404    Why ANSWER / CLARIFY / ESCALATE tags
+L409  RAG Source Attribution
+L423    Chunk Re-ranking (inside `buildInitialHistory`)
+L436  Referral Code Rotation
+L458  System Prompt Features (getSystemPrompt)
+L474    Prompt Caching (added 2026-05-15)
+L484    Scam Detection — All Layers (updated 2026-06-13)
+L568  Known Issues and Fixed Bugs
+L570    Gotchas
+L580    Fixed bugs (history)
+L612  RAG Index State
+L622  Pending / Discussed But Not Done
+L645    ⏰ Time-based reminders — do these after 2–4 weeks of live traffic
+L653    💡 Improvements discussed but deferred
 -->
 
 This file exists so any new Claude Code session can read it and immediately understand the full state of the project without needing conversation history.
@@ -194,6 +194,7 @@ Because the site's own redeploy also bumped `lastmod` on ~40 already-indexed blo
 - A candidate that's new-to-the-index but whose true `published_time` is still pre-floor is **not** silently added or silently dropped — it's held out of the KB and reported in the `/sync type:Blog` Discord reply under "Held back for review," with title + date, so a human decides via `/blog action:Include`. Real example from the migration sync: `blog.riverai.inc/river/` (`published_time` 2025-05-13, two days pre-floor) — flagged, then manually reviewed: it carries the `announcement` tag (a real, live tag page, just not featured in the site's nav) alongside already-indexed posts like `season2-airdrop-is-live` and `season-6-is-live`, so it's legitimate current content, not orphaned. Manually added 2026-09-04 (`knowledge-base/blogs/river.md`) since it fell outside the automated floor — future `/sync type:Blog` runs will maintain it normally (matches by URL) from here on.
 - `knowledge-base/blogs/_excluded-legacy.json` — a self-maintaining registry (title + true `published_time`, keyed by URL) of every post ever seen failing the `BLOG_SINCE_DATE` floor. Seeded 2026-09-04 with all 91 currently-known legacy (pre-floor) posts. A URL is only ever fetched once to populate its entry; after that it's a free lookup. Lets a future flagged candidate be checked against known legacy titles ("previously known as X") instead of judged with zero history.
 - An already-indexed post whose `lastmod` changed but whose `article:modified_time` matches what's on file is recognized as a redeploy artifact and the rescrape is skipped (falls back to a normal rescrape if inconclusive — no regression for that case).
+- **Publish dates (added 2026-11-12):** each post's true `article:published_time` is saved as `publishedTime` in `blogs/_index.json` on every add/rescrape (and filled in on a redeploy skip if missing). All 47 posts were backfilled from the live site on 2026-11-12. `searchKB` shows it in the chunk heading — `### knowledge-base/blogs/x.md (published 2025-11-10)` — so answers can tell a year-old post from news. Posts added with `/blog add` / `!add-blog-text` (`registerBlogInIndex`) get no date until the next sync rescrapes them. Governance posts have no stored date. Backfill found `satoshi-protocol-raises-2m-in-seed-round-funding` was published 2024-07-09, before `BLOG_SINCE_DATE` — it got in on a 2025-08-30 `lastmod`; the owner keeps it deliberately (2026-11-12, see `docs/DECISIONS.md`).
 
 **`/sync type:Doc` vs `/sync type:Doc force:true`:** the docs sitemap has no lastmod dates, so a regular sync only catches new and removed pages. Use `force` to re-scrape all pages after content updates.
 
@@ -464,6 +465,8 @@ Key rules injected into every Claude call:
 - **No `---` dividers** — Bold headers are fine; horizontal rules are not.
 - **ASSIGNED REFERRAL CODE** — not in the system prompt: added to the first user message of each conversation, so the cached system block stays identical (see Prompt Caching below).
 - **SOURCE PRIORITY** — corrections > blogs/announcements > docs.
+- **TODAY / PAST EVENTS** (added 2026-11-12) — the prompt states today's date and forbids bringing up a past incident (market events, attacks, buybacks, emergency measures) unless the user asks about it; a mentioned past event gets its month and year and is never called recent. KB posts are often a year old but written in the present tense ("over the past few days"); blog chunks now carry their publish date in the heading (see "Publish dates" under lastmod verification), governance posts still don't. Added after a Telegram reply to "It started so promising and now nothing" recounted the November 2025 attack as recent news.
+- **GENERAL FRUSTRATION** (added 2026-11-12) — a pure vent with no specific question gets 2-3 sentences: acknowledge, state what is current from core facts, say where updates are posted; no mechanism or past-event explanation.
 - **EXTERNAL LINKS** — only share URLs that appear in the provided context (KB chunks or the LIVE PRICES block); never links from training knowledge.
 - **SCAM SAFETY** — Dynamic injection (2026-05-15): injected only when `isScamConcern(question)` returns true. See Scam Concern Detection below.
 - **CONVERSATIONAL BREVITY** — Dynamic injection (added 2026-07-10): `getSystemPrompt(includeScamBlock, isFollowUp)` takes a second param; `askClaude()` sets `isFollowUp = history.length > 1` (true for Scenario 0/0.5/CLARIFY-continuation calls, false on a fresh first question). When true, injects a rule capping replies to 2-4 sentences, forbidding re-explanation of a mechanism already covered earlier in the thread (point back to it instead), and calling for a short acknowledgement rather than a full mechanic restatement when the user is just agreeing/venting. Added because conversational replies (e.g. a user agreeing with someone, then venting about price) were getting full multi-paragraph re-explanations of conversion mechanics on every turn.
@@ -471,7 +474,7 @@ Key rules injected into every Claude call:
 ### Prompt Caching (added 2026-05-15)
 
 `askClaude()` sets two cache breakpoints:
-1. **System block** — `getSystemPrompt(includeScamBlock, isFollowUp)` output, marked `cache_control: { type: 'ephemeral' }`. Cached by Anthropic for 5 minutes; identical for every call with the same two flags, so it is shared across users' first questions.
+1. **System block** — `getSystemPrompt(includeScamBlock, isFollowUp)` output, marked `cache_control: { type: 'ephemeral' }`. Cached by Anthropic for 5 minutes; identical for every call with the same two flags on the same day (the TODAY line changes it once a day), so it is shared across users' first questions.
 2. **Last message** — `withCacheOnLastMessage()` marks the newest message, caching the growing per-conversation prefix (system + KB context + history) for follow-ups.
 
 The rotating referral code and the KB context live in the first user message, not the system block.
@@ -487,6 +490,16 @@ Scam detection runs across five independent layers. The first three classify the
 **Infraction tracking:** Every action writes a record keyed by Discord user ID (survives username/display name changes). The alert embed shows the total infraction count and flags repeat offenders in red. Use `/scam-record action:View` to see full history, `action:Clear` for false positives, and `action:Clear count:-N` to remove only the N most recent records.
 
 Scope: targets what Discord's built-in automod misses — bio/profile redirect text, t.me/wa.me links, name impersonation + DM offers, and semantic social-engineering patterns Haiku catches. Direct link blocking is left to Discord automod, with one exception: a link without http posted within `NEW_MEMBER_LINK_MS` (1 minute) of joining goes to `detectBareLinkLLM`, which reads the whole message and the sender's own previous message, if any. If they are sharing a website it is blocked and forwarded to #ai; otherwise, or if the check fails, the message carries on to the normal rules (`newMemberLinks`, `secondsSinceJoining` in `src/commands.js`; added 2026-11-03 — see `docs/DECISIONS.md`).
+
+#### Fingerprinted scam images (added 2026-11-20)
+For scam images reposted unchanged by fresh accounts after the first poster is banned. Discord only, under the scam-blocker toggle; tickets and collab channels are never checked.
+
+1. **Mark:** staff right-click the scam message → Apps → **Fingerprint scam images**. The bot downloads every image in the message and shows them; with 2+ images, untick any that aren't scam (a logo, a real announcement), then **Save**. They become one numbered set in `data/scam-images/` (`fingerprints.json` plus a copy of each image; local only, never in git). Then ban the sender by hand. Nothing is fingerprinted on a ban (owner decision — see `docs/DECISIONS.md`).
+2. **Detect:** every image a non-staff member posts as an attachment, or in a message they forward (up to 10 per message, skipping files over 20 MB), is fingerprinted. Images that are only links (a CDN or imgur URL, a tweet preview) are not checked. A match is an exact copy (SHA-256), or a near copy: perceptual hash within 6 of 64 bits **and** 4×4 colour grid within 12. A nearly flat image only matches exact copies. No AI call.
+3. **Act:** the message is forwarded to #ai with a header (who, where, which set and image, exact or how close), then `takeScamAction` deletes it and applies the usual escalating timeout. The infraction's evidence holds the match. The set's match count and last match (ISO times) are updated.
+4. **Manage:** `/scam-images action:List`, `View set:N` (saved images, plus remove buttons for the set and each image), `Remove set:N [image:N]`. Removal only marks it removed (who and when); the record and image copy stay. Entries never expire.
+
+Who may mark and manage: `IMAGE_FINGERPRINT_ROLE_IDS`, or the staff roles when empty. Both commands are hidden by default from members without Manage Messages; Server Settings → Integrations → the bot can allow or deny them per role. A member reposting the image to warn others is timed out too (risk accepted, owner 2026-11-20). Code: `src/image-fingerprints.js`, `src/image-fingerprint-commands.js`, `checkFingerprintedImages` in `src/commands.js`. Tune the thresholds with `PHASH_MAX_DISTANCE` and `COLOR_MAX_DIFFERENCE`.
 
 #### Layer 1 — Scammer-side hard sync (`detectScamContentSync` in `src/intent.js`)
 Runs as the first line of `classifyMessageIntent`. Catches patterns that are unambiguous regardless of context — zero API cost. Returns `'scam-content'` and skips all further checks.
@@ -513,6 +526,8 @@ Soft patterns:
 - `accept my/the (friend) request`, `sent you a friend request` — friend-request redirect to gain DM access
 - `how can/may I/we help you` — unsolicited opener (about 80% scam in real samples)
 - a message that is nothing but `@SomethingBot` — a Telegram-only spam pattern, matched on the raw text
+- `chat/contact/hmu me/us`, `hit me/us up` — contact wording other than "dm me" (added 2026-11-12)
+- `buy/sell/purchase … wallets/accounts`, `buy/sell … aged/used/old/premium wallet/account` — wallet and account trading ads (added 2026-11-12, after a "buy used Phantom wallets … Chat me" ad in Discord #general was classified `content-promotion` and stayed up; the same kind of ad had only been caught before because it said "DM"). The Haiku prompt and the classifier's `scam-content` definition both treat buying/selling wallets, keys or accounts as scam-content, and asking how to buy a token or which wallet to use as not. Against all 8,936 logged messages these two patterns matched 12, all spam or scams.
 
 **`detectScamContentLLM` flow:** Receives the message content + reply context + recent thread (same context built for normal classification). Asks Haiku: *"Is this sender redirecting another user toward an external resource they own, or inviting them into a private conversation as a way of offering unsolicited help?"* YES → `'scam-content'`; NO → falls through to normal classification. Fails safe: returns `false` on API error (never false-positives due to a network issue). Haiku max_tokens: 5.
 
@@ -622,7 +637,7 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 - **Audit 2026-10-29 — fixed:** staff never scam-actioned; log lines timestamped (`bot.js`); blog article numbering can't overwrite (`blogFileForUrl`); failed announcement checks retried; Telegram-only reports exclude Discord tickets; `!add-doc-text` uses the sync file name rule; Q&A learning only for real questions; dependencies updated (0 vulnerabilities; dotenv 18, jsdom 30, discord.js 14.27); test suite (`npm test`) and evals (`npm run eval`) added; RAG index rebuilt.
 - **Audit 2026-10-29 — also fixed:** EXCLUDE markers (sync re-applies them; unclosed marker hides to the end; 11 posts closed, 1 partial block restored, 35 chunks of outdated text left the index); login retries with backoff instead of a pm2 restart storm; watchdog now judged by heartbeat acknowledgements (10 min) with a 6 h no-event backstop; deleted questions get no answer (Discord `messageDelete`, and both platforms skip quietly when the reply target is gone); hand-added blog posts found in the sitemap are rewritten in their existing file; pm2 log rotation enabled.
 - **Scam review 2026-10-28 (all 538 actions, `scripts/scam-review/review-infractions.js`):** 422 scam · 16 not scam · 81 unsure · 19 API errors. Main false-positive pattern: messages that are only an X/Twitter link (sometimes with a mention or decorative divider); also "buying aged wallets" pitches (spam, not scam), a few safety alerts, a token address. Text alone can't settle the unsure ones (no images or thread were stored). Results with message text: `data/scam-review-2026-10-28.json` (local). Decision pending on how to treat bare X links.
-- **TEMPORARY — AutoMod miss report (added 2026-10-29, remove when the owner says):** Discord AutoMod is the primary filter for links typed with http, and allows bare links on purpose because they aren't clickable. When the scam blocker catches a message with a link in its own text, `reportAutomodMiss` in `src/commands.js` posts the link and message to #ai (`TEMP_AUTOMOD_MISS_CHANNEL_ID`, channel 1502041137119105054) so the owner can see how it got through, refine the AutoMod regex (e.g. the `::discord.co/invite/…` campaign) and spot a wrong scam call. It posts a one-line header, then a real Discord forward of the original (sent before the deletion; plain text only if the forward fails). X/Twitter links (allowed in AutoMod on purpose), River's own links and altered words like `a.dd` never count, nor does an invite only inside a tweet or preview (corrected 2026-11-02: 13 tweet reports had been posted, and no disguised invite). The bot's scam reposts to #ai are only these reports and links to unreadable tweets that were left up (no second scam sign; `scheduleTweetRecheck` tries them again and removes the forward once one can be read); #ai is also an answer channel and the explanation-embed channel. Every action the bot takes is logged to the scam-log channel as usual. To remove: delete the block marked `TEMPORARY` (constants + `linksToReview` + `repostToReviewChannel` + `reportAutomodMiss`), the calls marked TEMPORARY, and the related assertions in the scam tests. `forwardUnreadableTweet` also posts through `repostToReviewChannel`, so decide first where unreadable tweets should go instead. The new-member link rule also relies on this block: `newMemberLinks` uses `linksToReview`, and `reportAutomodMiss` is how its catches reach #ai for the owner's review, so keep those working if the rest is removed.
+- **TEMPORARY — AutoMod miss report (added 2026-10-29, remove when the owner says):** Discord AutoMod is the primary filter for links typed with http, and allows bare links on purpose because they aren't clickable. When the scam blocker catches a message with a link in its own text, `reportAutomodMiss` in `src/commands.js` posts the link and message to #ai (`TEMP_AUTOMOD_MISS_CHANNEL_ID`, channel 1502041137119105054) so the owner can see how it got through, refine the AutoMod regex (e.g. the `::discord.co/invite/…` campaign) and spot a wrong scam call. It posts a one-line header, then a real Discord forward of the original (sent before the deletion; plain text only if the forward fails). X/Twitter links (allowed in AutoMod on purpose), River's own links and altered words like `a.dd` never count, nor does an invite only inside a tweet or preview (corrected 2026-11-02: 13 tweet reports had been posted, and no disguised invite). The bot's scam reposts to #ai are these reports, matches of fingerprinted scam images (added 2026-11-20), and links to unreadable tweets that were left up (no second scam sign; `scheduleTweetRecheck` tries them again and removes the forward once one can be read); #ai is also an answer channel and the explanation-embed channel. Every action the bot takes is logged to the scam-log channel as usual. To remove: delete the block marked `TEMPORARY` (constants + `linksToReview` + `repostToReviewChannel` + `reportAutomodMiss`), the calls marked TEMPORARY, and the related assertions in the scam tests. `forwardUnreadableTweet` and the fingerprinted-image check (`checkFingerprintedImages`, added 2026-11-20) also post through `repostToReviewChannel`, so decide first where those should go instead. The new-member link rule also relies on this block: `newMemberLinks` uses `linksToReview`, and `reportAutomodMiss` is how its catches reach #ai for the owner's review, so keep those working if the rest is removed.
 - **Scam review 2026-10-28, second run (with campaign counts, tweet content via FxTwitter):** 511 scam · 26 not scam · 1 unsure. Two confirmed wrong deletions — both bare X links of ordinary tweets ("Shit project !", "@RiverdotInc Argentina 1-0"); every fake help-desk tweet is a Discord "create a ticket" invite. Labelling workbook: `data/scam-review-2026-10-28-check.xlsx` (local). Each deletion now also stores evidence (replied-to message, attachments, link previews).
 - **2026-10-29 later:** the intent classifier prompt (`INTENT_SYSTEM_PROMPT`) now carries the documented taxonomy rules it was missing — "Referral code please" is onboarding (was referral-sharing → ignored), "New here" is a greeting; search keeps the embedding cache in memory (reloads when the file changes). **Anthropic credit ran out** during the scam review (19 rows unreviewed; the live bot's Claude calls fail until topped up). Decision notes for the scam review: `data/scam-review-2026-10-28-summary.md` and the labelling sheet `data/scam-review-2026-10-28-to-check.csv` (local).
 - **Audit 2026-10-29 — still open:** prompt caching reads only 6% of writes (measure again with timestamped logs, then decide); ticket channels — the bot can read ticket *categories* but **0 of 23 open ticket channels and 0 of 44 collab channels** (each new channel gets its own permissions from the ticket tool), so ticket logging has never written anything; fix: add the bot's role with View + Read History to new tickets (Send stays off — the `.env` categories keep it from answering there); on Telegram the bot gets no delete events, so a reply sent *before* another bot deletes the spam stays in the chat.
@@ -639,7 +654,26 @@ Haiku fallback (max_tokens: 5, YES/NO). Only called when tier-1 misses but `SCAM
 
 Future features are listed here. Build one only when the owner asks; "Raise when" says when to bring it up. Crossed-out entries further down are finished.
 
+**Splitting the bot into parts**
+
+- **Split into four parts with separate switches** — owner, 2026-11-15. The four parts are answering, Discord scam blocking, Telegram moderation and reports, so each can be reused on another server. The full plan is in `docs/ARCHITECTURE.md` § Feature map:
+  - which code belongs to each part;
+  - the coupling to undo;
+  - the toggle design: Answers Discord / Answers Telegram / Scam blocker Discord / Scam blocker Telegram / Reports, each independent and ready for a dashboard;
+  - the target folders and the order to do them in.
+
+  Decided 2026-11-15:
+  - Keep scam checks on the busiest channels only (`docs/DECISIONS.md`).
+  - The scam blocker keeps the full classifier. It shares answering's classification while answering is on, and classifies on its own when answering is off.
+  - The Telegram scam switch also covers rejoin enforcement.
+  - Report logging ignores every switch.
+
+  Layout decided: feature folders with Discord / Telegram subfolders, plus `shared/`, `platforms/` and `config/` (ARCHITECTURE.md § Target layout). Folder names are placeholders; the owner will choose names that say what each part does. The toggle split can be built before the folder move.
+  - Raise when: the owner wants to reuse a part on another server, asks for a dashboard, or turns off answering while expecting scam blocking to stay on.
+
 **Scam blocking**
+
+- **Spam as its own category, apart from scams** — raised by the owner on 2026-11-12: "there are scam and then there are spams". Today spam (wallet/account trading ads, unrelated promotions) is classified `scam-content` and gets the full scam action (delete, escalating timeout, scammer record). A separate `spam` category could get a lighter action (e.g. delete + log only). Raise when: the owner returns to it, or a spam poster gets a long escalated timeout.
 
 - **Scam checks on edited messages** — put off by the owner on 2026-11-04 (only a handful of cases so far); built on 2026-11-03 and removed the next day. Today an edited message is not checked on either platform, so a post edited into a scam stays up until someone spots it.
   - Discord: listen to `messageUpdate` and skip events with no `editedTimestamp` (link previews, pins) or unchanged text; run the scam checks only, never answer; skip staff and ticket/collab channels; run the classifier only where a new message would be classified; make sure one message can't count as two infractions.

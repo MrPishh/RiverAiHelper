@@ -70,34 +70,34 @@
 // L502       matchDef()
 // L511       blockEnd()
 // L569       lineOf()
-// L624   Contents block
-// L627     renderContents()
-// L653   Docs
-// L656     mdHeadings()
-// L670     slug()
-// L677     anchorsOf()
-// L690     stripSections()
-// L700     renderSections()
-// L715       safe()
-// L722     tableUnder()
-// L739     ticks()
-// L743   CODE_INDEX.md
-// L746     renderIndex()
-// L749       loc()
-// L837   Drift checks
-// L840     runChecks()
-// L845       err()
-// L851       warn()
-// L852       docLines()
-// L1033      usedElsewhere()
-// L1039  Build
-// L1042    envNames()
-// L1049    build()
-// L1109    staleFiles()
-// L1114    printReport()
-// L1128    runOnce()
-// L1151    watch()
-// L1155      trigger()
+// L637   Contents block
+// L640     renderContents()
+// L666   Docs
+// L669     mdHeadings()
+// L683     slug()
+// L690     anchorsOf()
+// L703     stripSections()
+// L713     renderSections()
+// L728       safe()
+// L735     tableUnder()
+// L752     ticks()
+// L756   CODE_INDEX.md
+// L759     renderIndex()
+// L762       loc()
+// L850   Drift checks
+// L853     runChecks()
+// L858       err()
+// L864       warn()
+// L865       docLines()
+// L1046      usedElsewhere()
+// L1052  Build
+// L1055    envNames()
+// L1062    build()
+// L1122    staleFiles()
+// L1127    printReport()
+// L1141    runOnce()
+// L1164    watch()
+// L1168      trigger()
 // ----- end of contents -----
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
@@ -601,6 +601,19 @@ function analyzeCode(file, text) {
             for (const x of named.filter(x => x.indent === top)) commands.push({ kind: 'slash', name: `/${x.name}`, file, line: x.line, registered: true });
         }
         for (const m of b.matchAll(/\bcmd\s*===\s*'([a-z0-9-]+)'/g)) commands.push({ kind: 'slash', name: `/${m[1]}`, file, line: lineOf(m.index), handled: true });
+    }
+    // The fingerprinted-scam-image commands: defined in their own file and spread into COMMANDS; one handler owns
+    // every name in the list, so each definition counts as both registered and handled.
+    if (/^src\/image-fingerprint-commands\.js$/.test(file)) {
+        const start = lines.findIndex(l => /^const IMAGE_FINGERPRINT_COMMANDS\s*=\s*\[/.test(l));
+        const end   = lines.findIndex((l, k) => k > start && /^\];/.test(l));
+        for (let k = start + 1; start !== -1 && k < end; k++) {
+            const m = lines[k].match(/^ {8}name:\s*'([a-z0-9-]+)'/);
+            if (m && isCode(k + 1)) {
+                commands.push({ kind: 'slash', name: `/${m[1]}`, file, line: k + 1, registered: true });
+                commands.push({ kind: 'slash', name: `/${m[1]}`, file, line: k + 1, handled: true });
+            }
+        }
     }
     for (const m of b.matchAll(/startsWith\(\s*'(![a-z0-9-]+)'/g)) commands.push({ kind: 'text', name: m[1], file, line: lineOf(m.index), handled: true });
     if (file.startsWith('telegram/')) {

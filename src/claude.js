@@ -18,27 +18,27 @@
 // L113      isScamConcern()
 // L119    System prompt
 // L123      getSystemPrompt()
-// L172    Reply chunking
-// L177      splitForReply()
-// L209    Response sanitiser
-// L212      sanitizeResponse()
-// L222    Source keyword matcher (used by explanation embed only)
-// L226      identifyRelevantSources()
-// L239    Claude API call
-// L243      withCacheOnLastMessage()
-// L262      askClaude()
-// L302    Chunk re-ranker
-// L306      rerankChunks()
-// L348      buildInitialHistory()
-// L390    Conversation state helpers
-// L393      setConversation()
-// L401      deleteConversation()
-// L407    Core answer function
-// L411      answerQuestion()
-// L514    Prune stale state entries (runs hourly)
-// L517      pruneStaleEntries()
-// L551    Core facts loader
-// L554      loadCoreFacts()
+// L177    Reply chunking
+// L182      splitForReply()
+// L214    Response sanitiser
+// L217      sanitizeResponse()
+// L227    Source keyword matcher (used by explanation embed only)
+// L231      identifyRelevantSources()
+// L244    Claude API call
+// L248      withCacheOnLastMessage()
+// L267      askClaude()
+// L307    Chunk re-ranker
+// L311      rerankChunks()
+// L353      buildInitialHistory()
+// L395    Conversation state helpers
+// L398      setConversation()
+// L406      deleteConversation()
+// L412    Core answer function
+// L416      answerQuestion()
+// L519    Prune stale state entries (runs hourly)
+// L522      pruneStaleEntries()
+// L556    Core facts loader
+// L559      loadCoreFacts()
 // ----- end of contents -----
 
 const fs   = require('fs');
@@ -141,6 +141,11 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
             'CONVERSION: Only Conversion 3.0 is active. Default to 3.0 for all conversion questions. Reference 1.0/2.0 only if explicitly asked. If ambiguous, ask: "Are you asking about Conversion 3.0 or an earlier version?" Never apply old 1.0/2.0 figures to current questions.',
             '',
             'RELEVANCE: Only include information that DIRECTLY answers the question. Do not volunteer related requirements, troubleshooting steps, or sub-topics the user did not ask about. No announcements, events, or loosely related content.',
+            '',
+            `TODAY: ${new Date().toISOString().slice(0, 10)}.`,
+            'PAST EVENTS: Knowledge-base posts are often months or a year old even when written in the present tense ("over the past few days", "the recent market event") — never treat a post as recent because of its wording. A chunk heading marked "(published YYYY-MM-DD)" gives the real date of the post; compare it with TODAY. Never bring up a past incident (market events, attacks, price crashes, buybacks, emergency measures) unless the user asks about that specific incident. If you do mention one, give its month and year and never call it recent or link its post as if it were news.',
+            '',
+            'GENERAL FRUSTRATION: When the user only voices disappointment about the project with no specific question (e.g. "it started so promising and now nothing", "no activity anymore", "project is dead"), reply in 2-3 sentences: acknowledge the feeling, state what is current from CORE PROJECT FACTS (e.g. the active season), and say where updates are posted. Do not explain any mechanism or past event, even if the context below describes one.',
             '',
             'SCOPE: Stop once you have answered the question. Do not append follow-up content after the answer is complete — no scoring explanations, troubleshooting steps, dashboard links, or "also worth knowing" additions unless the user asked for them. Only include extra information if omitting it would make the answer factually wrong or misleading.',
             '',
@@ -354,7 +359,7 @@ function createClaudeModule(anthropic, state, { searchKB, getSourceFiles, trackU
 
         const [{ rawChunks }, prices] = await Promise.all([kbSearch, pricePromise]);
         const reranked     = await rerankChunks(question, rawChunks);
-        const finalContext = reranked.map(c => `### ${c.file}\n\n${c.text}`).join('\n\n---\n\n');
+        const finalContext = reranked.map(c => `### ${c.file}${c.published ? ` (published ${c.published})` : ''}\n\n${c.text}`).join('\n\n---\n\n');
         const finalSources = [...new Set(reranked.map(c => c.file))];
 
         let priceBlock = '';
