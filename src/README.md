@@ -34,7 +34,7 @@ All bot logic. `bot.js` in the project root wires these modules together — non
 | `scam-tracker.js` | Scammer infraction store, `data/scammer-list.json`. |
 | `tweet-check.js` | Reads the X/Twitter posts a message links to (FxTwitter public API) and judges them for the scam blocker. |
 | `image-fingerprints.js` | Fingerprinted scam images: perceptual hash + colour grid of each image, matching, and the store in `data/scam-images/` (a copy of each image kept). |
-| `image-fingerprint-commands.js` | Staff controls for them: right-click → Apps → Fingerprint scam images, `/scam-images`, the `IMAGE_FINGERPRINT_ROLE_IDS` check. |
+| `image-fingerprint-commands.js` | Staff controls for them: right-click → Apps → Fingerprint scam images, `/scam-images`, who may use them (Integrations settings when set, otherwise `IMAGE_FINGERPRINT_ROLE_IDS` / staff). |
 | `price-fetcher.js` | Live RIVERPTS and $RIVER prices from Dexscreener. |
 
 ## How it works

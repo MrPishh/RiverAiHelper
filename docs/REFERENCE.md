@@ -37,7 +37,7 @@ Read from `.env` in the project root (copy `.env.example` to start). Never commi
 | `SUPPORT_TICKET_CATEGORY_IDS` | ticket logging | Comma-separated support-ticket category IDs. Ticket channels are created per ticket; non-staff messages are logged to `intent/ticket-log.jsonl`, never answered. | `1212753951578005644,1419608088297865286` |
 | `COLLAB_CATEGORY_IDS` | collab logging | Comma-separated collab / business-inquiry category IDs. Logged to `intent/collab-log.jsonl`; not in reports yet. | `1212754205731987546,1419607913705640017` |
 | `SCAM_LOG_CHANNEL_ID` | scam alerts | Where the scam blocker posts alert embeds. The bot needs Send Messages there. | `1212717191955480667` |
-| `IMAGE_FINGERPRINT_ROLE_IDS` | — (default: the staff roles) | Comma-separated roles that may fingerprint scam images (right-click → Apps → Fingerprint scam images) and use `/scam-images`. Server Settings → Integrations can narrow it further per command. | *(empty)* |
+| `IMAGE_FINGERPRINT_ROLE_IDS` | — (default: the staff roles) | Comma-separated roles that may fingerprint scam images (right-click → Apps → Fingerprint scam images) and use `/scam-images` — used only for a command with no roles set in Server Settings → Integrations; when roles are set there, Discord alone decides. | *(empty)* |
 | `CHINESE_DISCORD_CHANNEL_ID` | Chinese channel (optional) | Chinese community channel — logged for reports and scam-checked, never answered. | *(empty)* |
 | `TELEGRAM_BOT_TOKEN` | the Telegram bot | Bot token from BotFather. Without it the Telegram bot is disabled. | *(secret)* |
 | `TELEGRAM_CHAT_ID` | the Telegram bot | Telegram group ID (a negative number). | `-1002060657220` |
@@ -46,7 +46,7 @@ Read from `.env` in the project root (copy `.env.example` to start). Never commi
 
 ## Commands
 
-Every command is staff-only (Discord: a role in `STAFF_ROLE_IDS`; Telegram: a group admin). The two fingerprinted-scam-image commands use `IMAGE_FINGERPRINT_ROLE_IDS` instead (the staff roles when empty), are hidden by default from members without Manage Messages, and reply only to the person using them. `/check-permissions` has a handler but is deliberately not registered with Discord; to enable it, add its definition back to `COMMANDS` in `src/slash-commands.js`.
+Every command is staff-only (Discord: a role in `STAFF_ROLE_IDS`; Telegram: a group admin). The two fingerprinted-scam-image commands follow Server Settings → Integrations when roles or members are set there for them; otherwise `IMAGE_FINGERPRINT_ROLE_IDS` (the staff roles when empty). They reply only to the person using them. `/check-permissions` has a handler but is deliberately not registered with Discord; to enable it, add its definition back to `COMMANDS` in `src/slash-commands.js`.
 
 | Command | Where | What it does |
 |---|---|---|

@@ -95,7 +95,7 @@ const STAFF_ROLE_IDS = (process.env.STAFF_ROLE_IDS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
 
 // Roles that may fingerprint scam images and manage the list (right-click → Apps → Fingerprint scam images,
-// /scam-images). Empty: the staff roles.
+// /scam-images) when no roles are set for those commands in Server Settings → Integrations. Empty: the staff roles.
 const IMAGE_FINGERPRINT_ROLE_IDS = (process.env.IMAGE_FINGERPRINT_ROLE_IDS || '')
     .split(',').map(s => s.trim()).filter(Boolean);
 
